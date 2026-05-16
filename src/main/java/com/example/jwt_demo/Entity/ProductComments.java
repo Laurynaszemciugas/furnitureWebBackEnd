@@ -1,6 +1,9 @@
 package com.example.jwt_demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,10 +31,12 @@ public class ProductComments {
     @ManyToOne
     @JoinColumn(name = "product_id")
     @JsonIgnoreProperties("product")
+    @JsonIgnore
     private Product product;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 
     @CreationTimestamp

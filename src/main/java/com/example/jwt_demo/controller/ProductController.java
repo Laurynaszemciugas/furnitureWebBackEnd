@@ -85,13 +85,10 @@ public class ProductController {
         }
 
         try {
-            // 4. Fire the save execution.
-            // Product inserts first -> captures identity key -> maps product_id safely down the chain!
             productRepository.save(cleanProduct);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Failed to save product: " + e.getMessage());
+            return ResponseEntity.ok("failed");
+
         }
 
         return ResponseEntity.ok("Success");

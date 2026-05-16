@@ -4,7 +4,10 @@ package com.example.jwt_demo.Entity.ProductJoin;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.Tags;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,7 +33,7 @@ public class ProductTags {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
-    @JsonIgnoreProperties("product")
+    @JsonIgnore
     private Product product;
 
     @Enumerated(EnumType.STRING)
@@ -38,6 +41,7 @@ public class ProductTags {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+
     private User user;
 
     @CreationTimestamp
