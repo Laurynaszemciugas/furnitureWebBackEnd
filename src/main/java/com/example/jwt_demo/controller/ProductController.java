@@ -22,10 +22,8 @@ public class ProductController {
 
         System.out.println("Processing incoming product save request...");
 
-        // 1. Create a brand new instance of the Product object
         Product cleanProduct = new Product();
 
-        // 2. Map all basic data properties
         cleanProduct.setId(product.getId());
         cleanProduct.setProductName(product.getProductName());
         cleanProduct.setSku(product.getSku());
@@ -41,13 +39,10 @@ public class ProductController {
         cleanProduct.setUser(product.getUser());
         cleanProduct.setCreated(product.getCreated());
 
-        // 3. Update arrays IN-PLACE. Clear them first, then populate them.
-        // This keeps Hibernate's internal collection trackers perfectly intact!
-
         if (product.getTags() != null) {
-            cleanProduct.getTags().clear(); // Safe clear
+            cleanProduct.getTags().clear();
             for (var tag : product.getTags()) {
-                tag.setProduct(cleanProduct); // Repair network backlink
+                tag.setProduct(cleanProduct);
                 cleanProduct.getTags().add(tag);
             }
         }
@@ -69,10 +64,10 @@ public class ProductController {
         }
 
         if (product.getExtraDetails() != null) {
-            cleanProduct.getExtraDetails().clear(); // Clears internal records safely
+            cleanProduct.getExtraDetails().clear();
             for (var detail : product.getExtraDetails()) {
-                detail.setProduct(cleanProduct); // Sets product_id properly
-                cleanProduct.getExtraDetails().add(detail); // Adds into existing collection instance
+                detail.setProduct(cleanProduct);
+                cleanProduct.getExtraDetails().add(detail);
             }
         }
 
@@ -83,11 +78,11 @@ public class ProductController {
                 cleanProduct.getComments().add(comment);
             }
         }
-
+        productRepository.save(cleanProduct);
         try {
-            productRepository.save(cleanProduct);
+
         } catch (Exception e) {
-            return ResponseEntity.ok("failed");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("failed");
 
         }
 

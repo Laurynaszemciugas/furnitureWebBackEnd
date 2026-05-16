@@ -2,10 +2,8 @@ package com.example.jwt_demo.Entity;
 
 
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
-import com.example.jwt_demo.Entity.ProductJoin.ProductTags;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Status;
-import com.example.jwt_demo.Enums.Tags;
 import com.example.jwt_demo.Enums.Visibility;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,9 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.CurrentTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

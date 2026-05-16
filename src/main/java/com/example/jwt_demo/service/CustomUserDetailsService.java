@@ -2,6 +2,7 @@ package com.example.jwt_demo.service;
 
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,12 @@ public class CustomUserDetailsService  implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("User Not Found with username: " + username);
         }
-        return new org.springframework.security.core.userdetails.User(
+        return new CustomUserDetails(
+                user.getId(),
                 user.getGmail(),
-                user.getPassword(),
-                Collections.emptyList()
+                user.getName(),
+                user.getRole(),
+                user.getPassword()
         );
     }
 }

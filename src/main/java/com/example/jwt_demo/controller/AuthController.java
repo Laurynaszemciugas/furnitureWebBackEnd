@@ -4,10 +4,12 @@ import com.example.jwt_demo.Enums.AccountStatus;
 import com.example.jwt_demo.Enums.Role;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.security.CustomUserDetails;
 import com.example.jwt_demo.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -33,9 +35,28 @@ public class AuthController {
                         user.getPassword()
                 )
         );
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return jwtUtils.generateToken(userDetails.getUsername());
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+
+
+        return jwtUtils.generateToken(userDetails);
     }
+
+    @GetMapping("/profile")
+    public String profile() {
+
+        CustomUserDetails user =
+                (CustomUserDetails) SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+                        .getPrincipal();
+
+        return "ID: " + user.getId() +
+                ", Gmail: " + user.getUsername() +
+                ", Role: " + user.getRole();
+    }
+
+
     @PostMapping("/signup")
     public String registerUser(@RequestBody User user) {
         if (userRepository.existsByGmail(user.getGmail())) {
