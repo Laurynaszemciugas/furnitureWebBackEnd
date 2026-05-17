@@ -4,6 +4,7 @@ package com.example.jwt_demo.Entity;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Status;
+import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Visibility;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -41,6 +42,9 @@ public class Product {
     private Status status;
     @Enumerated(EnumType.STRING)
     private Visibility visibility;
+
+    @Enumerated(EnumType.STRING)
+    private Stock stock;
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<ProductTags> tags = new ArrayList<>();

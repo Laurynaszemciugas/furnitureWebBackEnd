@@ -65,6 +65,7 @@ public class ProductController {
         cleanProduct.setUser(product.getUser());
         cleanProduct.setCreated(product.getCreated());
         cleanProduct.setUser(currentUser.get());
+        cleanProduct.setStock(Stock.No_Stock);
 
         if (product.getTags() != null) {
             cleanProduct.getTags().clear();
@@ -129,26 +130,32 @@ public class ProductController {
             @PathVariable int size
     ) {
 
-        // You can use the enums directly here!
-        return productRepository.getAllProducts(category,PageRequest.of(page, size));
+        return productRepository.getAllProducts(category,stock,PageRequest.of(page, size));
+    }
+
+    @GetMapping("/getProductsPageCount")
+    public Long getProductPages() {
+        // make so user JWT is extracted the id
+        return productRepository.getProductPages(1l);
     }
 
 
 
 
 
-    @GetMapping("/data")
-    public ResponseEntity<Product> getItem(){
-        Product product = productRepository.findById(3l).orElse(null);
 
-        for(var s : product.getTags()){
-            System.out.println(s.getTags());
+    @GetMapping("/getProductToId/{id}")
+    public ResponseEntity<Product> getItem(@PathVariable Long id){
+        Product product = productRepository.findById(id).orElse(null);
+
+        if(product!=null){
+            System.out.println("found");
+            return ResponseEntity.ok(product);
         }
-        System.out.println(product.getProductName());
 
-
-        return ResponseEntity.ok(product);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
+
 
 
 

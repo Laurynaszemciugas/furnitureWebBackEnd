@@ -28,8 +28,15 @@ SELECT new com.example.jwt_demo.FrontEndModels.ProductFeedModel(
 )
 FROM Product p
 JOIN ImagesData i ON i.product.id = p.id
-WHERE i.imageLogic = 'Main' and (:category = 'ALL' OR p.category = :category)
+WHERE i.imageLogic = 'Main' and (:category = 'ALL' OR p.category = :category) and (:stock = 'ALL' OR p.stock = :stock)
 """)
-    List<ProductFeedModel> getAllProducts(@Param("category") Category category,Pageable pageable);
+    List<ProductFeedModel> getAllProducts(@Param("category") Category category,@Param("stock") Stock stock,Pageable pageable);
+
+
+    @Query("""
+
+    SELECT Ceil(count(p.id) /20) FROM Product p where p.user.id = :id
+""")
+    Long getProductPages(@Param("id") Long id);
 
 }
