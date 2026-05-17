@@ -4,7 +4,8 @@ public enum Stock {
 
     In_Stock("In Stock"),
     Low_Stock("Low Stock"),
-    No_Stock("No Stock");
+    No_Stock("No Stock"),
+    ALL("All");
 
     private String displayName;
 

@@ -27,6 +27,7 @@ public class ImagesData {
     private Long id;
     private String uuId;
     private String imageName;
+    @Lob
     private String imageUrl;
     private String imageType;
     @Enumerated(EnumType.STRING)
