@@ -17,7 +17,12 @@ public interface MaterialRepository extends JpaRepository<Materials,Long> {
 """)
     List<String> getAllMaterialNames(@Param("id") Long id);
 
-    Materials findByMaterialName(String name);
+    @Query("""
+
+    SELECT m FROM Materials m where m.materialName = :name and m.user.id = :id
+
+""")
+    Materials findByMaterialName(@Param("name") String name, @Param("id") Long id);
 
 
 

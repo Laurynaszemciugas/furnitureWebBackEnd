@@ -27,6 +27,10 @@ public class AuthController {
     PasswordEncoder encoder;
     @Autowired
     JwtUtil jwtUtils;
+
+    @Autowired
+    Common common;
+
     @PostMapping("/signin")
     public String authenticateUser(@RequestBody User user) {
         Authentication authentication = authenticationManager.authenticate(
@@ -45,11 +49,7 @@ public class AuthController {
     @GetMapping("/profile")
     public String profile() {
 
-        CustomUserDetails user =
-                (CustomUserDetails) SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getPrincipal();
+        CustomUserDetails user = common.getUserData();
 
         return "ID: " + user.getId() +
                 ", Gmail: " + user.getUsername() +

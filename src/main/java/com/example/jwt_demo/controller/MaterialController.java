@@ -10,7 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping("/api/material")
@@ -19,14 +22,14 @@ public class MaterialController {
     @Autowired
     MaterialRepository materialRepository;
 
+    @Autowired
+    Common common;
+
+
     @GetMapping("/getMaterialNames")
     public ResponseEntity<List<String>> getMaterialNames(){
 
-        CustomUserDetails user =
-                (CustomUserDetails) SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getPrincipal();
+        CustomUserDetails user = common.getUserData();
 
         System.out.println(user.getUsername());
 
@@ -39,11 +42,13 @@ public class MaterialController {
     @PostMapping("/getEstimatedPriceOfMaterialUsed")
     public ResponseEntity<Double> getEstimatedMaterialCost(@RequestBody List<ProductMaterials> productMaterials){
 
+        CustomUserDetails user = common.getUserData();
+
         double estimatedPrice = 0.0;
 
-        if(productMaterials != null || !productMaterials.isEmpty()) {
+        if(productMaterials != null && !productMaterials.isEmpty()) {
             for (var s : productMaterials) {
-                Materials usedMaterial = materialRepository.findByMaterialName(s.getNameForRefrence());
+                Materials usedMaterial = materialRepository.findByMaterialName(s.getNameForRefrence(), user.getId());
                 estimatedPrice += (usedMaterial.getUnitPrice() * s.getAmountUsed());
             }
 
@@ -57,12 +62,47 @@ public class MaterialController {
     @PostMapping("/getMaterialDataAccordingToName")
     public ResponseEntity<Materials> getMaterialDataToName(@RequestBody String name){
 
-        System.out.println(name + " name to find");
-        Materials usedMaterial = materialRepository.findByMaterialName(name);
+        CustomUserDetails user = common.getUserData();
 
-        System.out.println(usedMaterial.getMaterialName() + " name found ?");
+        Materials usedMaterial = materialRepository.findByMaterialName(name, user.getId());
 
+        if(usedMaterial !=null){
             return  ResponseEntity.ok(usedMaterial);
+        }
+
+        return ResponseEntity.ok(new Materials());
+
+    }
+
+
+    @PostMapping("/checkIfMaterialsAmountIsInStock")
+    public ResponseEntity<String> checkIfMaterialsDontExceedStockLimtis(@RequestBody List<ProductMaterials> productMaterials){
+
+        CustomUserDetails user = common.getUserData();
+
+        List<String> errorMessage = new ArrayList<>();
+
+        if(productMaterials != null && !productMaterials.isEmpty()) {
+            for (var s : productMaterials) {
+
+                Materials usedMaterial = materialRepository.findByMaterialName(s.getNameForRefrence(), user.getId());
+                if(usedMaterial.getInStock() == 0){
+                    errorMessage.add(String.format("%s %s %d %s %d",s.getNameForRefrence(),"will not be able to produce due to  taken material taken:",s.getAmountUsed(),"being too much for existing stock", usedMaterial.getInStock()));
+                }
+                if (usedMaterial.getInStock() - s.getAmountUsed() <= 2){
+                    errorMessage.add(String.format("%s %s %s %d","Product:", s.getNameForRefrence(), "will deplete stock current stock: ", usedMaterial.getInStock()));
+                }
+
+            }
+        }
+
+
+        String itemsThatWillCauseProblems = String.join("  |  ",errorMessage);
+
+
+
+
+        return  ResponseEntity.ok(itemsThatWillCauseProblems);
     }
 
 

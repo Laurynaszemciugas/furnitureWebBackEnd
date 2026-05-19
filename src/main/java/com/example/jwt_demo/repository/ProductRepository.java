@@ -27,12 +27,14 @@ SELECT new com.example.jwt_demo.FrontEndModels.ProductFeedModel(
     p.lowStockThreshold
 )
 FROM Product p
-LEFT JOIN ImagesData i ON i.product.id = p.id and i.imageLogic = 'Main'
-Where (:category = 'ALL' OR p.category = :category)
+LEFT JOIN ImagesData i ON i.product.id = p.id and i.imageLogic = 'Main' AND p.user.id = :id
+WHERE p.user.id = :id
+AND (:category = 'ALL' OR p.category = :category)
 AND (:stock = 'ALL' OR p.stock = :stock)
 AND (:prompt = 'ALL' OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%')))
+
 """)
-    List<ProductFeedModel> getAllProducts(@Param("category") Category category,@Param("stock") Stock stock,@Param("prompt") String prompt,Pageable pageable);
+    List<ProductFeedModel> getAllProducts(@Param("category") Category category,@Param("stock") Stock stock,@Param("prompt") String prompt,@Param("id") Long id,Pageable pageable);
 
 
     @Query("""

@@ -35,14 +35,13 @@ public class ProductController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    Common common;
+
     @PostMapping("/saveProduct")
     public ResponseEntity<String> saveProduct(@RequestBody Product product){
 
-        CustomUserDetails user =
-                (CustomUserDetails) SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getPrincipal();
+        CustomUserDetails user = common.getUserData();
 
         Optional<User> currentUser = userRepository.findById(user.getId());
 
@@ -136,7 +135,9 @@ public class ProductController {
             @PathVariable int size
     ) {
 
-        return productRepository.getAllProducts(category,stock,prompt,PageRequest.of(page, size));
+        CustomUserDetails user = common.getUserData();
+
+        return productRepository.getAllProducts(category,stock,prompt,user.getId(),PageRequest.of(page, size));
     }
 
 
@@ -167,11 +168,9 @@ public class ProductController {
     @PostMapping("/editProduct")
     public ResponseEntity<String> editProduct(@RequestBody Product product){
 
-        CustomUserDetails user =
-                (CustomUserDetails) SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getPrincipal();
+        CustomUserDetails userdata = common.getUserData();
+
+        CustomUserDetails user = common.getUserData();
 
         Product existingProduct = productRepository.findById(product.getId()).orElseThrow();
 
@@ -218,7 +217,8 @@ public class ProductController {
             existingProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
 
-                Materials usedMaterial = materialRepository.findByMaterialName(mat.getNameForRefrence());
+                Materials usedMaterial = materialRepository.findByMaterialName(mat.getNameForRefrence(),userdata.getId());
+
 
                 mat.setMaterials(usedMaterial);
                 mat.setUnitPrice(usedMaterial.getUnitPrice());
