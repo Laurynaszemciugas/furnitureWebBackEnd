@@ -1,11 +1,13 @@
 package com.example.jwt_demo.controller;
 
 
+import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.FrontEndModels.ProductFeedModel;
+import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
@@ -26,6 +28,9 @@ public class ProductController {
 
     @Autowired
     ProductRepository productRepository;
+
+    @Autowired
+    MaterialRepository materialRepository;
 
     @Autowired
     UserRepository userRepository;
@@ -212,8 +217,15 @@ public class ProductController {
         if (product.getMaterials() != null) {
             existingProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
+
+                Materials usedMaterial = materialRepository.findByMaterialName(mat.getNameForRefrence());
+
+                mat.setMaterials(usedMaterial);
+                mat.setUnitPrice(usedMaterial.getUnitPrice());
+
                 mat.setProduct(existingProduct);
                 mat.setUser(currentUser);
+
                 existingProduct.getMaterials().add(mat);
             }
         }

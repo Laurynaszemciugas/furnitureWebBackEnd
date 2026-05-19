@@ -27,6 +27,8 @@ public class MaterialController {
                         .getAuthentication()
                         .getPrincipal();
 
+        System.out.println(user.getUsername());
+
         return ResponseEntity.ok(materialRepository.getAllMaterialNames(user.getId()));
 
 

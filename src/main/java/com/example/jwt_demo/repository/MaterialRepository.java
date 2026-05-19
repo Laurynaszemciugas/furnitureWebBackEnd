@@ -17,6 +17,8 @@ public interface MaterialRepository extends JpaRepository<Materials,Long> {
 """)
     List<String> getAllMaterialNames(@Param("id") Long id);
 
+    Materials findByMaterialName(String name);
+
 
 
 }
