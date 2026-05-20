@@ -38,12 +38,14 @@ public class ProductController {
     @Autowired
     Common common;
 
+
+
     @PostMapping("/saveProduct")
     public ResponseEntity<String> saveProduct(@RequestBody Product product){
 
         CustomUserDetails user = common.getUserData();
 
-        Optional<User> currentUser = userRepository.findById(user.getId());
+        User currentUser = userRepository.findById(user.getId()).orElseThrow();
 
 
         System.out.println(user.getUsername());
@@ -68,14 +70,14 @@ public class ProductController {
         cleanProduct.setVisibility(product.getVisibility());
         cleanProduct.setUser(product.getUser());
         cleanProduct.setCreated(product.getCreated());
-        cleanProduct.setUser(currentUser.get());
+        cleanProduct.setUser(currentUser);
         cleanProduct.setStock(Stock.No_Stock);
 
         if (product.getTags() != null) {
             cleanProduct.getTags().clear();
             for (var tag : product.getTags()) {
                 tag.setProduct(cleanProduct);
-                tag.setUser(currentUser.get());
+                tag.setUser(currentUser);
                 cleanProduct.getTags().add(tag);
             }
         }
@@ -84,7 +86,7 @@ public class ProductController {
             cleanProduct.getImages().clear();
             for (var img : product.getImages()) {
                 img.setProduct(cleanProduct);
-                img.setUser(currentUser.get());
+                img.setUser(currentUser);
                 cleanProduct.getImages().add(img);
             }
         }
@@ -92,8 +94,16 @@ public class ProductController {
         if (product.getMaterials() != null) {
             cleanProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
+
+                Materials usedMaterial = materialRepository.findByMaterialName(mat.getNameForRefrence(),user.getId());
+
+
+                mat.setMaterials(usedMaterial);
+                mat.setUnitPrice(usedMaterial.getUnitPrice());
+
                 mat.setProduct(cleanProduct);
-                mat.setUser(currentUser.get());
+                mat.setUser(currentUser);
+
                 cleanProduct.getMaterials().add(mat);
             }
         }
@@ -102,7 +112,7 @@ public class ProductController {
             cleanProduct.getExtraDetails().clear();
             for (var detail : product.getExtraDetails()) {
                 detail.setProduct(cleanProduct);
-                detail.setUser(currentUser.get());
+                detail.setUser(currentUser);
                 cleanProduct.getExtraDetails().add(detail);
             }
         }
@@ -145,8 +155,9 @@ public class ProductController {
     // get product count how many paganation buttons are needed
     @GetMapping("/getProductsPageCount")
     public Long getProductPages() {
+        CustomUserDetails user = common.getUserData();
         // make so user JWT is extracted the id
-        return productRepository.getProductPages(1l);
+        return productRepository.getProductPages(user.getId());
     }
 
 
@@ -258,6 +269,14 @@ public class ProductController {
 
     }
 
+    @PostMapping("/removeProduct")
+    public ResponseEntity<String> removeProduct(@RequestBody Long id){
+
+
+        productRepository.deleteById(id);
+
+        return ResponseEntity.ok("Removed successfully");
+    }
 
 
 
