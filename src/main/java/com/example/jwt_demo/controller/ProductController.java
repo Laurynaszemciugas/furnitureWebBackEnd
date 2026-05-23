@@ -95,7 +95,7 @@ public class ProductController {
             cleanProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
 
-                Materials usedMaterial = materialRepository.findByMaterialName(mat.getNameForRefrence(),user.getId());
+                Materials usedMaterial = materialRepository.findByMaterialName(mat.getId(),user.getId());
 
 
                 mat.setMaterials(usedMaterial);
@@ -156,7 +156,6 @@ public class ProductController {
     @GetMapping("/getProductsPageCount")
     public Long getProductPages() {
         CustomUserDetails user = common.getUserData();
-        // make so user JWT is extracted the id
         return productRepository.getProductPages(user.getId());
     }
 
@@ -179,7 +178,6 @@ public class ProductController {
     @PostMapping("/editProduct")
     public ResponseEntity<String> editProduct(@RequestBody Product product){
 
-        CustomUserDetails userdata = common.getUserData();
 
         CustomUserDetails user = common.getUserData();
 
@@ -228,8 +226,7 @@ public class ProductController {
             existingProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
 
-                Materials usedMaterial = materialRepository.findByMaterialName(mat.getNameForRefrence(),userdata.getId());
-
+                Materials usedMaterial = materialRepository.findByMaterialName(mat.getId(),user.getId());
 
                 mat.setMaterials(usedMaterial);
                 mat.setUnitPrice(usedMaterial.getUnitPrice());

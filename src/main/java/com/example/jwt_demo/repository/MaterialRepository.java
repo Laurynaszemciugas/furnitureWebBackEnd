@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,19 +11,17 @@ import java.util.List;
 public interface MaterialRepository extends JpaRepository<Materials,Long> {
 
 
-    @Query("""
-
-        SELECT m.materialName FROM Materials m where m.user.id = :id
-
-""")
-    List<String> getAllMaterialNames(@Param("id") Long id);
+    @Query("SELECT new com.example.jwt_demo.DTOS.Product.ComboBoxMaterial(m.id, m.materialName) " +
+            "FROM Materials m " +
+            "WHERE m.user.id = :id")
+    List<ComboBoxMaterial> getAllMaterialNames(@Param("id") Long id);
 
     @Query("""
 
-    SELECT m FROM Materials m where m.materialName = :name and m.user.id = :id
+    SELECT m FROM Materials m where m.id = :materialID and m.user.id = :id
 
 """)
-    Materials findByMaterialName(@Param("name") String name, @Param("id") Long id);
+    Materials findByMaterialName(@Param("materialID") Long materialID, @Param("id") Long id);
 
 
 

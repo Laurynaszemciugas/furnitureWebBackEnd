@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.repository.MaterialRepository;
@@ -27,7 +28,7 @@ public class MaterialController {
 
 
     @GetMapping("/getMaterialNames")
-    public ResponseEntity<List<String>> getMaterialNames(){
+    public ResponseEntity<List<ComboBoxMaterial>> getMaterialNames(){
 
         CustomUserDetails user = common.getUserData();
 
@@ -48,7 +49,7 @@ public class MaterialController {
 
         if(productMaterials != null && !productMaterials.isEmpty()) {
             for (var s : productMaterials) {
-                Materials usedMaterial = materialRepository.findByMaterialName(s.getNameForRefrence(), user.getId());
+                Materials usedMaterial = materialRepository.findByMaterialName(s.getId(), user.getId());
                 estimatedPrice += (usedMaterial.getUnitPrice() * s.getAmountUsed());
             }
 
@@ -60,7 +61,7 @@ public class MaterialController {
     }
 
     @PostMapping("/getMaterialDataAccordingToName")
-    public ResponseEntity<Materials> getMaterialDataToName(@RequestBody String name){
+    public ResponseEntity<Materials> getMaterialDataToName(@RequestBody Long name){
 
         CustomUserDetails user = common.getUserData();
 
@@ -85,7 +86,7 @@ public class MaterialController {
         if(productMaterials != null && !productMaterials.isEmpty()) {
             for (var s : productMaterials) {
 
-                Materials usedMaterial = materialRepository.findByMaterialName(s.getNameForRefrence(), user.getId());
+                Materials usedMaterial = materialRepository.findByMaterialName(s.getId(), user.getId());
                 if(usedMaterial.getInStock() == 0){
                     errorMessage.add(String.format("%s %s %d %s %d",s.getNameForRefrence(),"will not be able to produce due to  taken material taken:",s.getAmountUsed(),"being too much for existing stock", usedMaterial.getInStock()));
                 }
