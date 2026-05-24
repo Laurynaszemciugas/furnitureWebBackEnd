@@ -5,7 +5,9 @@ import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.Category;
+import com.example.jwt_demo.Enums.Status;
 import com.example.jwt_demo.Enums.Stock;
+import com.example.jwt_demo.Enums.Visibility;
 import com.example.jwt_demo.FrontEndModels.ProductFeedModel;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.ProductRepository;
@@ -18,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -269,9 +272,17 @@ public class ProductController {
     @PostMapping("/removeProduct")
     public ResponseEntity<String> removeProduct(@RequestBody Long id){
 
-
-        productRepository.deleteById(id);
-
+        try {
+            productRepository.deleteById(id);
+        } catch (Exception e) {
+            Product product = productRepository.findById(id).orElseThrow();
+            if(!product.getVisibility().equals(Visibility.NonVisible) && !product.getStatus().equals(Status.Disabled)) {
+                product.setVisibility(Visibility.NonVisible);
+                product.setStatus(Status.Disabled);
+                productRepository.save(product);
+            }
+            return  ResponseEntity.ok("Product is used it is put into a blackList you cannot use it but you can change that");
+        }
         return ResponseEntity.ok("Removed successfully");
     }
 

@@ -1,46 +1,41 @@
 package com.example.jwt_demo.Entity;
 
-
-import com.example.jwt_demo.Enums.Enabled;
+import com.example.jwt_demo.Enums.EmployeeCategory;
 import com.example.jwt_demo.Enums.EnabledDisabled;
-import com.example.jwt_demo.Enums.Stock;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.CurrentTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 @Entity
-@Table(name = "materials")
-public class Materials {
+public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String materialName;
-    private Long inStock;
-    private Long minThresHold;
+    private Double hourlyRate;
+    private Long productsFinished;
+    private String name;
+    private String lastName;
+    private String fullName;
+    private String gmail;
     @Enumerated(EnumType.STRING)
-    private Stock stock;
-    @Enumerated(EnumType.STRING)
-    private Enabled enabled;
-    private double materialWeight;
-    private double unitPrice;
-    private String unit;
     private EnabledDisabled enabledDisabled;
-
+    @Enumerated(EnumType.STRING)
+    private EmployeeCategory employeeCategory;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
     @CreationTimestamp
     private LocalDateTime created;
+
 
 }
