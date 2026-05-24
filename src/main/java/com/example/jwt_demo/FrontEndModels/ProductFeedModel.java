@@ -2,6 +2,7 @@ package com.example.jwt_demo.FrontEndModels;
 
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.ProductCategory;
+import com.example.jwt_demo.Enums.Visibility;
 import lombok.*;
 
 @Getter
@@ -17,4 +18,8 @@ public class ProductFeedModel {
     private double price;
     private Long stockQuantity;
     private Long lowStockThreshold;
+
+    private double discount;
+    private double discountedPrice;
+    private Visibility visibility;
 }

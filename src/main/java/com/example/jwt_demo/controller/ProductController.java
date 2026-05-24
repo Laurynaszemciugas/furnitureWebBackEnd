@@ -139,27 +139,34 @@ public class ProductController {
     }
 
 
-    @GetMapping("/getProducts/{stock}/{category}/{prompt}/{page}/{size}")
+    @GetMapping("/getProducts/{stock}/{category}/{prompt}/{visibility}/{page}/{size}")
     public List<ProductFeedModel> getProducts(
             @PathVariable Stock stock,
             @PathVariable Category category,
             @PathVariable String prompt,
+            @PathVariable Visibility visibility,
             @PathVariable int page,
             @PathVariable int size
     ) {
 
         CustomUserDetails user = common.getUserData();
 
-        return productRepository.getAllProducts(category,stock,prompt,user.getId(),PageRequest.of(page, size));
+        return productRepository.getAllProducts(category,stock,prompt,visibility,user.getId(),PageRequest.of(page, size));
     }
 
 
 
     // get product count how many paganation buttons are needed
-    @GetMapping("/getProductsPageCount")
-    public Long getProductPages() {
+    @GetMapping("/getPages/{stock}/{category}/{prompt}/{visibility}")
+    public Long getProductPages(
+            @PathVariable Stock stock,
+            @PathVariable Category category,
+            @PathVariable String prompt,
+            @PathVariable Visibility visibility
+    ) {
+
         CustomUserDetails user = common.getUserData();
-        return productRepository.getProductPages(user.getId());
+        return productRepository.getProductPages(category,stock,prompt,visibility,user.getId());
     }
 
 
@@ -276,11 +283,9 @@ public class ProductController {
             productRepository.deleteById(id);
         } catch (Exception e) {
             Product product = productRepository.findById(id).orElseThrow();
-            if(!product.getVisibility().equals(Visibility.NonVisible) && !product.getStatus().equals(Status.Disabled)) {
                 product.setVisibility(Visibility.NonVisible);
                 product.setStatus(Status.Disabled);
                 productRepository.save(product);
-            }
             return  ResponseEntity.ok("Product is used it is put into a blackList you cannot use it but you can change that");
         }
         return ResponseEntity.ok("Removed successfully");
