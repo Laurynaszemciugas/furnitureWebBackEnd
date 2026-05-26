@@ -33,6 +33,10 @@ public class AuthController {
 
     @PostMapping("/signin")
     public String authenticateUser(@RequestBody User user) {
+
+        System.out.println("here");
+        System.out.println(user.getGmail());
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         user.getGmail(),
