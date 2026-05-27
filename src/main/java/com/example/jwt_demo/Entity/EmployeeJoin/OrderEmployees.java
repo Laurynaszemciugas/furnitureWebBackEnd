@@ -2,6 +2,8 @@ package com.example.jwt_demo.Entity.EmployeeJoin;
 
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.Orders;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,6 +28,7 @@ public class OrderEmployees {
     private Employee employee;
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference("employee")
     private Orders order;
 
     @CreationTimestamp

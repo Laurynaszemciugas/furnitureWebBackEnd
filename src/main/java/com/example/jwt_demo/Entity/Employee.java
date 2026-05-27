@@ -27,6 +27,10 @@ public class Employee {
     private String lastName;
     private String fullName;
     private String gmail;
+    private String profileImage;
+
+    private String password;
+
     @Enumerated(EnumType.STRING)
     private EnabledDisabled enabledDisabled;
     @Enumerated(EnumType.STRING)
