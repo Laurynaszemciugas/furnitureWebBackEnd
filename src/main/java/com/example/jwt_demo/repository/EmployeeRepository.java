@@ -13,7 +13,7 @@ public interface EmployeeRepository extends JpaRepository<Employee,Long> {
     // add user id check
     @Query("""
 
-    SELECT new com.example.jwt_demo.DTOS.Order.ComboBoxEmployees(e.id, e.fullName, e.employeeCategory) FROM Employee e
+    SELECT new com.example.jwt_demo.DTOS.Order.ComboBoxEmployees(e.id, e.fullName, e.employeeCategory, e.profileImage) FROM Employee e
 
 """)
     List<ComboBoxEmployees> getUserEmployees();

@@ -26,20 +26,26 @@ public class Orders {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonManagedReference("orders")
     private List<OrderProducts> productsData;
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonManagedReference("employee")
     private List<OrderEmployees> employees;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "order_placed_by_id")
+    private User orderPlacedBy;
+
     private Double totalPrice;
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
+    private String orderNote;
     private LocalDateTime estimatedDueDate;
     @CreationTimestamp
     private LocalDateTime created;

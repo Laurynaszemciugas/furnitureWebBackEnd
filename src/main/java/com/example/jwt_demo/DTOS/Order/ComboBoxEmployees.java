@@ -16,6 +16,7 @@ public class ComboBoxEmployees {
     private Long id;
     private String fullName;
     private EmployeeCategory employeeCategory;
+    private String profileImage;
 
 
 }
