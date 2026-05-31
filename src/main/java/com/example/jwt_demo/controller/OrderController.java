@@ -5,6 +5,7 @@ import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.GlobalExseptions.ValidationException;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
 import com.example.jwt_demo.repository.ProductRepository;
@@ -48,12 +49,6 @@ public class OrderController {
         sameExistingOrder.getEmployees().clear();
 
 
-//        System.out.println("after removing adding new data");
-//        for(var s : order.getProductsData()){
-//            System.out.println(s.getAmountOfProduct());
-//        }
-
-
 
         double totalPrice = 0.0;
 
@@ -63,6 +58,7 @@ public class OrderController {
 
             if (s.getAmountOfProduct() <= 0 && s.getAmountOfProduct() > 101) {
                 s.setAmountOfProduct(1l);
+                throw  new ValidationException("Product quantity can only be from 1 to 100");
             }
             totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
             OrderProducts orderProducts = new OrderProducts();
@@ -109,7 +105,7 @@ public class OrderController {
         orderRepository.save(sameExistingOrder);
 
 
-        return ResponseEntity.ok("Info saved");
+        return ResponseEntity.ok(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"));
     }
 
 
