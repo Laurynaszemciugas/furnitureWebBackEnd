@@ -1,4 +1,4 @@
-package com.example.jwt_demo.GlobalExseptions;
+package com.example.jwt_demo.GlobalExseptions.Exseptions;
 
 public class ValidationException extends RuntimeException {
 

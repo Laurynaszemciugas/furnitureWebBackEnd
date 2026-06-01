@@ -1,6 +1,6 @@
 package com.example.jwt_demo.GlobalExseptions.Handler;
 
-import com.example.jwt_demo.GlobalExseptions.ValidationException;
+import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
