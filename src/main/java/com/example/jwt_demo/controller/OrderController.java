@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -38,6 +39,8 @@ public class OrderController {
     @Autowired
     EmployeeRepository employeeRepository;
 
+    @Autowired
+    Logic logic;
 
     @GetMapping("/getAllOrders/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{pageChoice}/{pageCountChoice}")
     public ResponseEntity<List<OrdersFeedData>> getAllOrders(
@@ -72,27 +75,71 @@ public class OrderController {
 
 
 
-        String fromInput = String.format("%s %s", "2025-02-02", "13:42:46.614631");
-        String toInput = String.format("%s %s", "2050-12-20", "13:42:46.614631");
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
-
-        LocalDateTime fromDate = LocalDateTime.parse(fromInput, formatter);
-        LocalDateTime toDate = LocalDateTime.parse(toInput, formatter);
-
         return ResponseEntity.ok(
                 orderRepository.getOrderData(
                         orderStatusChoice,
                         priceFromChoice,
                         priceToChoice,
-                        fromDate,
-                        toDate,
+                        logic.dateConverter(dateFromChoice),
+                        logic.dateConverter(dateToChoice),
                         amountOfProductsChoice,
                         PageRequest.of(pageChoice, pageCountChoice)
                 )
         );
     }
+
+
+    @GetMapping("/getAmountOfPages/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}")
+    public ResponseEntity<Long> getAmountOfPages(
+            @PathVariable  OrderStatus orderStatusChoice,
+            @PathVariable Double priceFromChoice,
+            @PathVariable Double priceToChoice,
+            @PathVariable LocalDate dateFromChoice,
+            @PathVariable LocalDate dateToChoice,
+            @PathVariable Long amountOfProductsChoice
+    ) {
+
+
+
+
+        if(orderStatusChoice.equals(OrderStatus.ALL)){
+            orderStatusChoice = null;
+        }
+
+        if(priceFromChoice == 0.0){
+            priceFromChoice = null;
+        }
+        if(priceToChoice == 0.0){
+            priceToChoice = null;
+        }
+        if(amountOfProductsChoice == 0){
+            amountOfProductsChoice = null;
+        }
+
+
+
+        List<Long> count = orderRepository.getNumberOfOrderPages(
+                orderStatusChoice,
+                priceFromChoice,
+                priceToChoice,
+                logic.dateConverter(dateFromChoice),
+                logic.dateConverter(dateToChoice),
+                amountOfProductsChoice
+        );
+
+        Double pageCount = (double) count.size() / 5;
+        Long result = (long) Math.ceil(pageCount);
+
+
+
+
+        return ResponseEntity.ok(
+                result
+        );
+    }
+
+
+
 
 
     @GetMapping("/getOrderFromId/{id}")
@@ -167,6 +214,8 @@ public class OrderController {
 
         return ResponseEntity.ok(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"));
     }
+
+
 
 
 
