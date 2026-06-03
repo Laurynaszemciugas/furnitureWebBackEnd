@@ -19,4 +19,5 @@ public class OrdersFeedData {
     private Long productCount;
     private LocalDateTime estimatedDueDate;
     private LocalDateTime created;
+    private Double totalPrice;
 }

@@ -3,6 +3,8 @@ package com.example.jwt_demo.Entity;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Enums.OrderStatus;
+import com.example.jwt_demo.Enums.PayMethod;
+import com.example.jwt_demo.Enums.PayStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -47,6 +49,13 @@ public class Orders {
     private OrderStatus orderStatus;
     private String orderNote;
     private LocalDateTime estimatedDueDate;
+    private String phoneNumber;
+    @Enumerated(EnumType.STRING)
+    private PayStatus payStatus;
+    @Enumerated(EnumType.STRING)
+    private PayMethod payMethod;
+    private String billingAddress;
+
     @CreationTimestamp
     private LocalDateTime created;
 

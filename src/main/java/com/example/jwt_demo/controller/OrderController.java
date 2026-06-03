@@ -42,7 +42,7 @@ public class OrderController {
     @Autowired
     Logic logic;
 
-    @GetMapping("/getAllOrders/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{pageChoice}/{pageCountChoice}")
+    @GetMapping("/getAllOrders/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{prompt}/{pageChoice}/{pageCountChoice}")
     public ResponseEntity<List<OrdersFeedData>> getAllOrders(
             @PathVariable  OrderStatus orderStatusChoice,
             @PathVariable Double priceFromChoice,
@@ -50,6 +50,7 @@ public class OrderController {
             @PathVariable LocalDate dateFromChoice,
             @PathVariable LocalDate dateToChoice,
             @PathVariable Long amountOfProductsChoice,
+            @PathVariable String prompt,
             @PathVariable int pageChoice,
             @PathVariable int pageCountChoice
     ) {
@@ -72,6 +73,9 @@ public class OrderController {
         if(amountOfProductsChoice == 0){
             amountOfProductsChoice = null;
         }
+        if(prompt.equalsIgnoreCase("ALL")){
+            prompt = null;
+        }
 
 
 
@@ -83,20 +87,22 @@ public class OrderController {
                         logic.dateConverter(dateFromChoice),
                         logic.dateConverter(dateToChoice),
                         amountOfProductsChoice,
+                        prompt,
                         PageRequest.of(pageChoice, pageCountChoice)
                 )
         );
     }
 
 
-    @GetMapping("/getAmountOfPages/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}")
+    @GetMapping("/getAmountOfPages/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{prompt}")
     public ResponseEntity<Long> getAmountOfPages(
             @PathVariable  OrderStatus orderStatusChoice,
             @PathVariable Double priceFromChoice,
             @PathVariable Double priceToChoice,
             @PathVariable LocalDate dateFromChoice,
             @PathVariable LocalDate dateToChoice,
-            @PathVariable Long amountOfProductsChoice
+            @PathVariable Long amountOfProductsChoice,
+            @PathVariable String prompt
     ) {
 
 
@@ -115,6 +121,9 @@ public class OrderController {
         if(amountOfProductsChoice == 0){
             amountOfProductsChoice = null;
         }
+        if(prompt.equalsIgnoreCase("ALL")){
+            prompt = null;
+        }
 
 
 
@@ -124,7 +133,8 @@ public class OrderController {
                 priceToChoice,
                 logic.dateConverter(dateFromChoice),
                 logic.dateConverter(dateToChoice),
-                amountOfProductsChoice
+                amountOfProductsChoice,
+                prompt
         );
 
         Double pageCount = (double) count.size() / 5;
@@ -149,6 +159,7 @@ public class OrderController {
 
     @PostMapping("/saveModifiedOrder")
     public ResponseEntity<String> saveModifiedOrder(@RequestBody Orders order){
+
 
         Orders sameExistingOrder = orderRepository.findById(order.getId()).orElseThrow();
 
@@ -202,6 +213,8 @@ public class OrderController {
             sameExistingOrder.setOrderNote(order.getOrderNote());
             sameExistingOrder.setOrderStatus(order.getOrderStatus());
             sameExistingOrder.setEstimatedDueDate(order.getEstimatedDueDate());
+            sameExistingOrder.setPayMethod(order.getPayMethod());
+            sameExistingOrder.setPayStatus(order.getPayStatus());
 
 
 

@@ -29,7 +29,8 @@ SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
     o.orderStatus,
     SUM(op.amountOfProduct),
     o.estimatedDueDate,
-    o.created
+    o.created,
+    o.totalPrice
 )
 FROM Orders o
 LEFT JOIN o.productsData op
@@ -38,6 +39,10 @@ AND (:dateFrom IS NULL OR o.created >= :dateFrom)
 AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
 AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
 AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
+AND (
+    :prompt IS NULL
+    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+)
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate
 HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
 Order by o.estimatedDueDate
@@ -49,6 +54,7 @@ Order by o.estimatedDueDate
             @Param("dateFrom") LocalDateTime dateFrom,
             @Param("dateTo") LocalDateTime dateTo,
             @Param("amountOfProduct") Long amountOfProduct,
+            @Param("prompt") String prompt,
             Pageable pageable
     );
 
@@ -63,6 +69,10 @@ AND (:dateFrom IS NULL OR o.created >= :dateFrom)
 AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
 AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
 AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
+AND (
+    :prompt IS NULL
+    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+)
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate
 HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
 """)
@@ -72,7 +82,8 @@ HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
             @Param("priceTo") Double priceTo,
             @Param("dateFrom") LocalDateTime dateFrom,
             @Param("dateTo") LocalDateTime dateTo,
-            @Param("amountOfProduct") Long amountOfProduct
+            @Param("amountOfProduct") Long amountOfProduct,
+            @Param("prompt") String prompt
     );
 
 
