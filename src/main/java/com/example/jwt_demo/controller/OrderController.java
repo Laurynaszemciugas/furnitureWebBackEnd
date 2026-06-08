@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.DTOS.Order.ConsumerData;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
@@ -10,6 +11,7 @@ import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.OrderStatus;
+import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -182,7 +185,7 @@ public class OrderController {
 
             if (s.getAmountOfProduct() <= 0 && s.getAmountOfProduct() > 101) {
                 s.setAmountOfProduct(1l);
-                throw  new ValidationException("Product quantity can only be from 1 to 100");
+                throw  new ValidationException("Product quantity can only be from 1 to 100", Warnings.ERROR);
             }
             totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
             OrderProducts orderProducts = new OrderProducts();
@@ -241,11 +244,34 @@ public class OrderController {
     }
 
     @PostMapping("/saveNewOrder")
-    public ResponseEntity<String> saveNewOrder(@RequestBody Orders order){
+    public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
 
-        for(var s : order.getProductsData()){
-            System.out.println(s.getProduct().getId() + "  amount " + s.getAmountOfProduct());
+
+        Orders newOrder = new Orders();
+
+
+        if(order.getProductsData() == null || order.getProductsData().isEmpty()){
+            throw new ValidationException("No materials added please add materials to continue", Warnings.ERROR);
         }
+        else{
+            List<OrderProducts> products = new ArrayList<>();
+            for(var s : order.getProductsData()){
+
+                if(s.getProduct().getId() == null){
+                    throw new ValidationException("Product doesnt have an id", Warnings.FATAL_ERROR);
+                }
+                    Product product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
+
+                    OrderProducts orderProducts = new OrderProducts();
+                    orderProducts.setProduct(product);
+
+
+                    products.add(orderProducts);
+                }
+            newOrder.setProductsData(products);
+        }
+
+
 
         System.out.println("savingggggggggggg");
         System.out.println(order.getBillingAddress());
@@ -257,9 +283,11 @@ public class OrderController {
         order.setUser(creator);
         order.setOrderPlacedBy(buyer);
 
-        orderRepository.save(order);
 
-        return ResponseEntity.ok("Yes");
+
+        //orderRepository.save(order);
+
+        return ResponseEntity.ok(new ErrorResponse("Good",Warnings.OK));
 
     }
 

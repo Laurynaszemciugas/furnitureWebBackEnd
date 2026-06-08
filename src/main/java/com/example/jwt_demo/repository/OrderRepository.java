@@ -45,7 +45,6 @@ AND (
 )
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate
 HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
-Order by o.estimatedDueDate
 """)
     List<OrdersFeedData> getOrderData(
             @Param("status") OrderStatus status,
