@@ -4,6 +4,7 @@ public enum PayStatus {
 
     PAID,
     UNPAID,
+    UNKNOWN,
     ALL
 
 }

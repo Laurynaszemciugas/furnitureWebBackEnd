@@ -77,7 +77,10 @@ public class AuthController {
                 Role.USER,
                 AccountStatus.ALLOWED,
                 null,
-        null);
+                null,
+                user.getName() + " " + user.getLastName(),
+                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl(),
+                user.getPhoneNumber() == null ? "None" : user.getPhoneNumber());
         userRepository.save(newUser);
         return "User registered successfully!";
     }

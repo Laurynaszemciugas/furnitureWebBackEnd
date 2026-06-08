@@ -1,17 +1,20 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.Logic;
+import com.example.jwt_demo.DTOS.Order.ConsumerData;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.OrderStatus;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
 import com.example.jwt_demo.repository.ProductRepository;
+import com.example.jwt_demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +41,9 @@ public class OrderController {
 
     @Autowired
     EmployeeRepository employeeRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     Logic logic;
@@ -226,6 +232,35 @@ public class OrderController {
 
 
         return ResponseEntity.ok(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"));
+    }
+
+
+    @GetMapping("/getConsumers")
+    public ResponseEntity<List<ConsumerData>> getConsumerData(){
+        return  ResponseEntity.ok(userRepository.getUsersExtended());
+    }
+
+    @PostMapping("/saveNewOrder")
+    public ResponseEntity<String> saveNewOrder(@RequestBody Orders order){
+
+        for(var s : order.getProductsData()){
+            System.out.println(s.getProduct().getId() + "  amount " + s.getAmountOfProduct());
+        }
+
+        System.out.println("savingggggggggggg");
+        System.out.println(order.getBillingAddress());
+
+        User creator = userRepository.findById(1l).orElseThrow();
+
+        User buyer = userRepository.findById(2l).orElseThrow();
+
+        order.setUser(creator);
+        order.setOrderPlacedBy(buyer);
+
+        orderRepository.save(order);
+
+        return ResponseEntity.ok("Yes");
+
     }
 
 

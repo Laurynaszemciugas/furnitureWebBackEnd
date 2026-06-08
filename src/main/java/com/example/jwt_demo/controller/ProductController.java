@@ -1,8 +1,10 @@
 package com.example.jwt_demo.controller;
 
 
+import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Status;
@@ -98,16 +100,18 @@ public class ProductController {
             cleanProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
 
-                Materials usedMaterial = materialRepository.findByMaterialName(mat.getId(),user.getId());
+                ProductMaterials newMat = new ProductMaterials();
 
+                Materials usedMaterial =
+                        materialRepository.findByMaterialName(mat.getId(), user.getId());
 
-                mat.setMaterials(usedMaterial);
-                mat.setUnitPrice(usedMaterial.getUnitPrice());
+                newMat.setMaterials(usedMaterial);
+                newMat.setUnitPrice(usedMaterial.getUnitPrice());
+                newMat.setAmountUsed(mat.getAmountUsed());
 
-                mat.setProduct(cleanProduct);
-                mat.setUser(currentUser);
-
-                cleanProduct.getMaterials().add(mat);
+                newMat.setProduct(cleanProduct);
+                newMat.setUser(currentUser);
+                cleanProduct.getMaterials().add(newMat);
             }
         }
 
@@ -289,6 +293,14 @@ public class ProductController {
             return  ResponseEntity.ok("Product is used it is put into a blackList you cannot use it but you can change that");
         }
         return ResponseEntity.ok("Removed successfully");
+    }
+
+
+    @GetMapping("getProductsForAddOrder")
+    public ResponseEntity<List<OrderAddProducts>> getAllProductsForAddNewOrder(){
+
+        return ResponseEntity.ok(productRepository.getAllProductDataForAddNewOrder());
+
     }
 
 

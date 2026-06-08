@@ -5,6 +5,7 @@ public enum PayMethod {
     CARD,
     CASH,
     BOTH,
+    UNKNOWN,
     ALL
 
 }

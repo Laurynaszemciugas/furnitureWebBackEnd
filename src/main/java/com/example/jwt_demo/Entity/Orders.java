@@ -28,11 +28,11 @@ public class Orders {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference("orders")
     private List<OrderProducts> productsData;
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference("employee")
     private List<OrderEmployees> employees;
 

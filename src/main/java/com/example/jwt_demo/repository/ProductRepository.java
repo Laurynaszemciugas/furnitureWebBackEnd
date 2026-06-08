@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Stock;
@@ -32,7 +33,7 @@ SELECT new com.example.jwt_demo.FrontEndModels.ProductFeedModel(
     
 )
 FROM Product p
-LEFT JOIN ImagesData i ON i.product.id = p.id and i.imageLogic = 'Main' AND p.user.id = :id
+LEFT JOIN ProductImageData i ON i.product.id = p.id and i.imageLogic = 'Main' AND p.user.id = :id
 WHERE p.user.id = :id
 AND (:category = 'ALL' OR p.category = :category)
 AND (:stock = 'ALL' OR p.stock = :stock)
@@ -57,5 +58,23 @@ AND (:prompt = 'ALL' OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'
     
 """)
     Long getProductPages(@Param("category") Category category, @Param("stock") Stock stock, @Param("prompt") String prompt, @Param("vis") Visibility vis,@Param("id") Long id);
+
+
+
+
+    @Query("""
+
+        SELECT new com.example.jwt_demo.DTOS.Order.OrderAddProducts(p.id,pid.imageUrl, p.productName, p.sku,p.category, p.stockQuantity, p.lowStockThreshold, p.stock,p.price) FROM Product p
+        LEFT JOIN ProductImageData pid ON pid.product.id = p.id AND pid.imageLogic = 'Main'
+        
+   
+""")
+    List<OrderAddProducts> getAllProductDataForAddNewOrder();
+
+
+
+
+
+
 
 }

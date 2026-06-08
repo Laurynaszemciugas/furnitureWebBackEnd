@@ -1,16 +1,11 @@
 package com.example.jwt_demo.Entity;
 
 import com.example.jwt_demo.Enums.ImageLogic;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.CurrentTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,8 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "imagedData")
-public class ImagesData {
+public class ProductImageData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

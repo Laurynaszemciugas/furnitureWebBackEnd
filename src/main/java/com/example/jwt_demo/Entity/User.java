@@ -34,6 +34,10 @@ public class User {
     @CreationTimestamp
     private LocalDateTime created;
 
+    private String fullName;
+    private String imageUrl;
+    private String phoneNumber;
+
 
 
 }

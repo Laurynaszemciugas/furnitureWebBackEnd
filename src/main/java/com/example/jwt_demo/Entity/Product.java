@@ -43,19 +43,19 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private Stock stock;
 
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private List<ProductTags> tags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<ImagesData> images = new ArrayList<>();
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
+    private List<ProductImageData> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private List<ProductMaterials> materials = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private List<ExtraDetails> extraDetails = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private List<ProductComments> comments= new ArrayList<>();
 
     @ManyToOne
