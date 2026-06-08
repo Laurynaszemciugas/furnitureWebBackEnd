@@ -296,13 +296,29 @@ public class ProductController {
     }
 
 
-    @GetMapping("getProductsForAddOrder")
+    @GetMapping("/getProductsForAddOrder")
     public ResponseEntity<List<OrderAddProducts>> getAllProductsForAddNewOrder(){
 
         return ResponseEntity.ok(productRepository.getAllProductDataForAddNewOrder());
 
     }
 
+
+    @GetMapping("/getExistingData/{id}")
+    public ResponseEntity<List<OrderAddProducts>> getAllCurrentProducts(@PathVariable Long id){
+
+        System.out.println(id);
+
+        System.out.println("getting data ");
+        List<OrderAddProducts> list = productRepository.getExistingDataForOrder(id);
+
+        for(var s : list){
+            System.out.println(s.getId());
+        }
+
+        return ResponseEntity.ok(productRepository.getExistingDataForOrder(id));
+
+    }
 
 
 }

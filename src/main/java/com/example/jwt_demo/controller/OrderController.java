@@ -247,13 +247,36 @@ public class OrderController {
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
 
 
+
         Orders newOrder = new Orders();
+
+        newOrder.setOrderNote(order.getOrderNote());
+        newOrder.setOrderStatus(order.getOrderStatus());
+        newOrder.setPayMethod(order.getPayMethod());
+        newOrder.setPayStatus(order.getPayStatus());
+        newOrder.setBillingAddress(order.getBillingAddress());
+        newOrder.setPhoneNumber(order.getPhoneNumber());
+        newOrder.setEstimatedDueDate(order.getEstimatedDueDate());
+        newOrder.setOrderCreatedByGmail(order.getOrderCreatedByGmail());
+        newOrder.setOrderCreatedByName(order.getOrderCreatedByName());
+
+
+
 
 
         if(order.getProductsData() == null || order.getProductsData().isEmpty()){
-            throw new ValidationException("No materials added please add materials to continue", Warnings.ERROR);
+            throw new ValidationException("No products are added please add products to continue", Warnings.ERROR);
         }
         else{
+
+            // calc later
+            Double totalPrice = 0.0;
+            for(var s : order.getProductsData()){
+                Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
+                totalPrice+= s.getAmountOfProduct()* product.getPrice();
+            }
+            newOrder.setTotalPrice(totalPrice);
+
             List<OrderProducts> products = new ArrayList<>();
             for(var s : order.getProductsData()){
 
@@ -262,8 +285,19 @@ public class OrderController {
                 }
                     Product product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
 
+                if(s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >=100){
+                    throw  new ValidationException("Cannot selected that much product required from 1 to 99", Warnings.ERROR);
+                }
+//                if(product.getStockQuantity() < s.getAmountOfProduct()){
+//                    throw new ValidationException(String.format("Order is not possible due to [%s] having less stock that is needed to fill the order | AVAILABLE STOCK %d | NEEDED STOCK %d",product.getProductName(),product.getStockQuantity(),s.getAmountOfProduct()), Warnings.ERROR);
+//                }
+
+
                     OrderProducts orderProducts = new OrderProducts();
                     orderProducts.setProduct(product);
+                    orderProducts.setOrder(newOrder);
+                    orderProducts.setCost(totalPrice);
+                    orderProducts.setAmountOfProduct(s.getAmountOfProduct());
 
 
                     products.add(orderProducts);
@@ -273,21 +307,52 @@ public class OrderController {
 
 
 
-        System.out.println("savingggggggggggg");
-        System.out.println(order.getBillingAddress());
+
+        if(order.getEmployees() == null || order.getEmployees().isEmpty()){
+            throw new ValidationException("No employees are selected", Warnings.ERROR);
+        }
+        else{
+            List<OrderEmployees> employees = new ArrayList<>();
+            for(var s : order.getEmployees()){
+
+                if(s.getEmployee().getId() == null){
+                    throw new ValidationException("Employee doesnt have an id", Warnings.FATAL_ERROR);
+                }
+                Employee employee = employeeRepository.findById(s.getEmployee().getId()).orElseThrow(()-> new ValidationException("Employee not found", Warnings.ERROR));
+
+                OrderEmployees orderEmployees = new OrderEmployees();
+                orderEmployees.setEmployee(employee);
+                orderEmployees.setOrder(newOrder);
+
+
+                employees.add(orderEmployees);
+            }
+            newOrder.setEmployees(employees);
+        }
+
 
         User creator = userRepository.findById(1l).orElseThrow();
 
-        User buyer = userRepository.findById(2l).orElseThrow();
+        User buyer = userRepository.findByGmail(order.getOrderCreatedByGmail());
+        System.out.println(order.getOrderPlacedBy().getGmail());
 
         order.setUser(creator);
         order.setOrderPlacedBy(buyer);
 
 
+        orderRepository.save(newOrder);
 
-        //orderRepository.save(order);
+        System.out.println("ids");
+        for(var s : newOrder.getProductsData()){
+            System.out.println(s.getProduct().getId());
+        }
 
-        return ResponseEntity.ok(new ErrorResponse("Good",Warnings.OK));
+        if(buyer == null){
+            System.out.println("name");
+            ResponseEntity.ok(new ErrorResponse( order.getOrderCreatedByGmail() + " is not found this is not nessasary (PRESS AGAIN TO CONFIRM) ",Warnings.WARNING));
+        }
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),Warnings.OK));
 
     }
 

@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class OrderAddProducts {
 
     private Long id;
@@ -23,16 +24,4 @@ public class OrderAddProducts {
     private Double price;
     private Long amountSelected;
 
-
-    public OrderAddProducts(Long id,String mainImage, String productName, String sku, Category category, Long stockQuantity, Long lowStockThreshold, Stock stock, Double price) {
-        this.id = id;
-        this.mainImage = mainImage;
-        this.productName = productName;
-        this.sku = sku;
-        this.category = category;
-        this.stockQuantity = stockQuantity;
-        this.lowStockThreshold = lowStockThreshold;
-        this.stock = stock;
-        this.price = price;
-    }
 }

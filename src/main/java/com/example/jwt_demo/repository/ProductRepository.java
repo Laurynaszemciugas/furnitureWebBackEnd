@@ -64,12 +64,35 @@ AND (:prompt = 'ALL' OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'
 
     @Query("""
 
-        SELECT new com.example.jwt_demo.DTOS.Order.OrderAddProducts(p.id,pid.imageUrl, p.productName, p.sku,p.category, p.stockQuantity, p.lowStockThreshold, p.stock,p.price) FROM Product p
+        SELECT new com.example.jwt_demo.DTOS.Order.OrderAddProducts(p.id,pid.imageUrl, p.productName, p.sku,p.category, p.stockQuantity, p.lowStockThreshold, p.stock,p.price,1L) FROM Product p
         LEFT JOIN ProductImageData pid ON pid.product.id = p.id AND pid.imageLogic = 'Main'
         
    
 """)
     List<OrderAddProducts> getAllProductDataForAddNewOrder();
+
+
+    @Query("""
+SELECT new com.example.jwt_demo.DTOS.Order.OrderAddProducts(
+    p.id,
+    pid.imageUrl,
+    p.productName,
+    p.sku,
+    p.category,
+    p.stockQuantity,
+    p.lowStockThreshold,
+    p.stock,
+    p.price,
+    op.amountOfProduct
+)
+FROM OrderProducts op
+JOIN op.product p
+JOIN op.order o
+LEFT JOIN ProductImageData pid 
+    ON pid.product.id = p.id AND pid.imageLogic = 'Main'
+WHERE o.id = :id
+""")
+    List<OrderAddProducts> getExistingDataForOrder(@Param("id") Long id);
 
 
 
