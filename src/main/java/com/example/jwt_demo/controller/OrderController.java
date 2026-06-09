@@ -30,7 +30,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order")
@@ -50,6 +52,8 @@ public class OrderController {
 
     @Autowired
     Logic logic;
+
+    Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
     @GetMapping("/getAllOrders/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{prompt}/{pageChoice}/{pageCountChoice}")
     public ResponseEntity<List<OrdersFeedData>> getAllOrders(
@@ -167,7 +171,7 @@ public class OrderController {
     }
 
     @PostMapping("/saveModifiedOrder")
-    public ResponseEntity<String> saveModifiedOrder(@RequestBody Orders order){
+    public ResponseEntity<ErrorResponse> saveModifiedOrder(@RequestBody Orders order){
 
 
         Orders sameExistingOrder = orderRepository.findById(order.getId()).orElseThrow();
@@ -176,15 +180,24 @@ public class OrderController {
         sameExistingOrder.getEmployees().clear();
 
 
+        if(order.getBillingAddress().isEmpty() || order.getBillingAddress() == null){
+            throw  new ValidationException("Address is required", Warnings.ERROR);
+        }
+
+
 
         double totalPrice = 0.0;
+
+
+        if(order.getProductsData().isEmpty() || order.getProductsData() == null){
+            throw  new ValidationException("Existing order cannot be without products ", Warnings.ERROR);
+        }
 
         for(var s : order.getProductsData()) {
             Long productId = s.getProduct().getId();
             Product existingProduct = productRepository.findById(productId).orElseThrow();
 
-            if (s.getAmountOfProduct() <= 0 && s.getAmountOfProduct() > 101) {
-                s.setAmountOfProduct(1l);
+            if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() > 101) {
                 throw  new ValidationException("Product quantity can only be from 1 to 100", Warnings.ERROR);
             }
             totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
@@ -202,6 +215,9 @@ public class OrderController {
         }
 
 
+        if(order.getEmployees().isEmpty() || order.getEmployees() == null){
+            throw  new ValidationException("Existing order cannot be without employees ", Warnings.ERROR);
+        }
         for(var s : order.getEmployees()){
             Long employeeId = s.getEmployee().getId();
 
@@ -234,7 +250,7 @@ public class OrderController {
         orderRepository.save(sameExistingOrder);
 
 
-        return ResponseEntity.ok(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"));
+        return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
     }
 
 
@@ -245,6 +261,7 @@ public class OrderController {
 
     @PostMapping("/saveNewOrder")
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
+
 
 
 
@@ -269,7 +286,6 @@ public class OrderController {
         }
         else{
 
-            // calc later
             Double totalPrice = 0.0;
             for(var s : order.getProductsData()){
                 Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
@@ -331,26 +347,30 @@ public class OrderController {
         }
 
 
+        // get creator which is admin in this case
         User creator = userRepository.findById(1l).orElseThrow();
-
+        // if buyer not found then system cant pinpoint to whom it is needed not big deal it will be null
         User buyer = userRepository.findByGmail(order.getOrderCreatedByGmail());
-        System.out.println(order.getOrderPlacedBy().getGmail());
+        newOrder.setUser(creator);
+        newOrder.setOrderPlacedBy(buyer);
+        if(buyer == null){
+            int times = 1;
+                if (!countTheTimesAccordingToUser.isEmpty() && countTheTimesAccordingToUser.get(newOrder.getId()).equals(1)) {
+                    countTheTimesAccordingToUser.remove(newOrder.getId());
 
-        order.setUser(creator);
-        order.setOrderPlacedBy(buyer);
+                    orderRepository.save(newOrder);
+                    return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully", newOrder.getId()), Warnings.OK));
+            }
+            countTheTimesAccordingToUser.put(newOrder.getId(),times);
+            throw new ValidationException(order.getOrderCreatedByGmail() + " is not found this is not nessasary (PRESS AGAIN TO CONFIRM) ", Warnings.WARNING);
+        }
+
+
 
 
         orderRepository.save(newOrder);
 
-        System.out.println("ids");
-        for(var s : newOrder.getProductsData()){
-            System.out.println(s.getProduct().getId());
-        }
 
-        if(buyer == null){
-            System.out.println("name");
-            ResponseEntity.ok(new ErrorResponse( order.getOrderCreatedByGmail() + " is not found this is not nessasary (PRESS AGAIN TO CONFIRM) ",Warnings.WARNING));
-        }
 
         return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),Warnings.OK));
 
