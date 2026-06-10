@@ -1,0 +1,46 @@
+package com.example.jwt_demo.Entity;
+
+
+import com.example.jwt_demo.Enums.ImageLogic;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
+@Entity
+public class MaterialImageData {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String uuId;
+    private String imageName;
+    @Lob
+    private String imageUrl;
+    private String imageType;
+    @Enumerated(EnumType.STRING)
+    private ImageLogic imageLogic;
+
+    @Lob
+    private byte[] imageData;
+
+    @ManyToOne
+    @JoinColumn(name = "materials_id")
+    @JsonIgnore
+    private Materials materials;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @CreationTimestamp
+    private LocalDateTime created;
+
+}

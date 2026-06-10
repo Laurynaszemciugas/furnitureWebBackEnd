@@ -11,6 +11,8 @@ import org.hibernate.annotations.CurrentTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,7 +36,6 @@ public class Materials {
     private double materialWeight;
     private double unitPrice;
     private String unit;
-    private EnabledDisabled enabledDisabled;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -42,5 +43,8 @@ public class Materials {
 
     @CreationTimestamp
     private LocalDateTime created;
+
+    @OneToMany(mappedBy = "materials",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
+    List<MaterialImageData> images = new ArrayList<>();
 
 }
