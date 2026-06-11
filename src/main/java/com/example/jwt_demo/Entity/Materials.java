@@ -1,15 +1,13 @@
 package com.example.jwt_demo.Entity;
 
 
-import com.example.jwt_demo.Enums.Enabled;
-import com.example.jwt_demo.Enums.EnabledDisabled;
+import com.example.jwt_demo.Enums.ActiveInactive;
+import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.CurrentTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +30,12 @@ public class Materials {
     @Enumerated(EnumType.STRING)
     private Stock stock;
     @Enumerated(EnumType.STRING)
-    private Enabled enabled;
+    private ActiveInactive enabled;
     private double materialWeight;
     private double unitPrice;
     private String unit;
+    private String description;
+    private MaterialType materialType;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
