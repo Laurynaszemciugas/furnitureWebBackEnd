@@ -10,7 +10,7 @@ import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Status;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Visibility;
-import com.example.jwt_demo.FrontEndModels.ProductFeedModel;
+import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
@@ -19,13 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/product")

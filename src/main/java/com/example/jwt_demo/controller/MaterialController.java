@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
@@ -104,6 +105,11 @@ public class MaterialController {
 
 
         return  ResponseEntity.ok(itemsThatWillCauseProblems);
+    }
+
+    @GetMapping("/getAllMaterialForFeed")
+    public ResponseEntity<List<MaterialBriefDto>> getAllMaterialForFeed(){
+        return ResponseEntity.ok(materialRepository.getExistingMaterialDataForFeed());
     }
 
 

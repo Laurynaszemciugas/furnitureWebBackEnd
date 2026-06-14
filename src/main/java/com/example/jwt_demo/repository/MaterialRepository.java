@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +23,17 @@ public interface MaterialRepository extends JpaRepository<Materials,Long> {
 
 """)
     Materials findByMaterialName(@Param("materialID") Long materialID, @Param("id") Long id);
+
+
+
+    @Query("""
+
+       SELECT new com.example.jwt_demo.DTOS.Material.MaterialBriefDto(mid.imageUrl, m.materialName, m.description, m.enabled, m.materialType, m.stock, m.inStock, m.minThresHold,m.unitPrice,m.created)
+       FROM Materials m
+       LEFT JOIN MaterialImageData mid ON mid.materials.id = m.id AND mid.imageLogic = 'Main'
+
+""")
+    List<MaterialBriefDto> getExistingMaterialDataForFeed();
 
 
 

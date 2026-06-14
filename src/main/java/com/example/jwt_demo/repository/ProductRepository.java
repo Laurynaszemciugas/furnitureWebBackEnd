@@ -1,11 +1,12 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Visibility;
-import com.example.jwt_demo.FrontEndModels.ProductFeedModel;
+import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +20,7 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     Optional<Product> findById(Long id);
 
     @Query("""
-SELECT new com.example.jwt_demo.FrontEndModels.ProductFeedModel(
+SELECT new com.example.jwt_demo.DTOS.Product.ProductFeedModel(
     p.id,
     i.imageUrl,
     p.productName,

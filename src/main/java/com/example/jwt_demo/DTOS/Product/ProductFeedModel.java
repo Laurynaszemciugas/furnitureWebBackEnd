@@ -1,7 +1,6 @@
-package com.example.jwt_demo.FrontEndModels;
+package com.example.jwt_demo.DTOS.Product;
 
 import com.example.jwt_demo.Enums.Category;
-import com.example.jwt_demo.Enums.ProductCategory;
 import com.example.jwt_demo.Enums.Visibility;
 import lombok.*;
 

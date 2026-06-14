@@ -35,6 +35,7 @@ public enum MaterialType {
     LAMINATE,
 
     CARBON_FIBER,
-    ACRYLIC
+    ACRYLIC,
+    ALL
 
 }
