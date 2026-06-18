@@ -9,22 +9,19 @@ import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
-import com.example.jwt_demo.FilterDTO.MaterialFilterHolder;
+import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @RestController
 @RequestMapping("/api/material")
@@ -139,35 +136,32 @@ public class MaterialController {
         }
 
         // STOCK AMOUNT
-        if (filter.getStockAmountChoice() != null && filter.getStockAmountChoice() == 0) {
+        if ( filter.getStockAmountChoice() == 0) {
             filter.setStockAmountChoice(null);
         }
 
         // MIN THRESHOLD
-        if (filter.getMinThresholdChoice() != null && filter.getMinThresholdChoice() == 0) {
+        if (  filter.getMinThresholdChoice() == 0) {
             filter.setMinThresholdChoice(null);
         }
 
         // UNIT PRICE
-        if (filter.getUnitPriceChoice() != null && filter.getUnitPriceChoice() == 0.0) {
+        if (filter.getUnitPriceChoice() == 0.0) {
             filter.setUnitPriceChoice(null);
         }
 
         // FROM DATE
-        if (filter.getFromDateChoice() != null &&
-                filter.getFromDateChoice().equals(LocalDate.of(1000, 12, 12))) {
+        if (filter.getFromDateChoice().equals(LocalDate.of(1000, 12, 12))) {
             filter.setFromDateChoice(null);
         }
 
         // TO DATE
-        if (filter.getTodDateChoice() != null &&
-                filter.getTodDateChoice().equals(LocalDate.of(1000, 12, 12))) {
+        if (filter.getTodDateChoice().equals(LocalDate.of(1000, 12, 12))) {
             filter.setTodDateChoice(null);
         }
 
         // PROMPT
-        if (filter.getPromtChoice() != null &&
-                filter.getPromtChoice().equalsIgnoreCase("ALL")) {
+        if (filter.getPromtChoice().equalsIgnoreCase("ALL")) {
             filter.setPromtChoice(null);
         }
 
@@ -192,6 +186,78 @@ public class MaterialController {
                         PageRequest.of(filter.getPage(), filter.getPageCount()))
         );
     }
+
+
+    @PostMapping("/getTotalPages")
+    public ResponseEntity<Long> getAmountOfPages(
+            @RequestBody MaterialFilterHolder filter
+    ) {
+
+
+        System.out.println("dates" + filter.getFromDateChoice() + " " + filter.getTodDateChoice());
+
+        if (filter.getMaterialTypeChoice() == MaterialType.ALL) {
+            filter.setMaterialTypeChoice(null);
+        }
+
+        // ACTIVE / INACTIVE
+        if (filter.getActiveInactive() == ActiveInactive.ALL) {
+            filter.setActiveInactive(null);
+        }
+
+        // STOCK AMOUNT
+        if ( filter.getStockAmountChoice() == 0) {
+            filter.setStockAmountChoice(null);
+        }
+
+        // MIN THRESHOLD
+        if (  filter.getMinThresholdChoice() == 0) {
+            filter.setMinThresholdChoice(null);
+        }
+
+        // UNIT PRICE
+        if (filter.getUnitPriceChoice() == 0.0) {
+            filter.setUnitPriceChoice(null);
+        }
+
+        // FROM DATE
+        if (filter.getFromDateChoice().equals(LocalDate.of(1000, 12, 12))) {
+            filter.setFromDateChoice(null);
+        }
+
+        // TO DATE
+        if (filter.getTodDateChoice().equals(LocalDate.of(1000, 12, 12))) {
+            filter.setTodDateChoice(null);
+        }
+
+        // PROMPT
+        if (filter.getPromtChoice().equalsIgnoreCase("ALL")) {
+            filter.setPromtChoice(null);
+        }
+
+        // STOCK
+        if (filter.getStockChoice() == Stock.ALL) {
+            filter.setStockChoice(null);
+        }
+
+        LocalDateTime from = logic.dateConverter(filter.getFromDateChoice());
+        LocalDateTime to =logic.dateConverter(filter.getTodDateChoice());
+
+        Long count = materialRepository.getTotalPages(filter.getMaterialTypeChoice(),
+                filter.getActiveInactive(),
+                filter.getStockAmountChoice(),
+                filter.getMinThresholdChoice(),
+                filter.getUnitPriceChoice(),
+                from,
+                to,
+                filter.getStockChoice(),
+                filter.getPromtChoice());
+
+
+        return ResponseEntity.ok(count);
+    }
+
+
 
     @GetMapping("/getMaterialMiniStats/{fromDate}/{toDate}")
     public ResponseEntity<MaterialMiniStat> getMaterialMiniStats(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){

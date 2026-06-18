@@ -59,30 +59,37 @@ HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
 
 
     @Query("""
-SELECT  CASE  WHEN SUM(o.id) = 0 THEN 1 ELSE CEIL(SUM(o.id) / 5.0) END
-
+SELECT
+    CASE
+        WHEN COUNT(o.id) = 0 THEN 1
+        ELSE CEIL(COUNT(o.id) / 5.0)
+    END
 FROM Orders o
-LEFT JOIN o.productsData op
 WHERE (:status IS NULL OR o.orderStatus = :status)
 AND (:dateFrom IS NULL OR o.created >= :dateFrom)
 AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
 AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
 AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
 AND (
-    :prompt IS NULL
-    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+      :prompt IS NULL
+      OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
 )
-GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate
-HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
+AND (
+      :amountOfProduct IS NULL
+      OR (
+            SELECT SUM(op.amountOfProduct)
+            FROM o.productsData op
+         ) = :amountOfProduct
+)
 """)
-    List<Long> getNumberOfOrderPages(
-            @Param("status") OrderStatus status,
-            @Param("priceFrom") Double priceFrom,
-            @Param("priceTo") Double priceTo,
-            @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo,
-            @Param("amountOfProduct") Long amountOfProduct,
-            @Param("prompt") String prompt
+    Long getNumberOfOrderPages(
+            OrderStatus status,
+            Double priceFrom,
+            Double priceTo,
+            LocalDateTime dateFrom,
+            LocalDateTime dateTo,
+            Long amountOfProduct,
+            String prompt
     );
 
 

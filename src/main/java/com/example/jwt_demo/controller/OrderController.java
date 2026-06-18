@@ -12,6 +12,7 @@ import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.OrderStatus;
 import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
@@ -55,109 +56,85 @@ public class OrderController {
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
-    @GetMapping("/getAllOrders/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{prompt}/{pageChoice}/{pageCountChoice}")
-    public ResponseEntity<List<OrdersFeedData>> getAllOrders(
-            @PathVariable  OrderStatus orderStatusChoice,
-            @PathVariable Double priceFromChoice,
-            @PathVariable Double priceToChoice,
-            @PathVariable LocalDate dateFromChoice,
-            @PathVariable LocalDate dateToChoice,
-            @PathVariable Long amountOfProductsChoice,
-            @PathVariable String prompt,
-            @PathVariable int pageChoice,
-            @PathVariable int pageCountChoice
-    ) {
-
-        System.out.println(priceFromChoice);
-        System.out.println(dateFromChoice);
-        System.out.println(orderStatusChoice);
+    @PostMapping("/getAllOrders")
+    public ResponseEntity<List<OrdersFeedData>> getAllOrders(@RequestBody OrderFilterHolder orderFilterHolder) {
 
 
-        if(orderStatusChoice.equals(OrderStatus.ALL)){
-            orderStatusChoice = null;
+        if(orderFilterHolder.getOrderStatusChoice().equals(OrderStatus.ALL)){
+            orderFilterHolder.setOrderStatusChoice(null);
         }
 
-        if(priceFromChoice == 0.0){
-            priceFromChoice = null;
+        if(orderFilterHolder.getPriceFromChoice() == 0.0){
+            orderFilterHolder.setPriceFromChoice(null);
         }
-        if(priceToChoice == 0.0){
-            priceToChoice = null;
+        if(orderFilterHolder.getPriceToChoice() == 0.0){
+            orderFilterHolder.setPriceToChoice(null);
         }
-        if(amountOfProductsChoice == 0){
-            amountOfProductsChoice = null;
+        if(orderFilterHolder.getAmountOfProductsChoice() == 0){
+            orderFilterHolder.setAmountOfProductsChoice(null);
         }
-        if(prompt.equalsIgnoreCase("ALL")){
-            prompt = null;
+        if(orderFilterHolder.getPromptChoice().equals("ALL")){
+            orderFilterHolder.setPromptChoice(null);
         }
 
 
 
         return ResponseEntity.ok(
                 orderRepository.getOrderData(
-                        orderStatusChoice,
-                        priceFromChoice,
-                        priceToChoice,
-                        logic.dateConverter(dateFromChoice),
-                        logic.dateConverter(dateToChoice),
-                        amountOfProductsChoice,
-                        prompt,
-                        PageRequest.of(pageChoice, pageCountChoice)
+                        orderFilterHolder.getOrderStatusChoice(),
+                        orderFilterHolder.getPriceFromChoice(),
+                        orderFilterHolder.getPriceToChoice(),
+                        logic.dateConverter(orderFilterHolder.getDateFromChoice()),
+                        logic.dateConverter(orderFilterHolder.getDateToChoice()),
+                        orderFilterHolder.getAmountOfProductsChoice(),
+                        orderFilterHolder.getPromptChoice(),
+                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount())
                 )
         );
     }
 
 
-    @GetMapping("/getAmountOfPages/{orderStatusChoice}/{priceFromChoice}/{priceToChoice}/{dateFromChoice}/{dateToChoice}/{amountOfProductsChoice}/{prompt}")
-    public ResponseEntity<Long> getAmountOfPages(
-            @PathVariable  OrderStatus orderStatusChoice,
-            @PathVariable Double priceFromChoice,
-            @PathVariable Double priceToChoice,
-            @PathVariable LocalDate dateFromChoice,
-            @PathVariable LocalDate dateToChoice,
-            @PathVariable Long amountOfProductsChoice,
-            @PathVariable String prompt
-    ) {
+    @PostMapping("/getAmountOfPages")
+    public ResponseEntity<Long> getAmountOfPages(@RequestBody OrderFilterHolder orderFilterHolder) {
 
 
 
 
-        if(orderStatusChoice.equals(OrderStatus.ALL)){
-            orderStatusChoice = null;
+        if(orderFilterHolder.getOrderStatusChoice().equals(OrderStatus.ALL)){
+            orderFilterHolder.setOrderStatusChoice(null);
         }
 
-        if(priceFromChoice == 0.0){
-            priceFromChoice = null;
+        if(orderFilterHolder.getPriceFromChoice() == 0.0){
+            orderFilterHolder.setPriceFromChoice(null);
         }
-        if(priceToChoice == 0.0){
-            priceToChoice = null;
+        if(orderFilterHolder.getPriceToChoice() == 0.0){
+            orderFilterHolder.setPriceToChoice(null);
         }
-        if(amountOfProductsChoice == 0){
-            amountOfProductsChoice = null;
+        if(orderFilterHolder.getAmountOfProductsChoice() == 0){
+            orderFilterHolder.setAmountOfProductsChoice(null);
         }
-        if(prompt.equalsIgnoreCase("ALL")){
-            prompt = null;
+        if(orderFilterHolder.getPromptChoice().equals("ALL")){
+            orderFilterHolder.setPromptChoice(null);
         }
 
 
-
-        List<Long> count = orderRepository.getNumberOfOrderPages(
-                orderStatusChoice,
-                priceFromChoice,
-                priceToChoice,
-                logic.dateConverter(dateFromChoice),
-                logic.dateConverter(dateToChoice),
-                amountOfProductsChoice,
-                prompt
+        Long count = orderRepository.getNumberOfOrderPages(
+                orderFilterHolder.getOrderStatusChoice(),
+                orderFilterHolder.getPriceFromChoice(),
+                orderFilterHolder.getPriceToChoice(),
+                logic.dateConverter(orderFilterHolder.getDateFromChoice()),
+                logic.dateConverter(orderFilterHolder.getDateToChoice()),
+                orderFilterHolder.getAmountOfProductsChoice(),
+                orderFilterHolder.getPromptChoice()
         );
 
-        Double pageCount = (double) count.size() / 5;
-        Long result = (long) Math.ceil(pageCount);
+
 
 
 
 
         return ResponseEntity.ok(
-                result
+                count
         );
     }
 

@@ -1,4 +1,4 @@
-package com.example.jwt_demo.FilterDTO;
+package com.example.jwt_demo.FilterDTO.Material;
 
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.MaterialType;
