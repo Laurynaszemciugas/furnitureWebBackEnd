@@ -67,6 +67,12 @@ public class OrderController {
         if(orderFilterHolder.getPriceFromChoice() == 0.0){
             orderFilterHolder.setPriceFromChoice(null);
         }
+        if(orderFilterHolder.getEmployee() == 0){
+            orderFilterHolder.setEmployee(null);
+        }
+        if(orderFilterHolder.getProducts() == 0){
+            orderFilterHolder.setProducts(null);
+        }
         if(orderFilterHolder.getPriceToChoice() == 0.0){
             orderFilterHolder.setPriceToChoice(null);
         }
@@ -79,6 +85,7 @@ public class OrderController {
 
 
 
+
         return ResponseEntity.ok(
                 orderRepository.getOrderData(
                         orderFilterHolder.getOrderStatusChoice(),
@@ -88,6 +95,8 @@ public class OrderController {
                         logic.dateConverter(orderFilterHolder.getDateToChoice()),
                         orderFilterHolder.getAmountOfProductsChoice(),
                         orderFilterHolder.getPromptChoice(),
+                        orderFilterHolder.getEmployee(),
+                        orderFilterHolder.getProducts(),
                         PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount())
                 )
         );

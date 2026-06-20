@@ -27,14 +27,18 @@ LEFT JOIN FETCH o.user
 SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
     o.id,
     o.orderStatus,
-    SUM(op.amountOfProduct),
+    COALESCE(SUM(op.amountOfProduct), 0),
     o.estimatedDueDate,
     o.created,
     o.totalPrice
 )
 FROM Orders o
+JOIN o.employees oe
 LEFT JOIN o.productsData op
-WHERE (:status IS NULL OR o.orderStatus = :status)
+LEFT JOIN o.productsData pd
+WHERE (:matId IS NULL OR pd.product.id = :matId)
+AND(:empId IS NULL OR oe.employee.id = :empId)
+AND (:status IS NULL OR o.orderStatus = :status)
 AND (:dateFrom IS NULL OR o.created >= :dateFrom)
 AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
 AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
@@ -43,8 +47,8 @@ AND (
     :prompt IS NULL
     OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
 )
-GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate
-HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
+GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
+HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)
 """)
     List<OrdersFeedData> getOrderData(
             @Param("status") OrderStatus status,
@@ -54,6 +58,8 @@ HAVING (:amountOfProduct IS NULL OR SUM(op.amountOfProduct) = :amountOfProduct)
             @Param("dateTo") LocalDateTime dateTo,
             @Param("amountOfProduct") Long amountOfProduct,
             @Param("prompt") String prompt,
+            @Param("empId") Long empId,
+            @Param("matId") Long matId,
             Pageable pageable
     );
 

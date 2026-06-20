@@ -14,7 +14,7 @@ import java.time.LocalDate;
 public class OrderFilterHolder {
 
     private Long employee;
-    private Long product;
+    private Long products;
     private String promptChoice;
     private OrderStatus orderStatusChoice;
     private Double priceFromChoice;
@@ -22,7 +22,6 @@ public class OrderFilterHolder {
     private LocalDate dateFromChoice;
     private LocalDate dateToChoice;
     private Long amountOfProductsChoice;
-    private Long employeeId;
     private int page;
     private int pageCount;
 
