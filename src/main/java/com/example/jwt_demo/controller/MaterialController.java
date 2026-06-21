@@ -1,6 +1,7 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.Logic;
+import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialMiniStat;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
@@ -260,7 +261,7 @@ public class MaterialController {
 
 
     @GetMapping("/getMaterialMiniStats/{fromDate}/{toDate}")
-    public ResponseEntity<MaterialMiniStat> getMaterialMiniStats(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+    public ResponseEntity<MiniStatHolder> getMaterialMiniStats(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
         return ResponseEntity.ok(materialRepository.getMaterialMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
     }
 

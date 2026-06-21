@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialMiniStat;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
@@ -122,7 +123,7 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
     @Query("""
 
-            SELECT new com.example.jwt_demo.DTOS.Material.MaterialMiniStat(
+            SELECT new com.example.jwt_demo.DTOS.Common.MiniStatHolder(
             count(m.id),
             SUM(CASE WHEN m.enabled = 'ACTIVE' THEN 1 ELSE 0 END),
             SUM(CASE WHEN m.enabled = 'INACTIVE' THEN 1 ELSE 0 END),
@@ -132,7 +133,7 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
 
 """)
-    MaterialMiniStat getMaterialMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+    MiniStatHolder getMaterialMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
 
 
 

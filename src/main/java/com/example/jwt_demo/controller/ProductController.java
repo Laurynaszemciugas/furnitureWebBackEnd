@@ -1,7 +1,10 @@
 package com.example.jwt_demo.controller;
 
 
+import com.example.jwt_demo.Common.Logic;
+import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
+import com.example.jwt_demo.DTOS.Product.ProductPageMiniStat;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
@@ -11,16 +14,20 @@ import com.example.jwt_demo.Enums.Status;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Visibility;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
+import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -38,6 +45,9 @@ public class ProductController {
 
     @Autowired
     Common common;
+
+    @Autowired
+    Logic logic;
 
 
 
@@ -139,20 +149,80 @@ public class ProductController {
     }
 
 
-    @GetMapping("/getProducts/{stock}/{category}/{prompt}/{visibility}/{page}/{size}")
-    public List<ProductFeedModel> getProducts(
-            @PathVariable Stock stock,
-            @PathVariable Category category,
-            @PathVariable String prompt,
-            @PathVariable Visibility visibility,
-            @PathVariable int page,
-            @PathVariable int size
-    ) {
+    @PostMapping("/getProducts")
+    public List<ProductFeedModel> getProducts(@RequestBody ProductFilterHolder productFilterHolder) {
 
         CustomUserDetails user = common.getUserData();
 
-        return productRepository.getAllProducts(category,stock,prompt,visibility,user.getId(),PageRequest.of(page, size));
+        if(productFilterHolder.getStockChoice() == Stock.ALL){
+            productFilterHolder.setStockChoice(null);
+        }
+        if(productFilterHolder.getCategory() == Category.ALL){
+            productFilterHolder.setCategory(null);
+        }
+        if(productFilterHolder.getVisibility() == Visibility.ALL){
+            productFilterHolder.setVisibility(null);
+        }
+        if(productFilterHolder.getCategory() == Category.ALL){
+            productFilterHolder.setCategory(null);
+        }
+        if(productFilterHolder.getCreatedFrom().equals(LocalDate.of(1000,12,12))){
+            productFilterHolder.setCreatedFrom(null);
+        }
+        if(productFilterHolder.getCreatedTo().equals(LocalDate.of(1000,12,12))){
+            productFilterHolder.setCreatedTo(null);
+        }
+        if(productFilterHolder.getDiscount() == 0){
+            productFilterHolder.setDiscount(null);
+        }
+        if(productFilterHolder.getPrice() == 0.0){
+            productFilterHolder.setPrice(null);
+        }
+        if(productFilterHolder.getMaterialId() == 0){
+            productFilterHolder.setMaterialId(null);
+        }
+        if(productFilterHolder.getPrompt().equals("ALL")){
+            productFilterHolder.setPrompt(null);
+        }
+
+
+
+
+        LocalDateTime from = logic.dateConverter(productFilterHolder.getCreatedFrom());
+        LocalDateTime to =logic.dateConverter(productFilterHolder.getCreatedTo());
+
+
+        return productRepository.getAllProducts(
+                productFilterHolder.getCategory(),
+                productFilterHolder.getStockChoice(),
+                productFilterHolder.getVisibility(),
+                productFilterHolder.getPrompt(),
+                from,
+                to,
+                productFilterHolder.getPrice(),
+                productFilterHolder.getDiscount(),
+                productFilterHolder.getMaterialId(),
+                user.getId(),
+                PageRequest.of(productFilterHolder.getPage(), productFilterHolder.getPageCount())
+        );
     }
+//
+//    @GetMapping("/getProducts/{stock}/{category}/{prompt}/{visibility}/{page}/{size}")
+//    public List<ProductFeedModel> getProducts(
+//            @PathVariable Stock stock,
+//            @PathVariable Category category,
+//            @PathVariable String prompt,
+//            @PathVariable Visibility visibility,
+//            @PathVariable int page,
+//            @PathVariable int size
+//    ) {
+//
+//        CustomUserDetails user = common.getUserData();
+//
+//        System.out.println(visibility);
+//
+//        return productRepository.getAllProducts(category,stock,prompt,visibility,user.getId(),PageRequest.of(page, size));
+//    }
 
 
 
@@ -314,6 +384,11 @@ public class ProductController {
 
         return ResponseEntity.ok(productRepository.getExistingDataForOrder(id));
 
+    }
+
+    @GetMapping("/getProductMiniStats/{from}/{to}")
+    public ResponseEntity<MiniStatHolder> getProductMiniStats(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(productRepository.getProductMiniStats(logic.dateConverter(from),logic.dateConverter(to)));
     }
 
 

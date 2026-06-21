@@ -26,7 +26,8 @@ public enum ProductCategory {
     Food("Food"),
     Tools("Tools"),
     Cameras("Cameras"),
-    SmartHome("Smart Home");
+    SmartHome("Smart Home"),
+    ALL("All");
 
     private String displayName;
 
