@@ -227,16 +227,60 @@ public class ProductController {
 
 
     // get product count how many paganation buttons are needed
-    @GetMapping("/getPages/{stock}/{category}/{prompt}/{visibility}")
-    public Long getProductPages(
-            @PathVariable Stock stock,
-            @PathVariable Category category,
-            @PathVariable String prompt,
-            @PathVariable Visibility visibility
-    ) {
-
+    @PostMapping("/getPages")
+    public Long getProductPages(@RequestBody ProductFilterHolder productFilterHolder) {
         CustomUserDetails user = common.getUserData();
-        return productRepository.getProductPages(category,stock,prompt,visibility,user.getId());
+
+        if(productFilterHolder.getStockChoice() == Stock.ALL){
+            productFilterHolder.setStockChoice(null);
+        }
+        if(productFilterHolder.getCategory() == Category.ALL){
+            productFilterHolder.setCategory(null);
+        }
+        if(productFilterHolder.getVisibility() == Visibility.ALL){
+            productFilterHolder.setVisibility(null);
+        }
+        if(productFilterHolder.getCategory() == Category.ALL){
+            productFilterHolder.setCategory(null);
+        }
+        if(productFilterHolder.getCreatedFrom().equals(LocalDate.of(1000,12,12))){
+            productFilterHolder.setCreatedFrom(null);
+        }
+        if(productFilterHolder.getCreatedTo().equals(LocalDate.of(1000,12,12))){
+            productFilterHolder.setCreatedTo(null);
+        }
+        if(productFilterHolder.getDiscount() == 0){
+            productFilterHolder.setDiscount(null);
+        }
+        if(productFilterHolder.getPrice() == 0.0){
+            productFilterHolder.setPrice(null);
+        }
+        if(productFilterHolder.getMaterialId() == 0){
+            productFilterHolder.setMaterialId(null);
+        }
+        if(productFilterHolder.getPrompt().equals("ALL")){
+            productFilterHolder.setPrompt(null);
+        }
+
+
+
+
+        LocalDateTime from = logic.dateConverter(productFilterHolder.getCreatedFrom());
+        LocalDateTime to =logic.dateConverter(productFilterHolder.getCreatedTo());
+
+
+        return productRepository.getProductPages(
+                productFilterHolder.getCategory(),
+                productFilterHolder.getStockChoice(),
+                productFilterHolder.getVisibility(),
+                productFilterHolder.getPrompt(),
+                from,
+                to,
+                productFilterHolder.getPrice(),
+                productFilterHolder.getDiscount(),
+                productFilterHolder.getMaterialId(),
+                user.getId()
+        );
     }
 
 

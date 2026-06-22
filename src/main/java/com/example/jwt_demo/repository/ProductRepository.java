@@ -83,16 +83,45 @@ AND (
 
     SELECT CASE  WHEN COUNT(p.id) = 0 THEN 1 ELSE CEIL(COUNT(p.id) / 20.0) END
     FROM Product p
-WHERE p.user.id = :id
-AND (:category = 'ALL' OR p.category = :category)
-AND (:stock = 'ALL' OR p.stock = :stock)
-AND (:vis = 'ALL' OR  p.visibility = :vis)
-AND (:prompt = 'ALL' OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%')))
     
     
+WHERE p.user.id = :userId
+
+    
+AND (:category IS NULL OR p.category = :category)
+AND (:stock IS NULL OR p.stock = :stock)
+AND (:visibility IS NULL OR p.visibility = :visibility)
+
+AND (:prompt IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%')))
+
+AND (:createdFrom IS NULL OR p.created >= :createdFrom)
+AND (:createdTo IS NULL OR p.created <= :createdTo)
+
+AND (:price IS NULL OR p.price <= :price)
+AND (:discount IS NULL OR p.discount >= :discount)
+
+AND (
+    :materialId IS NULL
+    OR EXISTS (
+        SELECT 1
+        FROM ProductMaterials pm
+        WHERE pm.product.id = p.id
+        AND pm.materials.id = :materialId
+    )
+    
+    )
     
 """)
-    Long getProductPages(@Param("category") Category category, @Param("stock") Stock stock, @Param("prompt") String prompt, @Param("vis") Visibility vis,@Param("id") Long id);
+    Long getProductPages(@Param("category") Category category,
+                         @Param("stock") Stock stock,
+                         @Param("visibility") Visibility visibility,
+                         @Param("prompt") String prompt,
+                         @Param("createdFrom") LocalDateTime createdFrom,
+                         @Param("createdTo") LocalDateTime createdTo,
+                         @Param("price") Double price,
+                         @Param("discount") Long discount,
+                         @Param("materialId") Long materialId,
+                         @Param("userId") Long userId);
 
 
 
