@@ -130,6 +130,7 @@ AND (
 
         SELECT new com.example.jwt_demo.DTOS.Order.OrderAddProducts(p.id,pid.imageUrl, p.productName, p.sku,p.category, p.stockQuantity, p.lowStockThreshold, p.stock,p.price,1L) FROM Product p
         LEFT JOIN ProductImageData pid ON pid.product.id = p.id AND pid.imageLogic = 'Main'
+        WHERE p.visibility = 'Visible'
         
    
 """)

@@ -85,7 +85,7 @@ SELECT
     CASE
         WHEN COUNT(DISTINCT m.id) = 0
         THEN 1
-        ELSE CEIL(COUNT(DISTINCT m.id) / 10.0)
+        ELSE CEIL(COUNT(DISTINCT m.id) / 5.0)
     END
 FROM Materials m
 LEFT JOIN MaterialImageData mid
