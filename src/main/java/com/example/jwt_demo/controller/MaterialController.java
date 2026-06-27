@@ -3,7 +3,6 @@ package com.example.jwt_demo.controller;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
-import com.example.jwt_demo.DTOS.Material.MaterialMiniStat;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
@@ -42,8 +41,10 @@ public class MaterialController {
     public ResponseEntity<List<ComboBoxMaterial>> getMaterialNames(){
 
         CustomUserDetails user = common.getUserData();
+        if(user == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        System.out.println(user.getUsername());
 
         return ResponseEntity.ok(materialRepository.getAllMaterialNames(user.getId()));
 
@@ -55,6 +56,9 @@ public class MaterialController {
     public ResponseEntity<Double> getEstimatedMaterialCost(@RequestBody List<ProductMaterials> productMaterials){
 
         CustomUserDetails user = common.getUserData();
+        if(user == null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         double estimatedPrice = 0.0;
 
@@ -76,6 +80,7 @@ public class MaterialController {
 
         CustomUserDetails user = common.getUserData();
 
+
         Materials usedMaterial = materialRepository.findByMaterialName(name, user.getId());
 
         if(usedMaterial !=null){
@@ -91,6 +96,7 @@ public class MaterialController {
     public ResponseEntity<String> checkIfMaterialsDontExceedStockLimtis(@RequestBody List<ProductMaterials> productMaterials){
 
         CustomUserDetails user = common.getUserData();
+
 
         List<String> errorMessage = new ArrayList<>();
 

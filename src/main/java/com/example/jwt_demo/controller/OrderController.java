@@ -2,7 +2,6 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
-import com.example.jwt_demo.DTOS.Order.ConsumerData;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -240,10 +239,6 @@ public class OrderController {
     }
 
 
-    @GetMapping("/getConsumers")
-    public ResponseEntity<List<ConsumerData>> getConsumerData(){
-        return  ResponseEntity.ok(userRepository.getUsersExtended());
-    }
 
     @PostMapping("/saveNewOrder")
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){

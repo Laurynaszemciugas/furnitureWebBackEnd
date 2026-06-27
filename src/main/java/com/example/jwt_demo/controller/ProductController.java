@@ -1,18 +1,15 @@
 package com.example.jwt_demo.controller;
 
 
+import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
-import com.example.jwt_demo.DTOS.Product.ProductPageMiniStat;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Entity.User;
-import com.example.jwt_demo.Enums.Category;
-import com.example.jwt_demo.Enums.Status;
-import com.example.jwt_demo.Enums.Stock;
-import com.example.jwt_demo.Enums.Visibility;
+import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
 import com.example.jwt_demo.repository.MaterialRepository;
@@ -52,9 +49,11 @@ public class ProductController {
 
 
     @PostMapping("/saveProduct")
-    public ResponseEntity<String> saveProduct(@RequestBody Product product){
+    public ResponseEntity<ErrorResponse> saveProduct(@RequestBody Product product){
 
         CustomUserDetails user = common.getUserData();
+
+
 
         User currentUser = userRepository.findById(user.getId()).orElseThrow();
 
@@ -138,14 +137,9 @@ public class ProductController {
             }
         }
         productRepository.save(cleanProduct);
-        try {
 
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("failed");
 
-        }
-
-        return ResponseEntity.ok("Success");
+        return ResponseEntity.ok(new ErrorResponse("Success", Warnings.OK));
     }
 
 

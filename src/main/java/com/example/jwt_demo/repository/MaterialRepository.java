@@ -2,7 +2,6 @@ package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
-import com.example.jwt_demo.DTOS.Material.MaterialMiniStat;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Enums.ActiveInactive;

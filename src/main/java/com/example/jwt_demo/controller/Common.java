@@ -8,13 +8,17 @@ import org.springframework.stereotype.Service;
 public class Common {
 
     public CustomUserDetails getUserData(){
-        CustomUserDetails user =
-                (CustomUserDetails) SecurityContextHolder
-                        .getContext()
-                        .getAuthentication()
-                        .getPrincipal();
 
-        return user;
+        try {
+            CustomUserDetails user =
+                    (CustomUserDetails) SecurityContextHolder
+                            .getContext()
+                            .getAuthentication()
+                            .getPrincipal();
+            return user;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }

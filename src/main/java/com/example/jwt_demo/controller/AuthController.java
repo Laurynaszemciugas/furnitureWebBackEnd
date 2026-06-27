@@ -37,9 +37,6 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> authenticateUser(@RequestBody User user) {
 
         try {
-            System.out.println("here");
-            System.out.println(user.getGmail());
-
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             user.getGmail(),
@@ -49,8 +46,10 @@ public class AuthController {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
             return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
+
+
+
         } catch (Exception e) {
-            System.out.println("np");
             throw new ValidationException(
                     "Password or the login name is incorrect",
                     Warnings.ERROR
