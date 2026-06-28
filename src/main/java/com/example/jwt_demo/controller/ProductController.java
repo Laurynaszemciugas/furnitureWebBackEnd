@@ -294,7 +294,7 @@ public class ProductController {
 
 
     @PostMapping("/editProduct")
-    public ResponseEntity<String> editProduct(@RequestBody Product product){
+    public ResponseEntity<ErrorResponse> editProduct(@RequestBody Product product){
 
 
         CustomUserDetails user = common.getUserData();
@@ -380,12 +380,12 @@ public class ProductController {
 
         System.out.println(product.getProductName());
 
-        return ResponseEntity.ok("got data");
+        return ResponseEntity.ok(new ErrorResponse("Product was edited succesfully",Warnings.OK));
 
     }
 
     @PostMapping("/removeProduct")
-    public ResponseEntity<String> removeProduct(@RequestBody Long id){
+    public ResponseEntity<ErrorResponse> removeProduct(@RequestBody Long id){
 
         try {
             productRepository.deleteById(id);
@@ -394,9 +394,9 @@ public class ProductController {
                 product.setVisibility(Visibility.NonVisible);
                 product.setStatus(Status.Disabled);
                 productRepository.save(product);
-            return  ResponseEntity.ok("Product is used it is put into a blackList you cannot use it but you can change that");
+            return  ResponseEntity.ok(new ErrorResponse("Product is used it is put into a blackList you cannot use it but you can change that",Warnings.OK));
         }
-        return ResponseEntity.ok("Removed successfully");
+        return ResponseEntity.ok(new ErrorResponse("Removed successfully",Warnings.OK));
     }
 
 
