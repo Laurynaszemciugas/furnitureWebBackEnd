@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
@@ -9,6 +10,7 @@ import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
+import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
@@ -269,6 +271,31 @@ public class MaterialController {
     @GetMapping("/getMaterialMiniStats/{fromDate}/{toDate}")
     public ResponseEntity<MiniStatHolder> getMaterialMiniStats(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
         return ResponseEntity.ok(materialRepository.getMaterialMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+    }
+
+
+    @PostMapping("/createNewMaterial")
+    public ResponseEntity<ErrorResponse> createNewMaterial(@RequestBody Materials mat){
+
+        System.out.println(mat.getMaterialName());
+        System.out.println(mat.getMaterialColor());
+
+        Materials newMat = new Materials();
+
+        mat.setStock(Stock.No_Stock);
+
+        if (mat.getImages() != null) {
+            for (var img : mat.getImages()) {
+                img.setMaterials(mat);
+                newMat.getImages().add(img);
+            }
+        }
+
+        mat.setImages(newMat.getImages());
+
+        materialRepository.save(mat);
+
+        return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
     }
 
 

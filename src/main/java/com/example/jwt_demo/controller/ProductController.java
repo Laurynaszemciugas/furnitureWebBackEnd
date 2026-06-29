@@ -58,9 +58,6 @@ public class ProductController {
         User currentUser = userRepository.findById(user.getId()).orElseThrow();
 
 
-        System.out.println(user.getUsername());
-        System.out.println(user.getId());
-
 
         System.out.println("Processing incoming product save request...");
 
@@ -200,23 +197,7 @@ public class ProductController {
                 PageRequest.of(productFilterHolder.getPage(), productFilterHolder.getPageCount())
         );
     }
-//
-//    @GetMapping("/getProducts/{stock}/{category}/{prompt}/{visibility}/{page}/{size}")
-//    public List<ProductFeedModel> getProducts(
-//            @PathVariable Stock stock,
-//            @PathVariable Category category,
-//            @PathVariable String prompt,
-//            @PathVariable Visibility visibility,
-//            @PathVariable int page,
-//            @PathVariable int size
-//    ) {
-//
-//        CustomUserDetails user = common.getUserData();
-//
-//        System.out.println(visibility);
-//
-//        return productRepository.getAllProducts(category,stock,prompt,visibility,user.getId(),PageRequest.of(page, size));
-//    }
+
 
 
 
@@ -376,11 +357,9 @@ public class ProductController {
 
         productRepository.save(existingProduct);
 
-        System.out.println(user.getUsername());
 
-        System.out.println(product.getProductName());
 
-        return ResponseEntity.ok(new ErrorResponse("Product was edited succesfully",Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse("Product was edited successfully",Warnings.OK));
 
     }
 

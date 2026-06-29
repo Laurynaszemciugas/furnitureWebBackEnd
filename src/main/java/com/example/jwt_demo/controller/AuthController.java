@@ -86,8 +86,7 @@ public class AuthController {
                 null,
                 null,
                 user.getName() + " " + user.getLastName(),
-                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl(),
-                user.getPhoneNumber() == null ? "None" : user.getPhoneNumber());
+                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
         userRepository.save(newUser);
         return "User registered successfully!";
     }

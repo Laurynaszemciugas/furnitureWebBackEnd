@@ -46,6 +46,10 @@ AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
 AND (
     :prompt IS NULL
     OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+    OR LOWER(o.billingAddress) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
 )
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
 HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)

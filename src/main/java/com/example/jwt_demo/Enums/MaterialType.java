@@ -12,15 +12,12 @@ public enum MaterialType {
     CONCRETE,
 
     LEATHER,
-    FAUX_LEATHER,
     FABRIC,
     VELVET,
     LINEN,
     COTTON,
 
-    BAMBOO,
     RATTAN,
-    WICKER,
     CORK,
 
     CERAMIC,
@@ -29,7 +26,6 @@ public enum MaterialType {
     RUBBER,
     FOAM,
 
-    MDF,
     PLYWOOD,
     PARTICLE_BOARD,
     LAMINATE,

@@ -58,8 +58,8 @@ public class Orders {
 
     @CreationTimestamp
     private LocalDateTime created;
-    private String orderCreatedByName; // fallback if user doesnt have an account
-    private String orderCreatedByGmail; // fallback if user doesnt have an account
+    private String orderCreatedByName;
+    private String orderCreatedByGmail;
 
 
 }
