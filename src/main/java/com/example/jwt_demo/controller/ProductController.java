@@ -3,6 +3,7 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
+import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.Entity.Materials;
@@ -11,6 +12,7 @@ import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
+import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.ProductRepository;
@@ -45,6 +47,9 @@ public class ProductController {
 
     @Autowired
     Logic logic;
+
+    @Autowired
+    ProvidedDataChecker providedDataChecker;
 
 
 
@@ -145,42 +150,7 @@ public class ProductController {
 
         CustomUserDetails user = common.getUserData();
 
-        if(productFilterHolder.getStockChoice() == Stock.ALL){
-            productFilterHolder.setStockChoice(null);
-        }
-        if(productFilterHolder.getCategory() == Category.ALL){
-            productFilterHolder.setCategory(null);
-        }
-        if(productFilterHolder.getVisibility() == Visibility.ALL){
-            productFilterHolder.setVisibility(null);
-        }
-        if(productFilterHolder.getCategory() == Category.ALL){
-            productFilterHolder.setCategory(null);
-        }
-        if(productFilterHolder.getCreatedFrom().equals(LocalDate.of(1000,12,12))){
-            productFilterHolder.setCreatedFrom(null);
-        }
-        if(productFilterHolder.getCreatedTo().equals(LocalDate.of(1000,12,12))){
-            productFilterHolder.setCreatedTo(null);
-        }
-        if(productFilterHolder.getDiscount() == 0){
-            productFilterHolder.setDiscount(null);
-        }
-        if(productFilterHolder.getPrice() == 0.0){
-            productFilterHolder.setPrice(null);
-        }
-        if(productFilterHolder.getMaterialId() == 0){
-            productFilterHolder.setMaterialId(null);
-        }
-        if(productFilterHolder.getPrompt().equals("ALL")){
-            productFilterHolder.setPrompt(null);
-        }
-
-
-
-
-        LocalDateTime from = logic.dateConverter(productFilterHolder.getCreatedFrom());
-        LocalDateTime to =logic.dateConverter(productFilterHolder.getCreatedTo());
+        productFilterHolder = providedDataChecker.defaultValueChecker(productFilterHolder, ProductFilterHolder.class);
 
 
         return productRepository.getAllProducts(
@@ -188,8 +158,8 @@ public class ProductController {
                 productFilterHolder.getStockChoice(),
                 productFilterHolder.getVisibility(),
                 productFilterHolder.getPrompt(),
-                from,
-                to,
+                logic.dateConverter(productFilterHolder.getCreatedFrom()),
+                logic.dateConverter(productFilterHolder.getCreatedTo()),
                 productFilterHolder.getPrice(),
                 productFilterHolder.getDiscount(),
                 productFilterHolder.getMaterialId(),
@@ -206,42 +176,7 @@ public class ProductController {
     public Long getProductPages(@RequestBody ProductFilterHolder productFilterHolder) {
         CustomUserDetails user = common.getUserData();
 
-        if(productFilterHolder.getStockChoice() == Stock.ALL){
-            productFilterHolder.setStockChoice(null);
-        }
-        if(productFilterHolder.getCategory() == Category.ALL){
-            productFilterHolder.setCategory(null);
-        }
-        if(productFilterHolder.getVisibility() == Visibility.ALL){
-            productFilterHolder.setVisibility(null);
-        }
-        if(productFilterHolder.getCategory() == Category.ALL){
-            productFilterHolder.setCategory(null);
-        }
-        if(productFilterHolder.getCreatedFrom().equals(LocalDate.of(1000,12,12))){
-            productFilterHolder.setCreatedFrom(null);
-        }
-        if(productFilterHolder.getCreatedTo().equals(LocalDate.of(1000,12,12))){
-            productFilterHolder.setCreatedTo(null);
-        }
-        if(productFilterHolder.getDiscount() == 0){
-            productFilterHolder.setDiscount(null);
-        }
-        if(productFilterHolder.getPrice() == 0.0){
-            productFilterHolder.setPrice(null);
-        }
-        if(productFilterHolder.getMaterialId() == 0){
-            productFilterHolder.setMaterialId(null);
-        }
-        if(productFilterHolder.getPrompt().equals("ALL")){
-            productFilterHolder.setPrompt(null);
-        }
-
-
-
-
-        LocalDateTime from = logic.dateConverter(productFilterHolder.getCreatedFrom());
-        LocalDateTime to =logic.dateConverter(productFilterHolder.getCreatedTo());
+        productFilterHolder = providedDataChecker.defaultValueChecker(productFilterHolder, ProductFilterHolder.class);
 
 
         return productRepository.getProductPages(
@@ -249,8 +184,8 @@ public class ProductController {
                 productFilterHolder.getStockChoice(),
                 productFilterHolder.getVisibility(),
                 productFilterHolder.getPrompt(),
-                from,
-                to,
+                logic.dateConverter(productFilterHolder.getCreatedFrom()),
+                logic.dateConverter(productFilterHolder.getCreatedTo()),
                 productFilterHolder.getPrice(),
                 productFilterHolder.getDiscount(),
                 productFilterHolder.getMaterialId(),

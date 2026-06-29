@@ -13,15 +13,15 @@ import java.time.LocalDate;
 @ToString
 public class OrderFilterHolder {
 
-    private Long employee;
-    private Long products;
-    private String promptChoice;
-    private OrderStatus orderStatusChoice;
-    private Double priceFromChoice;
-    private Double priceToChoice;
-    private LocalDate dateFromChoice;
-    private LocalDate dateToChoice;
-    private Long amountOfProductsChoice;
+    private Long employee = 0L;
+    private Long products = 0L;
+    private String promptChoice = "ALL";
+    private OrderStatus orderStatusChoice = OrderStatus.ALL;
+    private Double priceFromChoice = 0.0;
+    private Double priceToChoice = 0.0;
+    private LocalDate dateFromChoice= LocalDate.of(1000,12,12);
+    private LocalDate dateToChoice= LocalDate.of(1000,12,12);
+    private Long amountOfProductsChoice= 0L;
     private int page;
     private int pageCount;
 

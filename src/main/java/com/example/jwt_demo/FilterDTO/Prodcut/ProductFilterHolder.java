@@ -16,15 +16,15 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class ProductFilterHolder {
 
-    private String prompt;
-    private Stock stockChoice;
-    private Category category;
-    private Visibility visibility;
-    private LocalDate createdFrom;
-    private LocalDate createdTo;
-    private Long discount;
-    private Double price;
-    private Long materialId;
+    private String prompt = "ALL";
+    private Stock stockChoice = Stock.ALL;
+    private Category category = Category.ALL;
+    private Visibility visibility = Visibility.ALL;
+    private LocalDate createdFrom = LocalDate.of(1000,12,12);
+    private LocalDate createdTo = LocalDate.of(1000,12,12);
+    private Long discount = 0L;
+    private Double price = 0.0;
+    private Long materialId = 0L;
     private int page;
     private int pageCount;
 

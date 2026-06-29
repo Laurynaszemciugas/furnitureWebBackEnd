@@ -1,5 +1,6 @@
 package com.example.jwt_demo.Entity;
 
+import com.example.jwt_demo.Common.Annotations.RequiredField;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Enums.OrderStatus;
@@ -30,10 +31,12 @@ public class Orders {
 
     @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference("orders")
+    @RequiredField
     private List<OrderProducts> productsData;
 
     @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonManagedReference("employee")
+    @RequiredField
     private List<OrderEmployees> employees;
 
     @ManyToOne
@@ -46,19 +49,28 @@ public class Orders {
 
     private Double totalPrice;
     @Enumerated(EnumType.STRING)
+    @RequiredField
     private OrderStatus orderStatus;
+    @RequiredField
     private String orderNote;
+    @RequiredField
     private LocalDateTime estimatedDueDate;
+    @RequiredField
     private String phoneNumber;
     @Enumerated(EnumType.STRING)
+    @RequiredField
     private PayStatus payStatus;
     @Enumerated(EnumType.STRING)
+    @RequiredField
     private PayMethod payMethod;
+    @RequiredField
     private String billingAddress;
 
     @CreationTimestamp
     private LocalDateTime created;
+    @RequiredField
     private String orderCreatedByName;
+    @RequiredField
     private String orderCreatedByGmail;
 
 

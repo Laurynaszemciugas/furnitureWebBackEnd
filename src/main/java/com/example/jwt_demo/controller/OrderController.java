@@ -2,6 +2,7 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
+import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -53,34 +54,21 @@ public class OrderController {
     @Autowired
     Logic logic;
 
+    @Autowired
+    ProvidedDataChecker providedDataChecker;
+
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
     @PostMapping("/getAllOrders")
     public ResponseEntity<List<OrdersFeedData>> getAllOrders(@RequestBody OrderFilterHolder orderFilterHolder) {
 
 
-        if(orderFilterHolder.getOrderStatusChoice().equals(OrderStatus.ALL)){
-            orderFilterHolder.setOrderStatusChoice(null);
-        }
 
-        if(orderFilterHolder.getPriceFromChoice() == 0.0){
-            orderFilterHolder.setPriceFromChoice(null);
-        }
-        if(orderFilterHolder.getEmployee() == 0){
-            orderFilterHolder.setEmployee(null);
-        }
-        if(orderFilterHolder.getProducts() == 0){
-            orderFilterHolder.setProducts(null);
-        }
-        if(orderFilterHolder.getPriceToChoice() == 0.0){
-            orderFilterHolder.setPriceToChoice(null);
-        }
-        if(orderFilterHolder.getAmountOfProductsChoice() == 0){
-            orderFilterHolder.setAmountOfProductsChoice(null);
-        }
-        if(orderFilterHolder.getPromptChoice().equals("ALL")){
-            orderFilterHolder.setPromptChoice(null);
-        }
+
+
+        orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
+
+
 
 
 
@@ -108,22 +96,7 @@ public class OrderController {
 
 
 
-        if(orderFilterHolder.getOrderStatusChoice().equals(OrderStatus.ALL)){
-            orderFilterHolder.setOrderStatusChoice(null);
-        }
-
-        if(orderFilterHolder.getPriceFromChoice() == 0.0){
-            orderFilterHolder.setPriceFromChoice(null);
-        }
-        if(orderFilterHolder.getPriceToChoice() == 0.0){
-            orderFilterHolder.setPriceToChoice(null);
-        }
-        if(orderFilterHolder.getAmountOfProductsChoice() == 0){
-            orderFilterHolder.setAmountOfProductsChoice(null);
-        }
-        if(orderFilterHolder.getPromptChoice().equals("ALL")){
-            orderFilterHolder.setPromptChoice(null);
-        }
+        orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
 
         Long count = orderRepository.getNumberOfOrderPages(
@@ -259,6 +232,8 @@ public class OrderController {
         newOrder.setOrderCreatedByName(order.getOrderCreatedByName());
 
 
+        // checks if there is any null or is empty values
+        providedDataChecker.checkEmptyValue(order, Orders.class);
 
 
 

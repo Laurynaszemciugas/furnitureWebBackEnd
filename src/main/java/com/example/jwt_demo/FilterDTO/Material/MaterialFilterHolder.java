@@ -17,15 +17,15 @@ import java.time.LocalDate;
 public class MaterialFilterHolder {
 
 
-    private MaterialType materialTypeChoice;
-    private ActiveInactive activeInactive;
-    private Long stockAmountChoice;
-    private Long minThresholdChoice;
-    private Double unitPriceChoice;
-    private LocalDate fromDateChoice;
-    private LocalDate todDateChoice;
-    private Stock stockChoice;
-    private String promtChoice;
+    private MaterialType materialTypeChoice = MaterialType.ALL;
+    private ActiveInactive activeInactive = ActiveInactive.ALL;
+    private Long stockAmountChoice = 0L;
+    private Long minThresholdChoice = 0L;
+    private Double unitPriceChoice = 0.0;
+    private LocalDate fromDateChoice = LocalDate.of(1000,12,12);
+    private LocalDate todDateChoice = LocalDate.of(1000,12,12);
+    private Stock stockChoice = Stock.ALL;
+    private String promtChoice = "ALL";
     private int page;
     private int pageCount;
 

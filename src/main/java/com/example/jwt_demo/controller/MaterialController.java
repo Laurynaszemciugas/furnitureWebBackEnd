@@ -2,6 +2,7 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
+import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
@@ -12,6 +13,8 @@ import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
+import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
+import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,9 @@ public class MaterialController {
 
     @Autowired
     Logic logic;
+
+    @Autowired
+    ProvidedDataChecker providedDataChecker;
 
 
     @GetMapping("/getMaterialNames")
@@ -131,56 +137,8 @@ public class MaterialController {
             @RequestBody MaterialFilterHolder filter
     ) {
 
+        filter = providedDataChecker.defaultValueChecker(filter, MaterialFilterHolder.class);
 
-        System.out.println("dates" + filter.getFromDateChoice() + " " + filter.getTodDateChoice());
-
-        // MATERIAL TYPE
-        if (filter.getMaterialTypeChoice() == MaterialType.ALL) {
-            filter.setMaterialTypeChoice(null);
-        }
-
-        // ACTIVE / INACTIVE
-        if (filter.getActiveInactive() == ActiveInactive.ALL) {
-            filter.setActiveInactive(null);
-        }
-
-        // STOCK AMOUNT
-        if ( filter.getStockAmountChoice() == 0) {
-            filter.setStockAmountChoice(null);
-        }
-
-        // MIN THRESHOLD
-        if (  filter.getMinThresholdChoice() == 0) {
-            filter.setMinThresholdChoice(null);
-        }
-
-        // UNIT PRICE
-        if (filter.getUnitPriceChoice() == 0.0) {
-            filter.setUnitPriceChoice(null);
-        }
-
-        // FROM DATE
-        if (filter.getFromDateChoice().equals(LocalDate.of(1000, 12, 12))) {
-            filter.setFromDateChoice(null);
-        }
-
-        // TO DATE
-        if (filter.getTodDateChoice().equals(LocalDate.of(1000, 12, 12))) {
-            filter.setTodDateChoice(null);
-        }
-
-        // PROMPT
-        if (filter.getPromtChoice().equalsIgnoreCase("ALL")) {
-            filter.setPromtChoice(null);
-        }
-
-        // STOCK
-        if (filter.getStockChoice() == Stock.ALL) {
-            filter.setStockChoice(null);
-        }
-
-        LocalDateTime from = logic.dateConverter(filter.getFromDateChoice());
-        LocalDateTime to =logic.dateConverter(filter.getTodDateChoice());
 
         return ResponseEntity.ok(
                 materialRepository.getExistingMaterialDataForFeed(filter.getMaterialTypeChoice(),
@@ -188,8 +146,8 @@ public class MaterialController {
                         filter.getStockAmountChoice(),
                         filter.getMinThresholdChoice(),
                         filter.getUnitPriceChoice(),
-                        from,
-                        to,
+                        logic.dateConverter(filter.getFromDateChoice()),
+                        logic.dateConverter(filter.getTodDateChoice()),
                         filter.getStockChoice(),
                         filter.getPromtChoice(),
                         PageRequest.of(filter.getPage(), filter.getPageCount()))
@@ -203,62 +161,15 @@ public class MaterialController {
     ) {
 
 
-        System.out.println("dates" + filter.getFromDateChoice() + " " + filter.getTodDateChoice());
-
-        if (filter.getMaterialTypeChoice() == MaterialType.ALL) {
-            filter.setMaterialTypeChoice(null);
-        }
-
-        // ACTIVE / INACTIVE
-        if (filter.getActiveInactive() == ActiveInactive.ALL) {
-            filter.setActiveInactive(null);
-        }
-
-        // STOCK AMOUNT
-        if ( filter.getStockAmountChoice() == 0) {
-            filter.setStockAmountChoice(null);
-        }
-
-        // MIN THRESHOLD
-        if (  filter.getMinThresholdChoice() == 0) {
-            filter.setMinThresholdChoice(null);
-        }
-
-        // UNIT PRICE
-        if (filter.getUnitPriceChoice() == 0.0) {
-            filter.setUnitPriceChoice(null);
-        }
-
-        // FROM DATE
-        if (filter.getFromDateChoice().equals(LocalDate.of(1000, 12, 12))) {
-            filter.setFromDateChoice(null);
-        }
-
-        // TO DATE
-        if (filter.getTodDateChoice().equals(LocalDate.of(1000, 12, 12))) {
-            filter.setTodDateChoice(null);
-        }
-
-        // PROMPT
-        if (filter.getPromtChoice().equalsIgnoreCase("ALL")) {
-            filter.setPromtChoice(null);
-        }
-
-        // STOCK
-        if (filter.getStockChoice() == Stock.ALL) {
-            filter.setStockChoice(null);
-        }
-
-        LocalDateTime from = logic.dateConverter(filter.getFromDateChoice());
-        LocalDateTime to =logic.dateConverter(filter.getTodDateChoice());
+        filter = providedDataChecker.defaultValueChecker(filter, MaterialFilterHolder.class);
 
         Long count = materialRepository.getTotalPages(filter.getMaterialTypeChoice(),
                 filter.getActiveInactive(),
                 filter.getStockAmountChoice(),
                 filter.getMinThresholdChoice(),
                 filter.getUnitPriceChoice(),
-                from,
-                to,
+                logic.dateConverter(filter.getFromDateChoice()),
+                logic.dateConverter(filter.getTodDateChoice()),
                 filter.getStockChoice(),
                 filter.getPromtChoice());
 
@@ -282,7 +193,66 @@ public class MaterialController {
 
         Materials newMat = new Materials();
 
-        mat.setStock(Stock.No_Stock);
+        // ============ Name ============================
+        // later check with AI if this is not bad
+        newMat.setMaterialName(mat.getMaterialName());
+
+        // ============ in stock value ============================
+        if(newMat.getInStock() < 0){
+            throw new ValidationException("Stock level can not be less than 0", Warnings.ERROR);
+        }
+        newMat.setInStock(mat.getInStock());
+
+
+        // ============ in min threshold value ============================
+        if(newMat.getMinThresHold() < 0){
+            throw new ValidationException("MIn threshold level can not be less than 0", Warnings.ERROR);
+        }
+
+        newMat.setMinThresHold(mat.getMinThresHold());
+
+        if(mat.getInStock() > mat.getMinThresHold()) {
+            newMat.setStock(Stock.In_Stock);
+        }
+        if(mat.getInStock() <= mat.getMinThresHold()){
+            newMat.setStock(Stock.Low_Stock);
+        }
+        if(mat.getInStock() == 0){
+            newMat.setStock(Stock.No_Stock);
+        }
+
+        // ============ in min setEnabled value ============================
+        // default value
+        newMat.setEnabled(ActiveInactive.ACTIVE);
+
+        // ============ in material weight value ============================
+        if(newMat.getMaterialWeight() <= 0){
+            throw new ValidationException("Material weight can not be less or equal 0 grams", Warnings.ERROR);
+        }
+
+        // ============ in unit price weight value ============================
+        if(newMat.getUnitPrice() <= 0){
+            throw new ValidationException("Unit price can not be less or equal 0", Warnings.ERROR);
+        }
+
+        // ============ in unit price weight value ============================
+        if(newMat.getUnit() == null){
+            throw new ValidationException("Unit name cannot be empty", Warnings.ERROR);
+        }
+
+        // check later with AI
+        newMat.setDescription(mat.getDescription());
+
+        newMat.setMaterialType(mat.getMaterialType());
+
+        //newMat.setUser();
+
+        newMat.setMaterialUrl(mat.getMaterialUrl());
+
+        newMat.setCareInstructions(mat.getCareInstructions());
+
+        newMat.setMaterialColor(mat.getMaterialColor());
+
 
         if (mat.getImages() != null) {
             for (var img : mat.getImages()) {
