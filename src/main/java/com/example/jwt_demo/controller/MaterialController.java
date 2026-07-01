@@ -7,6 +7,7 @@ import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
+import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.MaterialType;
@@ -188,57 +189,40 @@ public class MaterialController {
     @PostMapping("/createNewMaterial")
     public ResponseEntity<ErrorResponse> createNewMaterial(@RequestBody Materials mat){
 
-        System.out.println(mat.getMaterialName());
-        System.out.println(mat.getMaterialColor());
+
+        // checks if there is any null or is empty values
+        providedDataChecker.checkEmptyValue(mat, Materials.class);
 
         Materials newMat = new Materials();
+
 
         // ============ Name ============================
         // later check with AI if this is not bad
         newMat.setMaterialName(mat.getMaterialName());
 
         // ============ in stock value ============================
-        if(newMat.getInStock() < 0){
-            throw new ValidationException("Stock level can not be less than 0", Warnings.ERROR);
-        }
+
         newMat.setInStock(mat.getInStock());
 
 
         // ============ in min threshold value ============================
-        if(newMat.getMinThresHold() < 0){
-            throw new ValidationException("MIn threshold level can not be less than 0", Warnings.ERROR);
-        }
+
 
         newMat.setMinThresHold(mat.getMinThresHold());
 
-        if(mat.getInStock() > mat.getMinThresHold()) {
-            newMat.setStock(Stock.In_Stock);
-        }
-        if(mat.getInStock() <= mat.getMinThresHold()){
-            newMat.setStock(Stock.Low_Stock);
-        }
-        if(mat.getInStock() == 0){
+        if (newMat.getInStock() == 0) {
             newMat.setStock(Stock.No_Stock);
+        } else if (newMat.getInStock() <= newMat.getMinThresHold()) {
+            newMat.setStock(Stock.Low_Stock);
+        } else {
+            newMat.setStock(Stock.In_Stock);
         }
 
         // ============ in min setEnabled value ============================
         // default value
         newMat.setEnabled(ActiveInactive.ACTIVE);
 
-        // ============ in material weight value ============================
-        if(newMat.getMaterialWeight() <= 0){
-            throw new ValidationException("Material weight can not be less or equal 0 grams", Warnings.ERROR);
-        }
 
-        // ============ in unit price weight value ============================
-        if(newMat.getUnitPrice() <= 0){
-            throw new ValidationException("Unit price can not be less or equal 0", Warnings.ERROR);
-        }
-
-        // ============ in unit price weight value ============================
-        if(newMat.getUnit() == null){
-            throw new ValidationException("Unit name cannot be empty", Warnings.ERROR);
-        }
 
         // check later with AI
         newMat.setDescription(mat.getDescription());
@@ -256,17 +240,120 @@ public class MaterialController {
 
         if (mat.getImages() != null) {
             for (var img : mat.getImages()) {
-                img.setMaterials(mat);
+                img.setMaterials(newMat);
                 newMat.getImages().add(img);
             }
         }
 
-        mat.setImages(newMat.getImages());
+        newMat.setImages(newMat.getImages());
 
-        materialRepository.save(mat);
+        materialRepository.save(newMat);
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
     }
+
+
+    @PostMapping("/editExistingMaterial")
+    public ResponseEntity<ErrorResponse> ediMaterial(@RequestBody Materials mat){
+
+
+        // checks if there is any null or is empty values
+        providedDataChecker.checkEmptyValue(mat, Materials.class);
+
+        Materials existingMat = materialRepository.findById(mat.getId()).orElseThrow();
+
+
+        // ============ Name ============================
+        // later check with AI if this is not bad
+        existingMat.setMaterialName(mat.getMaterialName());
+
+        // ============ in stock value ============================
+
+        existingMat.setInStock(mat.getInStock());
+
+
+        // ============ in min threshold value ============================
+
+
+        existingMat.setMinThresHold(mat.getMinThresHold());
+
+        if (existingMat.getInStock() == 0) {
+            existingMat.setStock(Stock.No_Stock);
+        } else if (existingMat.getInStock() <= existingMat.getMinThresHold()) {
+            existingMat.setStock(Stock.Low_Stock);
+        } else {
+            existingMat.setStock(Stock.In_Stock);
+        }
+
+        // ============ in min setEnabled value ============================
+        // default value
+        existingMat.setEnabled(ActiveInactive.ACTIVE);
+
+
+
+        // check later with AI
+        existingMat.setDescription(mat.getDescription());
+
+        existingMat.setMaterialType(mat.getMaterialType());
+
+        //newMat.setUser();
+
+        existingMat.setMaterialUrl(mat.getMaterialUrl());
+
+        existingMat.setCareInstructions(mat.getCareInstructions());
+
+        existingMat.setMaterialColor(mat.getMaterialColor());
+
+
+        if (mat.getImages() != null) {
+            for (var img : mat.getImages()) {
+                img.setMaterials(existingMat);
+                existingMat.getImages().add(img);
+            }
+        }
+
+        existingMat.setImages(existingMat.getImages());
+
+        materialRepository.save(existingMat);
+
+        return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material edited successfully", Warnings.OK));
+    }
+
+
+    @GetMapping("/deleteMaterial/{id}")
+    public ResponseEntity<ErrorResponse> deleteMaterial(@PathVariable Long id){
+
+        Materials material = materialRepository.findById(id).orElseThrow();
+
+        try{
+
+            materialRepository.deleteById(id);
+
+        }catch (Exception e){
+
+
+            material.setEnabled(ActiveInactive.INACTIVE);
+
+            materialRepository.save(material);
+
+            return ResponseEntity.ok(new ErrorResponse(  material.getMaterialName() + " was set to Inactive successfully", Warnings.OK));
+
+        }
+        return ResponseEntity.ok(new ErrorResponse(material.getMaterialName() + "Material removed successfully", Warnings.OK));
+    }
+
+
+    @GetMapping("/getMaterial/{id}")
+    public ResponseEntity<Materials> getEditData(@PathVariable Long id){
+
+        Materials material = materialRepository.findById(id).orElseThrow();
+
+
+        return ResponseEntity.ok(material);
+    }
+
+
+
 
 
 

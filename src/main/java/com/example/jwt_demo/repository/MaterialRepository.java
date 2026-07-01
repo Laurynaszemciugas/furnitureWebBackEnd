@@ -34,6 +34,8 @@ public interface MaterialRepository extends JpaRepository<Materials,Long> {
 
     @Query("""
 SELECT new com.example.jwt_demo.DTOS.Material.MaterialBriefDto(
+    
+    m.id,
     mid.imageUrl,
     m.materialName,
     m.description,

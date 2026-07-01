@@ -63,7 +63,60 @@ public class ProvidedDataChecker {
 
 
 
+
     }
+
+
+
+
+    @SneakyThrows
+    public <T> T getdefaultssss(T values, Class<T> tClass){
+
+        T defaultValue = tClass.getDeclaredConstructor().newInstance();
+
+        for(var s : tClass.getDeclaredFields()){
+
+            Object defaultValues = s.get(defaultValue);
+            Object existingValues = s.get(values);
+
+            s.setAccessible(true);
+
+            if(Objects.equals(defaultValues,existingValues)){
+                s.set(values,null);
+            }
+
+
+
+        }
+
+
+        return values;
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @SneakyThrows
     public <T> T defaultValueChecker(T valueGiven, Class<T> tClass){

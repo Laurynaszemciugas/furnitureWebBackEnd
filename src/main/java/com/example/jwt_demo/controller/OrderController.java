@@ -217,7 +217,8 @@ public class OrderController {
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
 
 
-
+        // checks if there is any null or is empty values
+        providedDataChecker.checkEmptyValue(order, Orders.class);
 
         Orders newOrder = new Orders();
 
@@ -230,10 +231,6 @@ public class OrderController {
         newOrder.setEstimatedDueDate(order.getEstimatedDueDate());
         newOrder.setOrderCreatedByGmail(order.getOrderCreatedByGmail());
         newOrder.setOrderCreatedByName(order.getOrderCreatedByName());
-
-
-        // checks if there is any null or is empty values
-        providedDataChecker.checkEmptyValue(order, Orders.class);
 
 
 

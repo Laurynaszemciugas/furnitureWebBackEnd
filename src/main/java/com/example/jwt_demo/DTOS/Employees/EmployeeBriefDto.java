@@ -1,14 +1,13 @@
-package com.example.jwt_demo.Entity;
+package com.example.jwt_demo.DTOS.Employees;
+
 
 import com.example.jwt_demo.Enums.EmployeeAcIn;
 import com.example.jwt_demo.Enums.EmployeeCategory;
 import com.example.jwt_demo.Enums.EmployeeDepartment;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -16,32 +15,16 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class Employee {
+public class EmployeeBriefDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Double hourlyRate;
-    private Long productsFinished;
-    private String name;
-    private String lastName;
+    private String profileImage;
     private String fullName;
     private String gmail;
-    private String profileImage;
-
-
-    @Enumerated(EnumType.STRING)
     private EmployeeAcIn employeeAcIn;
-    @Enumerated(EnumType.STRING)
     private EmployeeCategory employeeCategory;
-    @Enumerated(EnumType.STRING)
     private EmployeeDepartment employeeDepartment;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-    @CreationTimestamp
+    private Double hourlyRate;
     private LocalDateTime created;
-
 
 }
