@@ -37,11 +37,10 @@ public class Employee {
     private LocalDate dateOfBirth;
     private String address;
     private String jobTittle;
-    private String employeeId;
     @Enumerated(EnumType.STRING)
     private EmploymentType employmentType;
 
-
+    @Lob
     private String profileImage;
 
 
@@ -54,6 +53,11 @@ public class Employee {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "employee_id")
+    private User empId;
+
     @CreationTimestamp
     private LocalDateTime created;
 

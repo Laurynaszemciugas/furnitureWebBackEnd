@@ -35,6 +35,7 @@ public class User {
     private LocalDateTime created;
 
     private String fullName;
+    @Lob
     private String imageUrl;
 
 
