@@ -20,4 +20,6 @@ public class OrdersFeedData {
     private LocalDateTime estimatedDueDate;
     private LocalDateTime created;
     private Double totalPrice;
+    private String address;
+    private String gmail;
 }

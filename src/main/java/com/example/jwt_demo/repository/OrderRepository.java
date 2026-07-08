@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.OrderStatus;
@@ -30,7 +31,9 @@ SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
     COALESCE(SUM(op.amountOfProduct), 0),
     o.estimatedDueDate,
     o.created,
-    o.totalPrice
+    o.totalPrice,
+    o.billingAddress,
+    o.orderCreatedByGmail
 )
 FROM Orders o
 JOIN o.employees oe
@@ -101,6 +104,24 @@ AND (
             Long amountOfProduct,
             String prompt
     );
+
+
+
+    @Query("""
+
+            SELECT new com.example.jwt_demo.DTOS.Common.MiniStatHolder(
+            count(o.id),
+            SUM(CASE WHEN o.orderStatus = 'Finished' THEN 1 ELSE 0 END),
+            SUM(CASE WHEN o.orderStatus = 'In_Progress' THEN 1 ELSE 0 END),
+            SUM(CASE WHEN o.created >= :fromDate AND o.created <= :toDate THEN 1 ELSE 0 END))
+         
+            FROM Orders o
+
+
+""")
+    MiniStatHolder getOrderMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+
+
 
 
 

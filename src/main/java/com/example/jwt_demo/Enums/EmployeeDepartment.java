@@ -6,6 +6,7 @@ public enum EmployeeDepartment {
     ASSEMBLY,
     LOGISTICS,
     FINISHING,
+    HELPING,
     ALL
 
 }

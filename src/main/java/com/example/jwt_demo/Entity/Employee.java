@@ -1,8 +1,8 @@
 package com.example.jwt_demo.Entity;
 
 import com.example.jwt_demo.Enums.EmployeeAcIn;
-import com.example.jwt_demo.Enums.EmployeeCategory;
 import com.example.jwt_demo.Enums.EmployeeDepartment;
+import com.example.jwt_demo.Enums.EmployeeRole;
 import com.example.jwt_demo.Enums.EmploymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -47,7 +47,7 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     private EmployeeAcIn employeeAcIn;
     @Enumerated(EnumType.STRING)
-    private EmployeeCategory employeeCategory;
+    private EmployeeRole employeeCategory;
     @Enumerated(EnumType.STRING)
     private EmployeeDepartment employeeDepartment;
     @ManyToOne

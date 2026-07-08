@@ -72,7 +72,7 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
 """)
     List<EmployeeBriefDto> getExistingEmployeeDataForFeed(
             @Param("employeeAcInChoice") EmployeeAcIn employeeAcInChoice,
-            @Param("employeeCategoryChoice") EmployeeCategory employeeCategoryChoice,
+            @Param("employeeCategoryChoice") EmployeeRole employeeCategoryChoice,
             @Param("employeeDepartmentChoice") EmployeeDepartment employeeDepartmentChoice,
             @Param("hourlyRateChoice") Double hourlyRateChoice,
             @Param("fromJoinedChoice") LocalDateTime fromJoinedChoice,
@@ -107,7 +107,7 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
 """)
     Long getTotalPages(
             @Param("employeeAcInChoice") EmployeeAcIn employeeAcInChoice,
-            @Param("employeeCategoryChoice") EmployeeCategory employeeCategoryChoice,
+            @Param("employeeCategoryChoice") EmployeeRole employeeCategoryChoice,
             @Param("employeeDepartmentChoice") EmployeeDepartment employeeDepartmentChoice,
             @Param("hourlyRateChoice") Double hourlyRateChoice,
             @Param("fromJoinedChoice") LocalDateTime fromJoinedChoice,

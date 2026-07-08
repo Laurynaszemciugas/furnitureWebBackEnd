@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -71,7 +72,7 @@ public class AuthController {
     @PostMapping("/signup")
     public String registerUser(@RequestBody User user) {
         if (userRepository.existsByGmail(user.getGmail())) {
-            throw  new ValidationException("Username is already taken!", Warnings.ERROR);
+            throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
         }
         // Create new user's account
         User newUser = new User(
@@ -84,10 +85,40 @@ public class AuthController {
                 Role.USER,
                 AccountStatus.ALLOWED,
                 null,
-                null,
+                LocalDateTime.now(),
                 user.getName() + " " + user.getLastName(),
                 user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
         userRepository.save(newUser);
         return "User registered successfully!";
     }
+
+
+    public String systemRegister(User user) {
+        if (userRepository.existsByGmail(user.getGmail())) {
+            throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
+        }
+        // Create new user's account
+        User newUser = new User(
+                null,
+                user.getGmail(),
+                user.getName(),
+                user.getLastName(),
+                encoder.encode(user.getPassword()),
+                user.getRecoveryPin(),
+                user.getRole(),
+                AccountStatus.ALLOWED,
+                null,
+                LocalDateTime.now(),
+                user.getName() + " " + user.getLastName(),
+                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
+        userRepository.save(newUser);
+
+
+        return "User registered successfully!";
+    }
+
 }
+
+
+
+

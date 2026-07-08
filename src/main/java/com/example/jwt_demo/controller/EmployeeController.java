@@ -16,6 +16,7 @@ import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.FilterDTO.Employee.EmployeeFilterHolder;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.repository.EmployeeRepository;
+import com.example.jwt_demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,9 @@ public class EmployeeController {
 
     @Autowired
     EmployeeRepository employeeRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
@@ -94,6 +98,19 @@ public class EmployeeController {
     @PostMapping("/saveNewEmployee")
     public ResponseEntity<ErrorResponse> saveNewEmploee(@RequestBody Employee emp){
 
+
+        User empUser = new User();
+        empUser.setGmail(emp.getGmail());
+        empUser.setName(emp.getName());
+        empUser.setLastName(emp.getLastName());
+        empUser.setFullName(emp.getName() + " " + emp.getLastName());
+        empUser.setPassword(emp.getUser().getPassword());
+        empUser.setRole(Role.EMPLOYEE);
+        empUser.setCreated(LocalDateTime.now());
+        authController.systemRegister(empUser);
+
+        User savedEmpUser = userRepository.findByGmail(emp.getGmail());
+
         Employee cleanEmpLoyee = new Employee();
         cleanEmpLoyee.setHourlyRate(emp.getHourlyRate());
         cleanEmpLoyee.setProductsFinished(0L); // count somehow btw
@@ -114,17 +131,11 @@ public class EmployeeController {
         cleanEmpLoyee.setCreated(LocalDateTime.now());
 
 
-        User empUser = new User();
-        empUser.setGmail(emp.getGmail());
-        empUser.setName(emp.getName());
-        empUser.setLastName(emp.getLastName());
-        empUser.setFullName(emp.getName() + " " + emp.getLastName());
-        empUser.setPassword(emp.getUser().getPassword());
-        empUser.setRole(Role.EMPLOYEE);
-        empUser.setCreated(LocalDateTime.now());
+        cleanEmpLoyee.setEmpId(savedEmpUser);
+
 
         employeeRepository.save(cleanEmpLoyee);
-        authController.registerUser(empUser);
+
 
         return ResponseEntity.ok(new ErrorResponse("saved", Warnings.OK));
 
@@ -133,6 +144,7 @@ public class EmployeeController {
 
     @PostMapping("/editEmployee")
     public ResponseEntity<ErrorResponse> editEmployee(@RequestBody Employee emp){
+
 
 
         Employee cleanEmpLoyee = employeeRepository.findById(emp.getId()).orElseThrow();
@@ -155,6 +167,17 @@ public class EmployeeController {
         cleanEmpLoyee.setCreated(LocalDateTime.now());
 
 
+        User empUser = cleanEmpLoyee.getEmpId();
+        empUser.setGmail(emp.getGmail());
+        empUser.setName(emp.getName());
+        empUser.setLastName(emp.getLastName());
+        empUser.setFullName(emp.getName() + " " + emp.getLastName());
+
+        if(emp.getUser().getPassword().length() >= 8 || !emp.getUser().getPassword().isEmpty() ) {
+            empUser.setPassword(logic.passwordEncoder().encode(emp.getUser().getPassword()));
+        }
+
+        employeeRepository.save(cleanEmpLoyee);
 
 
         employeeRepository.save(cleanEmpLoyee);

@@ -1,6 +1,6 @@
 package com.example.jwt_demo.DTOS.Order;
 
-import com.example.jwt_demo.Enums.EmployeeCategory;
+import com.example.jwt_demo.Enums.EmployeeRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +15,7 @@ public class ComboBoxEmployees {
 
     private Long id;
     private String fullName;
-    private EmployeeCategory employeeCategory;
+    private EmployeeRole employeeCategory;
     private String profileImage;
 
 

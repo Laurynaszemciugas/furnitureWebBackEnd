@@ -2,8 +2,8 @@ package com.example.jwt_demo.FilterDTO.Employee;
 
 
 import com.example.jwt_demo.Enums.EmployeeAcIn;
-import com.example.jwt_demo.Enums.EmployeeCategory;
 import com.example.jwt_demo.Enums.EmployeeDepartment;
+import com.example.jwt_demo.Enums.EmployeeRole;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -17,7 +17,7 @@ public class EmployeeFilterHolder {
 
     private EmployeeAcIn employeeAcIn = EmployeeAcIn.ALL;
     private String promt = "ALL";
-    private EmployeeCategory employeeCategory = EmployeeCategory.All;
+    private EmployeeRole employeeCategory = EmployeeRole.ALL;
     private EmployeeDepartment employeeDepartment = EmployeeDepartment.ALL;
     private Double hourlyRate = 0.0;
     private LocalDate fromJoined = LocalDate.of(1000,12,12);

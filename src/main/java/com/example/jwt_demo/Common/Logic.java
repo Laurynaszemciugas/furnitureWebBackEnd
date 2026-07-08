@@ -1,5 +1,7 @@
 package com.example.jwt_demo.Common;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,6 +23,11 @@ public class Logic {
 
             return LocalDateTime.parse(fromInput, formatter);
 
+    }
+
+
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 
