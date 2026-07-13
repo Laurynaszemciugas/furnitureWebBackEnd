@@ -53,6 +53,10 @@ public class Orders {
     private OrderStatus orderStatus;
     @RequiredField
     private String orderNote;
+
+    private String userNote;
+    private String serverNote;
+
     @RequiredField
     private LocalDateTime estimatedDueDate;
     @RequiredField

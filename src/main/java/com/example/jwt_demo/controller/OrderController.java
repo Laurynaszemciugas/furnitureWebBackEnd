@@ -4,6 +4,7 @@ import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -64,15 +65,31 @@ public class OrderController {
     public ResponseEntity<List<OrdersFeedData>> getAllOrders(@RequestBody OrderFilterHolder orderFilterHolder) {
 
 
-
-
-
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
+        return ResponseEntity.ok(
+                orderRepository.getOrderData(
+                        orderFilterHolder.getOrderStatusChoice(),
+                        orderFilterHolder.getPriceFromChoice(),
+                        orderFilterHolder.getPriceToChoice(),
+                        logic.dateConverter(orderFilterHolder.getDateFromChoice()),
+                        logic.dateConverter(orderFilterHolder.getDateToChoice()),
+                        orderFilterHolder.getAmountOfProductsChoice(),
+                        orderFilterHolder.getPromptChoice(),
+                        orderFilterHolder.getEmployee(),
+                        orderFilterHolder.getProducts(),
+                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount())
+                )
+        );
+    }
 
 
+    @PostMapping("/getAllNewOrders")
+    public ResponseEntity<List<OrdersFeedData>> getAllNewOrders(@RequestBody OrderFilterHolder orderFilterHolder) {
 
 
+        orderFilterHolder.setOrderStatusChoice(OrderStatus.NEW);
+        orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
         return ResponseEntity.ok(
                 orderRepository.getOrderData(
@@ -107,7 +124,8 @@ public class OrderController {
                 logic.dateConverter(orderFilterHolder.getDateFromChoice()),
                 logic.dateConverter(orderFilterHolder.getDateToChoice()),
                 orderFilterHolder.getAmountOfProductsChoice(),
-                orderFilterHolder.getPromptChoice()
+                orderFilterHolder.getPromptChoice(),
+                Double.valueOf(orderFilterHolder.getPageCount())
         );
 
 
@@ -139,9 +157,12 @@ public class OrderController {
         sameExistingOrder.getEmployees().clear();
 
 
+
         if(order.getBillingAddress().isEmpty() || order.getBillingAddress() == null){
             throw  new ValidationException("Address is required", Warnings.ERROR);
         }
+
+        sameExistingOrder.setBillingAddress(order.getBillingAddress());
 
 
 
@@ -339,8 +360,39 @@ public class OrderController {
 
     }
 
+//
+//    boolean orderCompletable = true;
+//
+//        for(var s : list){
+//        if(s.getQuantity() > s.getRemainingAmount()){
+//            orderCompletable = false;
+//        }
+//    }
+
+    @GetMapping("/getNewOrderCount")
+    public ResponseEntity<Long> getOrderMiniStats(){
 
 
+        return ResponseEntity.ok(orderRepository.findNewOrdersCount());
+
+    }
+
+    @GetMapping("/getGridStuff/{id}")
+    public ResponseEntity<List<NewOrderFeedData>> getOrderMiniStats(@PathVariable Long id){
+
+        List<NewOrderFeedData> list = orderRepository.getNewOrderFeedData(id);
+
+
+
+
+
+
+
+
+
+        return ResponseEntity.ok(list);
+
+    }
 
 
 

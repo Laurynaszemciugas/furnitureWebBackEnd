@@ -173,6 +173,14 @@ WHERE o.id = :id
     MiniStatHolder getProductMiniStats(@Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
 
 
+    @Query("""
+
+        SELECT p FROM Product p where p.user.id = :userId
+
+""")
+    List<Product> getProductsAccordingToUserId(@Param("userId") Long userId);
+
+
 
 
 }

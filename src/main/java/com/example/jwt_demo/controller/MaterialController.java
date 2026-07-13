@@ -304,6 +304,16 @@ public class MaterialController {
 
         existingMat.setMaterialColor(mat.getMaterialColor());
 
+        existingMat.setMaterialTextures(mat.getMaterialTextures());
+        existingMat.setMaterialTextures(mat.getMaterialTextures());
+        existingMat.setMaterialGrainPatterns(mat.getMaterialGrainPatterns());
+        existingMat.setUnitPrice(mat.getUnitPrice());
+        existingMat.setMaterialWeight(mat.getMaterialWeight());
+        existingMat.setMaterialFinishType(mat.getMaterialFinishType());
+        existingMat.setUnit(mat.getUnit());
+        existingMat.setDeliveryDate(mat.getDeliveryDate());
+        existingMat.setDefaultTimePeriod(mat.getDefaultTimePeriod());
+
 
         if (mat.getImages() != null) {
             for (var img : mat.getImages()) {

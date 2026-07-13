@@ -1,6 +1,7 @@
 package com.example.jwt_demo.controller;
 
 
+import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
@@ -51,6 +52,9 @@ public class ProductController {
     @Autowired
     ProvidedDataChecker providedDataChecker;
 
+    @Autowired
+    DatabaseChecks databaseChecks;
+
 
 
     @PostMapping("/saveProduct")
@@ -83,7 +87,7 @@ public class ProductController {
         cleanProduct.setUser(product.getUser());
         cleanProduct.setCreated(product.getCreated());
         cleanProduct.setUser(currentUser);
-        cleanProduct.setStock(Stock.No_Stock);
+        cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
 
         if (product.getTags() != null) {
             cleanProduct.getTags().clear();
@@ -140,6 +144,7 @@ public class ProductController {
         }
         productRepository.save(cleanProduct);
 
+        databaseChecks.calculateProductsStock(user.getId());
 
         return ResponseEntity.ok(new ErrorResponse("Success", Warnings.OK));
     }
@@ -151,6 +156,7 @@ public class ProductController {
         CustomUserDetails user = common.getUserData();
 
         productFilterHolder = providedDataChecker.defaultValueChecker(productFilterHolder, ProductFilterHolder.class);
+
 
 
         return productRepository.getAllProducts(
@@ -233,6 +239,7 @@ public class ProductController {
         existingProduct.setUser(product.getUser());
         existingProduct.setCreated(product.getCreated());
         existingProduct.setUser(currentUser);
+        existingProduct.setStockCalculatedManually(product.isStockCalculatedManually());
 
 
         // stock check later
@@ -292,7 +299,7 @@ public class ProductController {
 
         productRepository.save(existingProduct);
 
-
+        databaseChecks.calculateProductsStock(null);
 
         return ResponseEntity.ok(new ErrorResponse("Product was edited successfully",Warnings.OK));
 

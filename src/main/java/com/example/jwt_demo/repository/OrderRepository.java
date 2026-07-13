@@ -1,6 +1,7 @@
 package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.OrderStatus;
@@ -23,6 +24,12 @@ LEFT JOIN FETCH op.product
 LEFT JOIN FETCH o.user
 """)
     List<Orders> findAllFull();
+
+    @Query("""
+SELECT  count(o) FROM Orders o where orderStatus = 'NEW' 
+
+""")
+    Long findNewOrdersCount();
 
     @Query("""
 SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
@@ -75,7 +82,7 @@ HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amou
 SELECT
     CASE
         WHEN COUNT(o.id) = 0 THEN 1
-        ELSE CEIL(COUNT(o.id) / 5.0)
+        ELSE CEIL(COUNT(o.id) / :pageCount)
     END
 FROM Orders o
 WHERE (:status IS NULL OR o.orderStatus = :status)
@@ -102,7 +109,8 @@ AND (
             LocalDateTime dateFrom,
             LocalDateTime dateTo,
             Long amountOfProduct,
-            String prompt
+            String prompt,
+            double pageCount
     );
 
 
@@ -122,7 +130,28 @@ AND (
     MiniStatHolder getOrderMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
 
 
-
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Order.NewOrderFeedData(
+        p.id,
+        img.imageUrl,
+        p.productName,
+        p.sku,
+        op.amountOfProduct,
+        p.stockQuantity,
+        p.price,
+        p.price * op.amountOfProduct
+    )
+    FROM Orders o
+    JOIN o.productsData op
+    JOIN op.product p
+    LEFT JOIN ProductImageData img
+        ON img.product.id = p.id
+        AND img.imageLogic = 'Main'
+    WHERE o.id = :orderId
+    """)
+    List<NewOrderFeedData> getNewOrderFeedData(
+            @Param("orderId") Long orderId
+    );
 
 
 

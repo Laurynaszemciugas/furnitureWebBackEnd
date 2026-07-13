@@ -5,6 +5,9 @@ public enum OrderStatus {
     In_Progress,
     Finished,
     Pending,
+    CANCELLED,
+    NEW,
+    LACK_OF_SUPPLY,
     ALL
 
 }

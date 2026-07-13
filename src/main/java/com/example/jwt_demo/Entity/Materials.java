@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +69,9 @@ public class Materials {
     @Enumerated(EnumType.STRING)
     @RequiredField
     private MaterialGrainPatterns materialGrainPatterns;
+
+    public LocalDate deliveryDate;
+    public Long defaultTimePeriod;
 
     @CreationTimestamp
     private LocalDateTime created;
