@@ -20,6 +20,7 @@ import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,9 @@ public class OrderController {
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
+
+    @Autowired
+    Common common;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
@@ -360,14 +364,6 @@ public class OrderController {
 
     }
 
-//
-//    boolean orderCompletable = true;
-//
-//        for(var s : list){
-//        if(s.getQuantity() > s.getRemainingAmount()){
-//            orderCompletable = false;
-//        }
-//    }
 
     @GetMapping("/getNewOrderCount")
     public ResponseEntity<Long> getOrderMiniStats(){
@@ -382,17 +378,53 @@ public class OrderController {
 
         List<NewOrderFeedData> list = orderRepository.getNewOrderFeedData(id);
 
-
-
-
-
-
-
-
-
         return ResponseEntity.ok(list);
 
     }
+
+    @GetMapping("/rejectNewOrder/{id}")
+    public ResponseEntity<ErrorResponse> rejectNewOrder(@PathVariable Long id){
+
+        Orders newOrder = orderRepository.findById(id).orElseThrow();
+        newOrder.setOrderStatus(OrderStatus.CANCELLED);
+
+        orderRepository.save(newOrder);
+
+        return ResponseEntity.ok(new ErrorResponse("Changed successfully to cancelled", Warnings.OK));
+
+    }
+
+    @GetMapping("/acceptNewOrder/{id}")
+    public ResponseEntity<ErrorResponse> acceptNewOrder(@PathVariable Long id){
+
+        Orders newOrder = orderRepository.findById(id).orElseThrow();
+
+        for(var ord : newOrder.getProductsData()){
+
+            Long amountTaken = ord.getAmountOfProduct();
+            Long amountAvailable = ord.getProduct().getStockQuantity();
+
+            if(amountTaken > amountAvailable){
+                newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                newOrder.setServerNote("Order not possible will be automatically changed to Pending when supply exists");
+            }
+
+            else{
+                newOrder.setOrderStatus(OrderStatus.Pending);
+            }
+
+
+
+        }
+
+        orderRepository.save(newOrder);
+
+        return ResponseEntity.ok(new ErrorResponse("Changed successfully to Pending", Warnings.OK));
+
+    }
+
+
+
 
 
 
