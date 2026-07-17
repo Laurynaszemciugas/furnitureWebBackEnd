@@ -226,7 +226,17 @@ AND (
         ),
         
         
-        
+            COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created < :currentTo
+              AND o.orderStatus = 'Finished'
+        ),
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created < :previousTo
+              AND o.orderStatus = 'Finished'
+        ),
         
 
         COUNT(DISTINCT o.id) FILTER (
