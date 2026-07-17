@@ -1,7 +1,10 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
+import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.OrderStatus;
@@ -154,6 +157,120 @@ AND (
     );
 
 
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Order.OrderReportPieChart(
+        COALESCE(SUM(CASE
+            WHEN o.orderStatus = 'NEW' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.orderStatus = 'LACK_OF_SUPPLY' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.orderStatus = 'Pending' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.orderStatus = 'In_Progress' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.orderStatus = 'Finished' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.orderStatus = 'CANCELLED' THEN 1L ELSE 0L
+        END), 0)
+    )
+    FROM Orders o
+    WHERE o.created >= :dateFrom
+      AND o.created < :dateTo
+""")
+    OrderReportPieChart orderReportPieChart(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
+    );
+
+
+    @Query("""
+
+    SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
+    o.createdDate,
+    SUM(op.cost * op.amountOfProduct))
+    FROM Orders o
+    JOIN productsData op
+    WHERE o.created >= :dateFrom
+    AND o.created <= :dateTo
+    GROUP BY o.createdDate
+    ORDER BY createdDate
+    
+    
+
+""")
+    List<GraphDataDateValue> orderReportLineBar(@Param("dateFrom") LocalDateTime dateFrom,
+                                                @Param("dateTo") LocalDateTime dateTo);
+
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder(
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created < :currentTo
+        ),
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created < :previousTo
+        ),
+        
+        
+        
+        
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created < :currentTo
+              AND o.orderStatus = 'Pending'
+        ),
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created < :previousTo
+              AND o.orderStatus = 'Pending'
+        ),
+
+
+
+        COALESCE(
+            SUM(op.cost * op.amountOfProduct) FILTER (
+                WHERE o.created >= :currentFrom
+                  AND o.created < :currentTo
+            ),
+            0
+        ),
+
+        COALESCE(
+            SUM(op.cost * op.amountOfProduct) FILTER (
+                WHERE o.created >= :previousFrom
+                  AND o.created < :previousTo
+            ),
+            0
+        )
+
+    )
+    FROM Orders o
+    LEFT JOIN o.productsData op
+    WHERE o.created >= :previousFrom
+      AND o.created < :currentTo
+""")
+    ReportMiniStatHolder getOrderMiniStats(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("previousFrom") LocalDateTime previousFrom,
+            @Param("previousTo") LocalDateTime previousTo
+    );
 
 
 

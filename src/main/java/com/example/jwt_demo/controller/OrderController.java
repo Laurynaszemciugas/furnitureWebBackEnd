@@ -3,8 +3,11 @@ package com.example.jwt_demo.controller;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
+import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -181,8 +184,8 @@ public class OrderController {
             Long productId = s.getProduct().getId();
             Product existingProduct = productRepository.findById(productId).orElseThrow();
 
-            if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() > 101) {
-                throw  new ValidationException("Product quantity can only be from 1 to 100", Warnings.ERROR);
+            if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
+                throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
             }
             totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
             OrderProducts orderProducts = new OrderProducts();
@@ -257,6 +260,7 @@ public class OrderController {
         newOrder.setEstimatedDueDate(order.getEstimatedDueDate());
         newOrder.setOrderCreatedByGmail(order.getOrderCreatedByGmail());
         newOrder.setOrderCreatedByName(order.getOrderCreatedByName());
+        newOrder.setCreatedDate(LocalDate.now());
 
 
 
@@ -280,8 +284,8 @@ public class OrderController {
                 }
                     Product product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
 
-                if(s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >=100){
-                    throw  new ValidationException("Cannot selected that much product required from 1 to 99", Warnings.ERROR);
+                if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
+                    throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
                 }
 //                if(product.getStockQuantity() < s.getAmountOfProduct()){
 //                    throw new ValidationException(String.format("Order is not possible due to [%s] having less stock that is needed to fill the order | AVAILABLE STOCK %d | NEEDED STOCK %d",product.getProductName(),product.getStockQuantity(),s.getAmountOfProduct()), Warnings.ERROR);
@@ -423,6 +427,44 @@ public class OrderController {
 
     }
 
+    // ORDER REPORT PAGE CALLS
+
+
+    @GetMapping("/getOrderByStatus/{fromDate}/{toDate}")
+    public ResponseEntity<OrderReportPieChart> getOrderPieChartData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        System.out.println(fromDate);
+
+        return ResponseEntity.ok(orderRepository.orderReportPieChart(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+
+    }
+
+    @GetMapping("/getOrderByLineChart/{fromDate}/{toDate}")
+    public ResponseEntity<List<GraphDataDateValue>> getOrderLineChartData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+
+        System.out.println("line bar");
+
+
+        System.out.println(fromDate + "   "   + toDate);
+
+
+        return ResponseEntity.ok(orderRepository.orderReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+
+    }
+
+
+    @GetMapping("/getOrderMiniStatData/{fromDate}/{toDate}")
+    public ResponseEntity<ReportMiniStatHolder> getOrderMiniStatData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
+
+        LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
+
+
+        return ResponseEntity.ok(orderRepository.getOrderMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+
+    }
 
 
 
