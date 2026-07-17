@@ -6,9 +6,7 @@ import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
-import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
-import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
-import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
+import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
@@ -23,19 +21,12 @@ import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
-import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -465,6 +456,23 @@ public class OrderController {
         return ResponseEntity.ok(orderRepository.getOrderMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
 
     }
+
+    @GetMapping("/getOrderTopConsumers/{fromDate}/{toDate}")
+    public ResponseEntity< List<TopCustomerDto>> getOrderTopCustomerGrid(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        return ResponseEntity.ok(orderRepository.topCustomerList(logic.dateConverter(fromDate), logic.dateConverter(toDate),PageRequest.of(0,5)));
+
+    }
+
+    @GetMapping("/getRecentOrders/{fromDate}/{toDate}")
+    public ResponseEntity<List<RecentOrdersReportPage>> getRecentOrderList(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        return ResponseEntity.ok(orderRepository.recentOrderReportPage(logic.dateConverter(fromDate), logic.dateConverter(toDate),PageRequest.of(0,5)));
+
+    }
+
+
+
 
 
 

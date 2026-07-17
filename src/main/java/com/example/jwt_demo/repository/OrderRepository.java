@@ -3,9 +3,7 @@ package com.example.jwt_demo.repository;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
-import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
-import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
-import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
+import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.OrderStatus;
 import org.springframework.data.domain.Pageable;
@@ -282,6 +280,55 @@ AND (
             @Param("previousTo") LocalDateTime previousTo
     );
 
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Order.TopCustomerDto(
+        u.id,
+        u.fullName,
+        COUNT(DISTINCT o.id),
+        SUM(op.amountOfProduct * op.cost),
+        (SUM(op.amountOfProduct * op.cost) / COUNT(DISTINCT o.id))
+    )
+    FROM Orders o
+    JOIN o.productsData op
+    
+    JOIN o.user u
+    WHERE o.created >= :dateFrom
+      AND o.created <= :dateTo
+    GROUP BY u.id, u.fullName
+    ORDER BY SUM(op.amountOfProduct * op.cost) DESC
+    
+""")
+    List<TopCustomerDto> topCustomerList(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo,
+            Pageable pageable
+    );
 
+    @Query("""
+
+    SELECT new com.example.jwt_demo.DTOS.Order.RecentOrdersReportPage(
+        o.id,
+        SUM(op.amountOfProduct),
+        o.orderStatus,
+        SUM(op.amountOfProduct * op.cost),
+        o.created)
+    FROM Orders o
+    JOIN productsData op
+        
+        WHERE o.created >= :dateFrom
+      AND o.created <= :dateTo
+        
+    GROUP BY
+        o.id,
+        o.orderStatus,
+        o.created
+        
+        
+        
+
+""")
+    List<RecentOrdersReportPage> recentOrderReportPage(@Param("dateFrom") LocalDateTime dateFrom,
+                                                       @Param("dateTo") LocalDateTime dateTo,
+                                                       Pageable pageable);
 
 }
