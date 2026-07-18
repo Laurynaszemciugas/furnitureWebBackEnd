@@ -1,6 +1,7 @@
 package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
@@ -135,6 +136,80 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
 """)
     MiniStatHolder getMaterialMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+
+
+    // report page stuff
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder(
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created < :currentTo
+        ),
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created < :previousTo
+        ),
+        
+        
+            COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created < :currentTo
+              AND o.stock = 'In_Stock'
+        ),
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created < :previousTo
+              AND o.stock = 'In_Stock'
+        ),
+        
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created < :currentTo
+              AND o.stock = 'Low_Stock'
+        ),
+
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created < :previousTo
+              AND o.stock = 'Low_Stock'
+        ),
+
+
+
+        COALESCE(
+            SUM(o.unitPrice * o.inStock) FILTER (
+                WHERE o.created >= :currentFrom
+                  AND o.created < :currentTo
+            ),
+            0.0
+        ),
+
+        COALESCE(
+            SUM(o.unitPrice * o.inStock) FILTER (
+                WHERE o.created >= :previousFrom
+                  AND o.created < :previousTo
+            ),
+            0.0
+        )
+
+    )
+    FROM Materials o
+    WHERE o.created >= :previousFrom
+      AND o.created < :currentTo
+""")
+    ReportMiniStatHolder getProductMiniStats(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("previousFrom") LocalDateTime previousFrom,
+            @Param("previousTo") LocalDateTime previousTo
+    );
+
+
 
 
 

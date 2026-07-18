@@ -4,6 +4,7 @@ import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
@@ -363,6 +364,19 @@ public class MaterialController {
     }
 
 
+    // report page calls
+
+    @GetMapping("/getProductsMiniStatData/{fromDate}/{toDate}")
+    public ResponseEntity<ReportMiniStatHolder> getOrderMiniStatData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
+
+        LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
+
+
+        return ResponseEntity.ok(materialRepository.getProductMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+
+    }
 
 
 
