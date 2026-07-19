@@ -144,7 +144,7 @@ public class ProductController {
         }
         productRepository.save(cleanProduct);
 
-        databaseChecks.calculateProductsStock(user.getId());
+        databaseChecks.calculateProductsStock(user.getId(),false);
 
         return ResponseEntity.ok(new ErrorResponse("Success", Warnings.OK));
     }
@@ -299,7 +299,7 @@ public class ProductController {
 
         productRepository.save(existingProduct);
 
-        databaseChecks.calculateProductsStock(null);
+        databaseChecks.calculateProductsStock(user.getId(),false);
 
         return ResponseEntity.ok(new ErrorResponse("Product was edited successfully",Warnings.OK));
 

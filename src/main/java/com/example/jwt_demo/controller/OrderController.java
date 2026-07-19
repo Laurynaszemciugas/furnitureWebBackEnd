@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
@@ -53,6 +54,9 @@ public class OrderController {
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
+
+    @Autowired
+    DatabaseChecks databaseChecks;
 
     @Autowired
     Common common;
@@ -343,6 +347,9 @@ public class OrderController {
 
 
         orderRepository.save(newOrder);
+
+
+        databaseChecks.calculateProductsStock(1L,false);
 
 
 

@@ -7,20 +7,20 @@ import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
+import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
 import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
-import com.example.jwt_demo.Enums.ActiveInactive;
-import com.example.jwt_demo.Enums.MaterialType;
-import com.example.jwt_demo.Enums.Stock;
-import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.Entity.StockMovement;
+import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.MaterialRepository;
+import com.example.jwt_demo.repository.StockMovementRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -39,6 +39,9 @@ public class MaterialController {
 
     @Autowired
     MaterialRepository materialRepository;
+
+    @Autowired
+    StockMovementRepository stockMovementRepository;
 
     @Autowired
     Common common;
@@ -199,6 +202,14 @@ public class MaterialController {
 
         Materials newMat = new Materials();
 
+        newMat.setUnitPrice(mat.getUnitPrice());
+        newMat.setMaterialWeight(mat.getMaterialWeight());
+        newMat.setDeliveryDate(mat.getDeliveryDate());
+        newMat.setDefaultTimePeriod(mat.getDefaultTimePeriod());
+        newMat.setUnit(mat.getUnit());
+        newMat.setMaterialTextures(mat.getMaterialTextures());
+        newMat.setMaterialFinishType(mat.getMaterialFinishType());
+        newMat.setMaterialGrainPatterns(mat.getMaterialGrainPatterns());
 
         // ============ Name ============================
         // later check with AI if this is not bad
@@ -253,6 +264,19 @@ public class MaterialController {
 
         materialRepository.save(newMat);
 
+        // SAVE NEW MOVEMENT
+
+        StockMovement stockMovement = new StockMovement();
+        stockMovement.setMaterials(newMat);
+        stockMovement.setType(Type.IN);
+        stockMovement.setAmountTakeAdd(newMat.getInStock());
+
+        stockMovementRepository.save(stockMovement);
+
+
+        logic.materialMovementTracker(1L,newMat,0L, mat.getInStock());
+
+
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
     }
 
@@ -265,6 +289,19 @@ public class MaterialController {
         providedDataChecker.checkEmptyValue(mat, Materials.class);
 
         Materials existingMat = materialRepository.findById(mat.getId()).orElseThrow();
+
+        Long stockWas = existingMat.getInStock();
+
+
+        existingMat.setUnitPrice(mat.getUnitPrice());
+        existingMat.setMaterialWeight(mat.getMaterialWeight());
+        existingMat.setDeliveryDate(mat.getDeliveryDate());
+        existingMat.setDefaultTimePeriod(mat.getDefaultTimePeriod());
+        existingMat.setUnit(mat.getUnit());
+        existingMat.setMaterialTextures(mat.getMaterialTextures());
+        existingMat.setMaterialFinishType(mat.getMaterialFinishType());
+        existingMat.setMaterialGrainPatterns(mat.getMaterialGrainPatterns());
+
 
 
         // ============ Name ============================
@@ -329,6 +366,10 @@ public class MaterialController {
         existingMat.setImages(existingMat.getImages());
 
         materialRepository.save(existingMat);
+
+
+        logic.materialMovementTracker(1L,existingMat,mat.getInStock(), stockWas);
+
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material edited successfully", Warnings.OK));
     }
@@ -396,6 +437,18 @@ public class MaterialController {
         return ResponseEntity.ok(materialRepository.productReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
 
     }
+
+    @GetMapping("/getMaterialLowStock/{fromDate}/{toDate}")
+    public ResponseEntity<List<MaterialLowStockGrid>> getLowStockMaterials(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        return ResponseEntity.ok(materialRepository.getProductLowFeed(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5)));
+
+    }
+
+
+
+
+
 
 
 

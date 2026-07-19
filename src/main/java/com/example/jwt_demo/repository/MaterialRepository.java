@@ -4,6 +4,7 @@ import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
+import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
 import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
@@ -254,6 +255,29 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 """)
     List<GraphDataDateValue> productReportLineBar(@Param("dateFrom") LocalDateTime dateFrom,
                                                 @Param("dateTo") LocalDateTime dateTo);
+
+
+    @Query("""
+
+    SELECT new com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid(
+     m.id, m.materialName, m.inStock, m.minThresHold, m.stock)
+     FROM Materials m
+     
+     where m.stock = 'Low_Stock'
+  
+    
+    
+
+""")
+    List<MaterialLowStockGrid> getProductLowFeed(@Param("dateFrom") LocalDateTime dateFrom,
+                                                 @Param("dateTo") LocalDateTime dateTo,
+                                                 Pageable pageable);
+
+
+
+
+
+
 
 
 

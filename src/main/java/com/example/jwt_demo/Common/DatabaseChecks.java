@@ -20,13 +20,18 @@ public class DatabaseChecks {
     @Autowired
     ProductRepository productRepository;
 
+    @Autowired
+    Logic logic;
 
-    public void calculateProductsStock(Long userId){
+
+    public void calculateProductsStock(Long userId, boolean changeMaterialSupply){
 
         System.out.println("cheking db stuff");
 
         List<User> user = userRepository.findAll();
 
+        Long stockWas = 0L;
+        Long stockNew = 0L;
 //        if(userId !=null) {
 //             user = userRepository.findAll();
 //        }
@@ -64,6 +69,18 @@ public class DatabaseChecks {
                     String materialName = matStats.getMaterials().getMaterialName();
 
                     Long canProduce = materialStock / amountUsed;
+
+                    stockWas = matStats.getMaterials().getInStock();
+                    stockNew = Math.abs(stockWas - amountUsed);
+
+
+                    if(changeMaterialSupply) {
+                        System.out.println(stockWas);
+                        System.out.println(stockNew);
+
+                        logic.materialMovementTracker(userId, matStats.getMaterials(), stockWas, stockNew);
+                    }
+
 
                     if(limitingMaterial == null && lowestAmountToMake == null) {
                         lowestAmountToMake = canProduce;
