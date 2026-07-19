@@ -3,9 +3,12 @@ package com.example.jwt_demo.controller;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
+import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
+import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Orders;
@@ -366,8 +369,8 @@ public class MaterialController {
 
     // report page calls
 
-    @GetMapping("/getProductsMiniStatData/{fromDate}/{toDate}")
-    public ResponseEntity<ReportMiniStatHolder> getOrderMiniStatData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+    @GetMapping("/getMaterialMiniStatData/{fromDate}/{toDate}")
+    public ResponseEntity<ReportMiniStatHolder> getMaterialMiniStatData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
         LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
 
@@ -375,6 +378,22 @@ public class MaterialController {
 
 
         return ResponseEntity.ok(materialRepository.getProductMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+
+    }
+
+    @GetMapping("/getMaterialByStatus/{fromDate}/{toDate}")
+    public ResponseEntity<MaterialReportPieChart> getMaterialPieChart(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        System.out.println(fromDate);
+
+        return ResponseEntity.ok(materialRepository.MaterialReportPieChart(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+
+    }
+
+    @GetMapping("/getMaterialByLineChart/{fromDate}/{toDate}")
+    public ResponseEntity<List<GraphDataDateValue>> getProductLineChartData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        return ResponseEntity.ok(materialRepository.productReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
 
     }
 

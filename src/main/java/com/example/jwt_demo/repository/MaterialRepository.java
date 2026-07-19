@@ -1,8 +1,11 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
+import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
+import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Enums.ActiveInactive;
@@ -209,6 +212,48 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
             @Param("previousTo") LocalDateTime previousTo
     );
 
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Material.MaterialReportPieChart(
+        COALESCE(SUM(CASE
+            WHEN o.stock = 'In_Stock' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.stock = 'Low_Stock' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.stock = 'No_Stock' THEN 1L ELSE 0L
+        END), 0)
+
+    )
+    FROM Materials o
+    WHERE o.created >= :dateFrom
+      AND o.created < :dateTo
+""")
+    MaterialReportPieChart MaterialReportPieChart(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
+    );
+
+
+    @Query("""
+
+    SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
+    o.createdDate,
+    SUM(op.cost * op.amountOfProduct))
+    FROM Orders o
+    JOIN productsData op
+    WHERE o.created >= :dateFrom
+    AND o.created <= :dateTo
+    GROUP BY o.createdDate
+    ORDER BY createdDate
+    
+    
+
+""")
+    List<GraphDataDateValue> productReportLineBar(@Param("dateFrom") LocalDateTime dateFrom,
+                                                @Param("dateTo") LocalDateTime dateTo);
 
 
 
