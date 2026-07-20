@@ -44,8 +44,6 @@ public class DatabaseChecks {
 
     public void calculateProductsStock(Long userId, boolean changeMaterialSupply) {
 
-        System.out.println("cheking db stuff");
-
         List<User> user = userRepository.findAll();
 
         Long stockWas = 0L;
@@ -221,7 +219,7 @@ public class DatabaseChecks {
 
             OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
 
-            amountOfProductTaken = Math.abs(amountOfProductTaken - old.getAmountOfProduct());
+            amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
 
 
             if (amountOfProductTaken > remainingProduct) {
