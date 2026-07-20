@@ -150,22 +150,19 @@ public class DatabaseChecks {
             Long remainingProduct = prods.getProduct().getStockQuantity();
 
 
+            Product userDrivenProduct = prods.getProduct();
+
+            userDrivenProduct.setStockQuantity(
+                    Math.abs(amountOfProductTaken - remainingProduct)
+            );
+
+            productRepository.save(userDrivenProduct);
+
+
             if (prods.getProduct().isStockCalculatedManually()) {
-
-                Product userDrivenProduct = prods.getProduct();
-
-                userDrivenProduct.setStockQuantity(Math.abs(amountOfProductTaken - remainingProduct));
-
-                productRepository.save(userDrivenProduct);
-
                 continue;
-            } else {
-                Product userDrivenProduct = prods.getProduct();
-
-                userDrivenProduct.setStockQuantity(Math.abs(amountOfProductTaken - remainingProduct));
-
-                productRepository.save(userDrivenProduct);
             }
+
 
             for (var mats : prods.getProduct().getMaterials()) {
 
@@ -214,13 +211,19 @@ public class DatabaseChecks {
 
         for (var prods : order.getProductsData()) {
 
+            if (prods.getProduct().isStockCalculatedManually()) {
+                continue;
+            }
+
             Long amountOfProductTaken = prods.getAmountOfProduct();
             Long remainingProduct = prods.getProduct().getStockQuantity();
 
             OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
 
-            amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
+            if(old.getAmountOfProduct() != null) {
 
+                amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
+            }
 
             if (amountOfProductTaken > remainingProduct) {
                 throw new ValidationException("Order cannot be filled", Warnings.ERROR);
@@ -236,7 +239,9 @@ public class DatabaseChecks {
 
         for (var oldProduct : oldOrder.getProductsData()) {
 
-
+            if (oldProduct.getProduct().isStockCalculatedManually()) {
+                continue;
+            }
 
             OrderProducts newProduct = newOrder.getProductsData()
                     .stream()
@@ -248,7 +253,11 @@ public class DatabaseChecks {
 
             if (newProduct == null) {
 
+
+
                 for (var oldMaterial : oldProduct.getProduct().getMaterials()) {
+
+
 
                     Materials materials = materialRepository.findById(oldMaterial.getMaterials().getId()).orElseThrow();
 
@@ -272,10 +281,17 @@ public class DatabaseChecks {
 
         for (var newProduct : newOrder.getProductsData()) {
 
+            if (newProduct.getProduct().isStockCalculatedManually()) {
+                continue;
+            }
+
+
             Long before = 0L;
             Long after = 0L;
 
             Long recourcesRequired = 0L;
+
+
 
             OrderProducts oldProducts = oldOrder.getProductsData()
                     .stream()
@@ -298,6 +314,11 @@ public class DatabaseChecks {
             }
 
             if (!exists) {
+
+
+                if (newProduct.getProduct().isStockCalculatedManually()) {
+                    continue;
+                }
 
                 Long newRecource = 0L;
                 Long countOfProduct = 0L;

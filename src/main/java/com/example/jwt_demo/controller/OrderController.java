@@ -174,6 +174,7 @@ public class OrderController {
 
 
                     Product productCopy = new Product();
+                    productCopy.setStockCalculatedManually(oldProduct.getProduct().isStockCalculatedManually());
                     productCopy.setId(oldProduct.getProduct().getId());
                     productCopy.setProductName(oldProduct.getProduct().getProductName());
 
@@ -184,6 +185,7 @@ public class OrderController {
 
                                         ProductMaterials newMaterial = new ProductMaterials();
                                         newMaterial.setAmountUsed(oldMaterial.getAmountUsed());
+
 
 
                                         newMaterial.setId(oldMaterial.getId());
