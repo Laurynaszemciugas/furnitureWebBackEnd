@@ -8,12 +8,10 @@ import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.*;
-import com.example.jwt_demo.Entity.Employee;
+import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
-import com.example.jwt_demo.Entity.Orders;
-import com.example.jwt_demo.Entity.Product;
-import com.example.jwt_demo.Entity.User;
+import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.OrderStatus;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
@@ -149,11 +147,112 @@ public class OrderController {
         return ResponseEntity.ok(orderRepository.findById(id).orElseThrow());
     }
 
+    public Orders copyOrder(Orders original) {
+
+        Orders copy = new Orders();
+
+        copy.setId(original.getId());
+        copy.setBillingAddress(original.getBillingAddress());
+        copy.setTotalPrice(original.getTotalPrice());
+        copy.setOrderNote(original.getOrderNote());
+        copy.setOrderStatus(original.getOrderStatus());
+        copy.setEstimatedDueDate(original.getEstimatedDueDate());
+        copy.setPayMethod(original.getPayMethod());
+        copy.setPayStatus(original.getPayStatus());
+
+
+        // Copy products
+        List<OrderProducts> copiedProducts = original.getProductsData()
+                .stream()
+                .map(oldProduct -> {
+
+                    OrderProducts newProduct = new OrderProducts();
+
+                    newProduct.setId(oldProduct.getId());
+                    newProduct.setAmountOfProduct(oldProduct.getAmountOfProduct());
+                    newProduct.setCost(oldProduct.getCost());
+
+
+                    Product productCopy = new Product();
+                    productCopy.setId(oldProduct.getProduct().getId());
+                    productCopy.setProductName(oldProduct.getProduct().getProductName());
+
+
+                    List<ProductMaterials> copiedMaterials =
+                            oldProduct.getProduct().getMaterials()
+                                    .stream()
+                                    .map(oldMaterial -> {
+
+                                        ProductMaterials newMaterial = new ProductMaterials();
+
+                                        newMaterial.setId(oldMaterial.getId());
+
+
+                                        Materials materialCopy = new Materials();
+
+                                        materialCopy.setId(
+                                                oldMaterial.getMaterials().getId()
+                                        );
+
+                                        materialCopy.setMaterialName(
+                                                oldMaterial.getMaterials().getMaterialName()
+                                        );
+
+                                        materialCopy.setInStock(
+                                                oldMaterial.getMaterials().getInStock()
+                                        );
+
+
+                                        newMaterial.setMaterials(materialCopy);
+
+                                        return newMaterial;
+
+                                    })
+                                    .toList();
+
+
+                    productCopy.setMaterials(copiedMaterials);
+
+                    newProduct.setProduct(productCopy);
+
+                    return newProduct;
+
+                })
+                .toList();
+
+
+        copy.setProductsData(copiedProducts);
+
+
+        // Copy employees
+        List<OrderEmployees> copiedEmployees =
+                original.getEmployees()
+                        .stream()
+                        .map(oldEmployee -> {
+
+                            OrderEmployees newEmployee = new OrderEmployees();
+
+                            newEmployee.setId(oldEmployee.getId());
+                            newEmployee.setEmployee(oldEmployee.getEmployee());
+
+                            return newEmployee;
+
+                        })
+                        .toList();
+
+
+        copy.setEmployees(copiedEmployees);
+
+
+        return copy;
+    }
+
     @PostMapping("/saveModifiedOrder")
     public ResponseEntity<ErrorResponse> saveModifiedOrder(@RequestBody Orders order){
 
 
         Orders sameExistingOrder = orderRepository.findById(order.getId()).orElseThrow();
+        Orders nonModified = copyOrder(sameExistingOrder);
 
         sameExistingOrder.getProductsData().clear();
         sameExistingOrder.getEmployees().clear();
@@ -230,6 +329,14 @@ public class OrderController {
 
 
         orderRepository.save(sameExistingOrder);
+
+
+        databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
+
+//        databaseChecks.calculateProductsStock(1L,false);
+//
+//
+//        databaseChecks.calculateMaterialsStock(order.getId());
 
 
         return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
@@ -350,6 +457,10 @@ public class OrderController {
 
 
         databaseChecks.calculateProductsStock(1L,false);
+
+
+        databaseChecks.calculateMaterialsStock(newOrder.getId());
+
 
 
 

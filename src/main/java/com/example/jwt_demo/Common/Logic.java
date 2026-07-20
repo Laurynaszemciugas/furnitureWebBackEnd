@@ -47,19 +47,22 @@ public class Logic {
         stockMovement.setMaterials(material);
 
 
+        Long diffrence = Math.abs(stockWas - stockNew);
+
 
 
         if(stockNew > stockWas){
 
             stockMovement.setType(Type.IN);
             stockMovement.setAmountTakeAdd(Math.abs(stockWas - stockNew));
+            stockMovement.setBalance(stockWas + diffrence);
 
         }
         if(stockNew < stockWas){
 
             stockMovement.setType(Type.OUT);
             stockMovement.setAmountTakeAdd(Math.abs(stockWas - stockNew));
-
+            stockMovement.setBalance(Math.abs(stockWas - diffrence));
         }
 
 //        if(stockNew.equals(stockWas)){

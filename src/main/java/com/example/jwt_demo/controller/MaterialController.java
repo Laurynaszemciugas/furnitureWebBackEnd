@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
@@ -48,6 +49,9 @@ public class MaterialController {
 
     @Autowired
     Logic logic;
+
+    @Autowired
+    DatabaseChecks databaseChecks;
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
@@ -369,6 +373,8 @@ public class MaterialController {
 
 
         logic.materialMovementTracker(1L,existingMat,mat.getInStock(), stockWas);
+
+        databaseChecks.calculateProductsStock(null,false);
 
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material edited successfully", Warnings.OK));

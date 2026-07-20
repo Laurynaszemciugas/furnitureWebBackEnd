@@ -24,6 +24,8 @@ public class StockMovement {
 
     private Long amountTakeAdd;
 
+    private Long balance;
+
     @ManyToOne
     @JoinColumn(name = "materials_id")
     private Materials materials;
