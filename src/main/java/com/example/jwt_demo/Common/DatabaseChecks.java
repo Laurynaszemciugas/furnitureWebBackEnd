@@ -144,15 +144,7 @@ public class DatabaseChecks {
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
 
-        for (var prods : order.getProductsData()) {
 
-            Long amountOfProductTaken = prods.getAmountOfProduct();
-            Long remainingProduct = prods.getProduct().getStockQuantity();
-
-            if (amountOfProductTaken > remainingProduct) {
-                throw new ValidationException("Order cannot be filled", Warnings.ERROR);
-            }
-        }
 
         for (var prods : order.getProductsData()) {
 
@@ -217,10 +209,67 @@ public class DatabaseChecks {
 
     }
 
+
+    public void checkIfOrderPossible(Long orderId, Orders oldOrder){
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
+        for (var prods : order.getProductsData()) {
+
+            Long amountOfProductTaken = prods.getAmountOfProduct();
+            Long remainingProduct = prods.getProduct().getStockQuantity();
+
+            OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
+
+            amountOfProductTaken = Math.abs(amountOfProductTaken - old.getAmountOfProduct());
+
+
+            if (amountOfProductTaken > remainingProduct) {
+                throw new ValidationException("Order cannot be filled", Warnings.ERROR);
+            }
+        }
+    }
+
     public void checkModifiedOrders(Long orderId, Orders oldOrder) {
 
 
         Orders newOrder = orderRepository.findById(orderId).orElseThrow();
+
+
+        for (var oldProduct : oldOrder.getProductsData()) {
+
+
+
+            OrderProducts newProduct = newOrder.getProductsData()
+                    .stream()
+                    .filter(p -> p.getProduct().getId()
+                            .equals(oldProduct.getProduct().getId()))
+                    .findFirst()
+                    .orElse(null);
+
+
+            if (newProduct == null) {
+
+                for (var oldMaterial : oldProduct.getProduct().getMaterials()) {
+
+                    Materials materials = materialRepository.findById(oldMaterial.getMaterials().getId()).orElseThrow();
+
+                    Long returnedResources =
+                            oldMaterial.getAmountUsed() * oldProduct.getAmountOfProduct();
+
+                    materials.setInStock(materials.getInStock() + returnedResources);
+
+                    materialRepository.save(materials);
+
+
+                }
+                }
+
+            }
+
+
+
+
 
 
         for (var newProduct : newOrder.getProductsData()) {
@@ -232,32 +281,54 @@ public class DatabaseChecks {
 
             OrderProducts oldProducts = oldOrder.getProductsData()
                     .stream()
-                    .filter(p -> p.getId().equals(newProduct.getId()))
+                    .filter(p -> p.getProduct().getId().equals(newProduct.getProduct().getId()))
                     .findFirst()
                     .orElse(null);
 
 
-            if (oldProducts == null) {
-                continue;
-            }
+            boolean exists = oldOrder.getProductsData()
+                    .stream()
+                    .anyMatch(p-> p.getProduct().getId().equals(newProduct.getProduct().getId()));
+
 
             if (oldProducts != null) {
 
-                 before = oldProducts.getAmountOfProduct();
-                 after = newProduct.getAmountOfProduct();
-
-
-
-
+                before = oldProducts.getAmountOfProduct();
+                after = newProduct.getAmountOfProduct();
 
 
             }
 
+            if (!exists) {
+
+                Long newRecource = 0L;
+                Long countOfProduct = 0L;
+
+                Materials newlyAddedMaterial = materialRepository.findById(newProduct.getProduct().getId()).orElseThrow();
+
+                    newRecource = newProduct.getProduct().getMaterials()
+                            .stream()
+                            .filter(p->p.getId().equals(newlyAddedMaterial.getId()))
+                            .map(ProductMaterials::getAmountUsed)
+                            .findFirst()
+                            .orElse(0L);
+
+                countOfProduct = newProduct.getAmountOfProduct();
+
+                newlyAddedMaterial.setInStock(newlyAddedMaterial.getInStock() - (newRecource*countOfProduct) );
+
+
+                materialRepository.save(newlyAddedMaterial);
+
+            }
+
+
+            if (oldProducts != null && oldProducts.getProduct().getMaterials() != null) {
             for (var newMaterial : newProduct.getProduct().getMaterials()) {
 
                 ProductMaterials oldMaterial = oldProducts.getProduct().getMaterials()
                         .stream()
-                        .filter(p -> p.getId().equals(newMaterial.getId()))
+                        .filter(p -> p.getMaterials().getId().equals(newMaterial.getMaterials().getId()))
                         .findFirst()
                         .orElse(null);
 
@@ -271,8 +342,8 @@ public class DatabaseChecks {
                     Long value = before * recourcesRequired - after * recourcesRequired;
 
 
-                        material.setInStock(material.getInStock() + value);
-                        materialRepository.save(material);
+                    material.setInStock(material.getInStock() + value);
+                    materialRepository.save(material);
 
 
                     System.out.println(
@@ -283,7 +354,7 @@ public class DatabaseChecks {
 
 
                 }
-
+            }
 
             }
         }

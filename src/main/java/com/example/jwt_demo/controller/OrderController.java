@@ -177,13 +177,14 @@ public class OrderController {
                     productCopy.setId(oldProduct.getProduct().getId());
                     productCopy.setProductName(oldProduct.getProduct().getProductName());
 
-
                     List<ProductMaterials> copiedMaterials =
                             oldProduct.getProduct().getMaterials()
                                     .stream()
                                     .map(oldMaterial -> {
 
                                         ProductMaterials newMaterial = new ProductMaterials();
+                                        newMaterial.setAmountUsed(oldMaterial.getAmountUsed());
+
 
                                         newMaterial.setId(oldMaterial.getId());
 
@@ -201,6 +202,8 @@ public class OrderController {
                                         materialCopy.setInStock(
                                                 oldMaterial.getMaterials().getInStock()
                                         );
+
+
 
 
                                         newMaterial.setMaterials(materialCopy);
@@ -331,11 +334,9 @@ public class OrderController {
         orderRepository.save(sameExistingOrder);
 
 
+        databaseChecks.checkIfOrderPossible(sameExistingOrder.getId(),nonModified);
         databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
-
-//        databaseChecks.calculateProductsStock(1L,false);
-//
-//
+//        databaseChecks.calculateProductsStock(null,false);
 //        databaseChecks.calculateMaterialsStock(order.getId());
 
 
