@@ -336,7 +336,7 @@ public class OrderController {
         orderRepository.save(sameExistingOrder);
 
 
-        databaseChecks.checkIfOrderPossible(sameExistingOrder.getId(),nonModified);
+        //databaseChecks.checkIfOrderPossible(sameExistingOrder.getId(),nonModified);
         databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
         databaseChecks.calculateProductsStock(null,false);
 //        databaseChecks.calculateMaterialsStock(order.getId());
