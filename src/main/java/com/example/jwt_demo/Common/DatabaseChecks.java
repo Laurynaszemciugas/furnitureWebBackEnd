@@ -239,9 +239,7 @@ public class DatabaseChecks {
 
         for (var oldProduct : oldOrder.getProductsData()) {
 
-            if (oldProduct.getProduct().isStockCalculatedManually()) {
-                continue;
-            }
+
 
             OrderProducts newProduct = newOrder.getProductsData()
                     .stream()
@@ -251,18 +249,32 @@ public class DatabaseChecks {
                     .orElse(null);
 
 
+
             if (newProduct == null) {
 
 
 
                 for (var oldMaterial : oldProduct.getProduct().getMaterials()) {
 
+                    if (oldProduct.getProduct().isStockCalculatedManually()) {
+
+                        Long stockWas = oldProduct.getAmountOfProduct();
+
+                        Product getManuallySetProduct = productRepository.findById(oldProduct.getProduct().getId()).orElseThrow();
+
+                        getManuallySetProduct.setStockQuantity(getManuallySetProduct.getStockQuantity() + stockWas);
+
+                        productRepository.save(getManuallySetProduct);
+
+
+                        continue;
+                    }
+
 
 
                     Materials materials = materialRepository.findById(oldMaterial.getMaterials().getId()).orElseThrow();
 
-                    Long returnedResources =
-                            oldMaterial.getAmountUsed() * oldProduct.getAmountOfProduct();
+                    Long returnedResources = oldMaterial.getAmountUsed() * oldProduct.getAmountOfProduct();
 
                     materials.setInStock(materials.getInStock() + returnedResources);
 
@@ -300,9 +312,12 @@ public class DatabaseChecks {
                     .orElse(null);
 
 
-            boolean exists = oldOrder.getProductsData()
-                    .stream()
-                    .anyMatch(p-> p.getProduct().getId().equals(newProduct.getProduct().getId()));
+//            boolean exists = oldOrder.getProductsData()
+//                    .stream()
+//                    .anyMatch(p-> p.getProduct().getId().equals(newProduct.getProduct().getId()));
+
+
+
 
 
             if (oldProducts != null) {
@@ -313,7 +328,8 @@ public class DatabaseChecks {
 
             }
 
-            if (!exists) {
+            // !exists
+            if (oldProducts == null) {
 
 
                 if (newProduct.getProduct().isStockCalculatedManually()) {
