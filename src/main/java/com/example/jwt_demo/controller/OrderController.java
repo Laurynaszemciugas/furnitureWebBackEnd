@@ -20,6 +20,7 @@ import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.OrderRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -252,6 +253,7 @@ public class OrderController {
         return copy;
     }
 
+    @Transactional
     @PostMapping("/saveModifiedOrder")
     public ResponseEntity<ErrorResponse> saveModifiedOrder(@RequestBody Orders order){
 
@@ -333,14 +335,14 @@ public class OrderController {
 
 
 
-        orderRepository.save(sameExistingOrder);
 
 
-        //databaseChecks.checkIfOrderPossible(sameExistingOrder.getId(),nonModified);
+
         databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
         databaseChecks.calculateProductsStock(null,false);
 //        databaseChecks.calculateMaterialsStock(order.getId());
 
+        orderRepository.save(sameExistingOrder);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
     }

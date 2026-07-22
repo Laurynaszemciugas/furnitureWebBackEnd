@@ -211,16 +211,51 @@ public class DatabaseChecks {
 
         for (var prods : order.getProductsData()) {
 
+            OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
+
             if (prods.getProduct().isStockCalculatedManually()) {
+
+                Long amountWasUsed;
+                if(old != null) {
+                    amountWasUsed = old.getAmountOfProduct();
+                }
+                else{
+                    amountWasUsed = 0L;
+                }
+
+
+
+                Long amountUsedUpdated = prods.getAmountOfProduct();
+                Long productStock = prods.getProduct().getStockQuantity();
+
+                Long taken = amountUsedUpdated - amountWasUsed;
+
+
+                System.out.println("===========================================================");
+
+                System.out.println("Amount was used so old order - " + amountWasUsed);
+                System.out.println("Amount new used - " + amountUsedUpdated);
+                System.out.println("Amount taken - " + taken);
+
+                System.out.println("===========================================================");
+
+                System.out.println("product stock - " + productStock);
+
+
+               if(taken > productStock){
+                   throw new ValidationException("Order cannot be filled szazazaz", Warnings.ERROR);
+               }
+
+
                 continue;
             }
 
             Long amountOfProductTaken = prods.getAmountOfProduct();
             Long remainingProduct = prods.getProduct().getStockQuantity();
 
-            OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
 
-            if(old.getAmountOfProduct() != null) {
+
+            if(old != null) {
 
                 amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
             }
@@ -232,6 +267,10 @@ public class DatabaseChecks {
     }
 
     public void checkModifiedOrders(Long orderId, Orders oldOrder) {
+
+        // order possibillity checks
+
+        checkIfOrderPossible(orderId,oldOrder);
 
 
         Orders newOrder = orderRepository.findById(orderId).orElseThrow();
@@ -353,7 +392,7 @@ public class DatabaseChecks {
                     Long oldAmountTaken = 0L;
 
                     if(productOld == null){
-                        System.out.println("Product is new but it was fixed my other method");
+                        System.out.println("Product is new but it was fixed my other method skipped");
                         continue;
                     }
 
