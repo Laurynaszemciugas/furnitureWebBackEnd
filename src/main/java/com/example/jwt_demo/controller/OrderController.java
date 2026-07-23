@@ -281,6 +281,7 @@ public class OrderController {
             throw  new ValidationException("Existing order cannot be without products ", Warnings.ERROR);
         }
 
+        List<OrderProducts> products = new ArrayList<>();
         for(var s : order.getProductsData()) {
             Long productId = s.getProduct().getId();
             Product existingProduct = productRepository.findById(productId).orElseThrow();
@@ -290,18 +291,14 @@ public class OrderController {
             }
             totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
             OrderProducts orderProducts = new OrderProducts();
-
-            System.out.println(s.getAmountOfProduct());
-
-            orderProducts.setAmountOfProduct(s.getAmountOfProduct());
-            orderProducts.setOrder(sameExistingOrder);
             orderProducts.setProduct(existingProduct);
-            orderProducts.setCost(existingProduct.getPrice()); // calculate plus tax stuff
-
-
-            sameExistingOrder.getProductsData().add(orderProducts);
+            orderProducts.setOrder(sameExistingOrder);
+            orderProducts.setCost(totalPrice);
+            orderProducts.setAmountOfProduct(s.getAmountOfProduct());
+            products.add(orderProducts);
         }
 
+        sameExistingOrder.getProductsData().addAll(products);
 
         if(order.getEmployees().isEmpty() || order.getEmployees() == null){
             throw  new ValidationException("Existing order cannot be without employees ", Warnings.ERROR);
@@ -342,7 +339,7 @@ public class OrderController {
         databaseChecks.calculateProductsStock(null,false);
 //        databaseChecks.calculateMaterialsStock(order.getId());
 
-        orderRepository.save(sameExistingOrder);
+        //orderRepository.save(sameExistingOrder);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
     }

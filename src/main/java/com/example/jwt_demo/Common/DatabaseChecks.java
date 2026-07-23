@@ -67,7 +67,7 @@ public class DatabaseChecks {
             for (var prods : product) {
 
                 String limitingMaterial = null;
-                Long lowestAmountToMake = null;
+                Long lowestAmountToMake = 0L;
 
                 if (prods.isStockCalculatedManually()) {
                     continue;
@@ -96,7 +96,7 @@ public class DatabaseChecks {
                     }
 
 
-                    if (limitingMaterial == null && lowestAmountToMake == null) {
+                    if (limitingMaterial == null && lowestAmountToMake == 0) {
                         lowestAmountToMake = canProduce;
                         limitingMaterial = materialName;
                     }
@@ -243,7 +243,11 @@ public class DatabaseChecks {
 
 
                if(taken > productStock){
-                   throw new ValidationException("Order cannot be filled szazazaz", Warnings.ERROR);
+
+                   String productName = prods.getProduct().getProductName();
+
+
+                   throw new ValidationException("Order cannot be filled due to product stock (Manually set) [" + productName +"]", Warnings.ERROR);
                }
 
 
@@ -261,15 +265,72 @@ public class DatabaseChecks {
             }
 
             if (amountOfProductTaken > remainingProduct) {
-                throw new ValidationException("Order cannot be filled", Warnings.ERROR);
+                String productName = prods.getProduct().getProductName();
+
+                throw new ValidationException("Order cannot be filled due to product stock [" + productName +"]", Warnings.ERROR);
             }
         }
     }
+
+    public void checkIfOrderDoesntTakeTooMuchSupply(Long orderId, Orders oldOrder){
+
+
+
+        Orders newOrder = orderRepository.findById(orderId).orElseThrow();
+
+        for(var productNew : newOrder.getProductsData()) {
+
+
+            if(productNew.getProduct().isStockCalculatedManually()){
+                continue;
+            }
+
+            OrderProducts productOld = oldOrder.getProductsData()
+                    .stream()
+                    .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            for (var material : productNew.getProduct().getMaterials()) {
+
+                Long newOrderMaterialCount = 0L;
+                Long oldOrderMaterialCount = 0L;
+                Long totalMaterialStock = 0L;
+
+                if(productOld != null){
+                    oldOrderMaterialCount = productOld.getAmountOfProduct() * material.getAmountUsed();
+                }
+
+                newOrderMaterialCount = productNew.getAmountOfProduct() * material.getAmountUsed();
+                totalMaterialStock = material.getMaterials().getInStock();
+
+                if(newOrderMaterialCount == oldOrderMaterialCount){
+                    continue;
+                }
+
+                Long taken = newOrderMaterialCount - oldOrderMaterialCount;
+
+                if(taken > totalMaterialStock){
+                    throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+                }
+
+
+            }
+
+
+
+
+
+        }
+    }
+
+
 
     public void checkModifiedOrders(Long orderId, Orders oldOrder) {
 
         // order possibillity checks
 
+        checkIfOrderDoesntTakeTooMuchSupply(orderId,oldOrder);
         checkIfOrderPossible(orderId,oldOrder);
 
 
