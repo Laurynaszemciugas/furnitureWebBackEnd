@@ -91,9 +91,7 @@ public class DatabaseChecks {
                     stockNew = Math.abs(stockWas - amountUsed);
 
 
-                    if (changeMaterialSupply) {
-                        logic.materialMovementTracker(userId, matStats.getMaterials(), stockWas, stockNew);
-                    }
+
 
 
                     if (limitingMaterial == null && lowestAmountToMake == 0) {
@@ -144,27 +142,41 @@ public class DatabaseChecks {
 
 
 
+
         for (var prods : order.getProductsData()) {
-
-            Long amountOfProductTaken = prods.getAmountOfProduct();
-            Long remainingProduct = prods.getProduct().getStockQuantity();
-
-// seems useless i have product update btw
-            Product userDrivenProduct = prods.getProduct();
-
-            userDrivenProduct.setStockQuantity(
-                    Math.abs(amountOfProductTaken - remainingProduct)
-            );
-
-            productRepository.save(userDrivenProduct);
-
 
             if (prods.getProduct().isStockCalculatedManually()) {
                 continue;
             }
 
+//            OrderProducts productOld = oldOrder.getProductsData()
+//                    .stream()
+//                    .filter(p -> p.getProduct().getId().equals(prods.getProduct().getId()))
+//                    .findFirst()
+//                    .orElse(null);
+
+//            if(prods.getAmountOfProduct().equals(productOld.getAmountOfProduct())){
+//                continue;
+//            }
+
+            Long amountOfProductTaken = prods.getAmountOfProduct();
+            Long remainingProduct = prods.getProduct().getStockQuantity();
+//
+//// seems useless i have product update btw
+//            Product userDrivenProduct = prods.getProduct();
+//
+//            userDrivenProduct.setStockQuantity(
+//                    Math.abs(amountOfProductTaken - remainingProduct)
+//            );
+//
+//            productRepository.save(userDrivenProduct);
+
+
+
+
 
             for (var mats : prods.getProduct().getMaterials()) {
+
 
                 Materials mat = materialRepository.findById(mats.getMaterials().getId()).orElseThrow();
 
@@ -179,7 +191,7 @@ public class DatabaseChecks {
                     newStock = 0L;
                 }
 
-                mat.setInStock(newStock);
+                //mat.setInStock(newStock);
 
                 Long lowThreshold = mat.getMinThresHold();
 
@@ -368,6 +380,8 @@ public class DatabaseChecks {
                 for (var material : productNew.getProduct().getMaterials()) {
 
 
+
+
                     Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
                     Long materialStock = newlyAddedProductsMaterial.getInStock();
                     Long takenProductCount = productNew.getAmountOfProduct();
@@ -378,6 +392,11 @@ public class DatabaseChecks {
                     newlyAddedProductsMaterial.setInStock(stock);
 
                     materialRepository.save(newlyAddedProductsMaterial);
+
+
+                    // check if order is getting new value
+                    logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
+
 
 
                 }
@@ -429,6 +448,9 @@ public class DatabaseChecks {
                         newlyAddedProductsMaterial.setInStock(stock);
 
                         materialRepository.save(newlyAddedProductsMaterial);
+
+                        // check if order is getting new value
+                        logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
 
 
                     }

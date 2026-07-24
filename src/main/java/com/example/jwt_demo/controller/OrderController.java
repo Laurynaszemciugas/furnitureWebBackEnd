@@ -334,12 +334,10 @@ public class OrderController {
 
 
 
-
-        databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
+            databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
         databaseChecks.calculateProductsStock(null,false);
-//        databaseChecks.calculateMaterialsStock(order.getId());
-
-        //orderRepository.save(sameExistingOrder);
+        databaseChecks.calculateMaterialsStock(order.getId());
+        orderRepository.save(sameExistingOrder);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
     }

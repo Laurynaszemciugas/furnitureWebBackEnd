@@ -278,7 +278,6 @@ public class MaterialController {
         stockMovementRepository.save(stockMovement);
 
 
-        logic.materialMovementTracker(1L,newMat,0L, mat.getInStock());
 
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
@@ -372,7 +371,6 @@ public class MaterialController {
         materialRepository.save(existingMat);
 
 
-        logic.materialMovementTracker(1L,existingMat,mat.getInStock(), stockWas);
 
         databaseChecks.calculateProductsStock(null,false);
 

@@ -34,6 +34,10 @@ public class StockMovement {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "orders_id")
+    private Orders orders;
+
     @CreationTimestamp
     private LocalDateTime created;
 

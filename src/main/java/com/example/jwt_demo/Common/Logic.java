@@ -1,9 +1,12 @@
 package com.example.jwt_demo.Common;
 
 import com.example.jwt_demo.Entity.Materials;
+import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.StockMovement;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.Type;
+import com.example.jwt_demo.repository.MaterialRepository;
+import com.example.jwt_demo.repository.OrderRepository;
 import com.example.jwt_demo.repository.StockMovementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,6 +22,12 @@ public class Logic {
 
     @Autowired
     StockMovementRepository stockMovementRepository;
+
+    @Autowired
+    OrderRepository orderRepository;
+
+    @Autowired
+    MaterialRepository materialRepository;
 
     public LocalDateTime dateConverter(LocalDate givenDate){
 
@@ -41,10 +50,15 @@ public class Logic {
 
 
 
-    public void materialMovementTracker(Long userId, Materials material, Long stockWas, Long stockNew ){
+    public void materialMovementTracker(Long userId,Long orderId, Long materialId, Long stockWas, Long stockNew ){
+
+        Orders orders = orderRepository.findById(orderId).orElseThrow();
+        Materials materials = materialRepository.findById(materialId).orElseThrow();
+
 
         StockMovement stockMovement = new StockMovement();
-        stockMovement.setMaterials(material);
+        stockMovement.setMaterials(materials);
+        stockMovement.setOrders(orders);
 
 
         Long diffrence = Math.abs(stockWas - stockNew);
