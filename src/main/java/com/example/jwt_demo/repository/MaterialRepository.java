@@ -149,37 +149,37 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
         COUNT(DISTINCT o.id) FILTER (
             WHERE o.created >= :currentFrom
-              AND o.created < :currentTo
+              AND o.created <= :currentTo
         ),
 
         COUNT(DISTINCT o.id) FILTER (
             WHERE o.created >= :previousFrom
-              AND o.created < :previousTo
+              AND o.created <= :previousTo
         ),
         
         
             COUNT(DISTINCT o.id) FILTER (
             WHERE o.created >= :currentFrom
-              AND o.created < :currentTo
+              AND o.created <= :currentTo
               AND o.stock = 'In_Stock'
         ),
 
         COUNT(DISTINCT o.id) FILTER (
             WHERE o.created >= :previousFrom
-              AND o.created < :previousTo
+              AND o.created <= :previousTo
               AND o.stock = 'In_Stock'
         ),
         
 
         COUNT(DISTINCT o.id) FILTER (
             WHERE o.created >= :currentFrom
-              AND o.created < :currentTo
+              AND o.created <= :currentTo
               AND o.stock = 'Low_Stock'
         ),
 
         COUNT(DISTINCT o.id) FILTER (
             WHERE o.created >= :previousFrom
-              AND o.created < :previousTo
+              AND o.created <= :previousTo
               AND o.stock = 'Low_Stock'
         ),
 
@@ -188,7 +188,7 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
         COALESCE(
             SUM(o.unitPrice * o.inStock) FILTER (
                 WHERE o.created >= :currentFrom
-                  AND o.created < :currentTo
+                  AND o.created <= :currentTo
             ),
             0.0
         ),
@@ -196,7 +196,7 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
         COALESCE(
             SUM(o.unitPrice * o.inStock) FILTER (
                 WHERE o.created >= :previousFrom
-                  AND o.created < :previousTo
+                  AND o.created <= :previousTo
             ),
             0.0
         )
@@ -204,7 +204,7 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
     )
     FROM Materials o
     WHERE o.created >= :previousFrom
-      AND o.created < :currentTo
+      AND o.created <= :currentTo
 """)
     ReportMiniStatHolder getProductMiniStats(
             @Param("currentFrom") LocalDateTime currentFrom,
@@ -230,7 +230,7 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
     )
     FROM Materials o
     WHERE o.created >= :dateFrom
-      AND o.created < :dateTo
+      AND o.created <= :dateTo
 """)
     MaterialReportPieChart MaterialReportPieChart(
             @Param("dateFrom") LocalDateTime dateFrom,
@@ -265,7 +265,8 @@ ORDER BY DATE(o.created)
      
      where m.stock = 'Low_Stock'
   
-    
+    and m.created >= :dateFrom
+      AND m.created <= :dateTo
     
 
 """)
