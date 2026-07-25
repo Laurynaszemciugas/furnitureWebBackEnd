@@ -79,12 +79,6 @@ public class Logic {
             stockMovement.setBalance(Math.abs(stockWas - diffrence));
         }
 
-//        if(stockNew.equals(stockWas)){
-//            stockMovement.setType(Type.SAME);
-//            stockMovement.setAmountTakeAdd(Math.abs(stockWas - stockNew));
-//        }
-
-
         stockMovementRepository.save(stockMovement);
 
 

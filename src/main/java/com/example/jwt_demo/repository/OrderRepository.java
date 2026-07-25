@@ -195,7 +195,7 @@ AND (
 
     SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
     o.createdDate,
-    SUM(op.cost * op.amountOfProduct))
+    SUM(op.cost))
     FROM Orders o
     JOIN productsData op
     WHERE o.created >= :dateFrom
@@ -252,7 +252,7 @@ AND (
 
 
         COALESCE(
-            SUM(op.cost * op.amountOfProduct) FILTER (
+            SUM(op.cost) FILTER (
                 WHERE o.created >= :currentFrom
                   AND o.created < :currentTo
             ),
@@ -260,7 +260,7 @@ AND (
         ),
 
         COALESCE(
-            SUM(op.cost * op.amountOfProduct) FILTER (
+            SUM(op.cost) FILTER (
                 WHERE o.created >= :previousFrom
                   AND o.created < :previousTo
             ),
@@ -285,8 +285,8 @@ AND (
         u.id,
         u.fullName,
         COUNT(DISTINCT o.id),
-        SUM(op.amountOfProduct * op.cost),
-        (SUM(op.amountOfProduct * op.cost) / COUNT(DISTINCT o.id))
+        SUM( op.cost),
+        (SUM( op.cost) / COUNT(DISTINCT o.id))
     )
     FROM Orders o
     JOIN o.productsData op
@@ -310,7 +310,7 @@ AND (
         o.id,
         SUM(op.amountOfProduct),
         o.orderStatus,
-        SUM(op.amountOfProduct * op.cost),
+        SUM(op.cost),
         o.created)
     FROM Orders o
     JOIN productsData op

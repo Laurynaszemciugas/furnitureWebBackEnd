@@ -239,22 +239,22 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
 
     @Query("""
-
-    SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
-    o.createdDate,
-    SUM(op.cost * op.amountOfProduct))
-    FROM Orders o
-    JOIN productsData op
-    WHERE o.created >= :dateFrom
-    AND o.created <= :dateTo
-    GROUP BY o.createdDate
-    ORDER BY createdDate
+SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
+     Date(o.created), sum(op.amountOfProduct * (pm.amountUsed * pm.unitPrice))
+)
+ FROM Orders o
     
-    
-
+    Join productsData op ON op.order.id = o.id
+    Join ProductMaterials pm ON pm.product.id = op.product.id
+WHERE o.created >= :dateFrom
+  AND o.created <= :dateTo
+GROUP BY DATE(o.created)
+ORDER BY DATE(o.created)
 """)
-    List<GraphDataDateValue> productReportLineBar(@Param("dateFrom") LocalDateTime dateFrom,
-                                                @Param("dateTo") LocalDateTime dateTo);
+    List<GraphDataDateValue> productReportLineBar(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
+    );
 
 
     @Query("""

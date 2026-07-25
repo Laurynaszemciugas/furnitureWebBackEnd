@@ -12,6 +12,7 @@ import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
 import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
+import com.example.jwt_demo.DTOS.StockMovement.StockMovementGrid;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
@@ -55,6 +56,7 @@ public class MaterialController {
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
+
 
 
     @GetMapping("/getMaterialNames")
@@ -446,6 +448,13 @@ public class MaterialController {
     public ResponseEntity<List<MaterialLowStockGrid>> getLowStockMaterials(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
         return ResponseEntity.ok(materialRepository.getProductLowFeed(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5)));
+
+    }
+
+    @GetMapping("/getMaterialMovement/{fromDate}/{toDate}")
+    public ResponseEntity<List<StockMovementGrid>> getMaterialMovement(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        return ResponseEntity.ok(stockMovementRepository.stockMovementHistory(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5)));
 
     }
 

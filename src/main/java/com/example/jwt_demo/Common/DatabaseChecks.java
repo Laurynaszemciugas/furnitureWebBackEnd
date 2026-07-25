@@ -526,6 +526,7 @@ public class DatabaseChecks {
 
                         materialRepository.save(newlyAddedProductsMaterial);
 
+                        logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
 
                     }
 

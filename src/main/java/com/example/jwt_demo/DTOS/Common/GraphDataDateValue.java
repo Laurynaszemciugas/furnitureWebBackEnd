@@ -5,16 +5,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.sql.Date;
 import java.time.LocalDate;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class GraphDataDateValue {
 
     private LocalDate localDate;
-    private double value;
+    private Double value;
 
+    public GraphDataDateValue(LocalDate localDate, Double value) {
+        this.localDate = localDate;
+        this.value = value;
+    }
+
+    public GraphDataDateValue(Date date, Double value) {
+        this.localDate = date.toLocalDate();
+        this.value = value;
+    }
 
 }
