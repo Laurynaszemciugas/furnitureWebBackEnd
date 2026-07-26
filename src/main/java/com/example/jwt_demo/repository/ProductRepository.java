@@ -1,8 +1,11 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
+import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Stock;
@@ -180,6 +183,137 @@ WHERE o.id = :id
 """)
     List<Product> getProductsAccordingToUserId(@Param("userId") Long userId);
 
+
+    // report page stuff
+
+    @Query(value = """
+SELECT
+
+    COUNT( CASE
+        WHEN o.created >= :currentFrom
+        AND o.created <= :currentTo
+        THEN o.id
+    END),
+
+    COUNT(DISTINCT CASE
+        WHEN o.created >= :previousFrom
+        AND o.created <= :previousTo
+        THEN o.id
+    END),
+
+COALESCE((
+    SELECT SUM(op2.amount_of_product)
+    FROM order_products op2
+    JOIN orders o2 ON o2.id = op2.order_id
+    WHERE o2.created >= :currentFrom
+    AND o2.created <= :currentTo
+    GROUP BY op2.product_id
+    ORDER BY SUM(op2.amount_of_product) DESC
+    LIMIT 1
+),0),
+
+COALESCE((
+    SELECT p3.product_name
+    FROM order_products op3
+    JOIN products p3 ON p3.id = op3.product_id
+    JOIN orders o3 ON o3.id = op3.order_id
+    WHERE o3.created >= :currentFrom
+    AND o3.created <= :currentTo
+    GROUP BY p3.id, p3.product_name
+    ORDER BY SUM(op3.amount_of_product) DESC
+    LIMIT 1
+),'None'),
+    COUNT(DISTINCT CASE
+        WHEN o.created >= :currentFrom
+        AND o.created <= :currentTo
+        AND p.stock = 'Low_Stock'
+        THEN p.id
+    END),
+
+    COUNT(DISTINCT CASE
+        WHEN o.created >= :previousFrom
+        AND o.created <= :previousTo
+        AND p.stock = 'Low_Stock'
+        THEN p.id
+    END),
+
+    COALESCE(SUM(
+        CASE
+            WHEN o.created >= :currentFrom
+            AND o.created <= :currentTo
+            THEN op.cost * op.amount_of_product
+            ELSE 0
+        END
+    ),0),
+
+    COALESCE(SUM(
+        CASE
+            WHEN o.created >= :previousFrom
+            AND o.created <= :previousTo
+            THEN op.cost * op.amount_of_product
+            ELSE 0
+        END
+    ),0)
+
+FROM orders o
+JOIN order_products op 
+    ON op.order_id = o.id
+JOIN products p 
+    ON p.id = op.product_id
+
+WHERE o.created >= :previousFrom
+AND o.created <= :currentTo
+
+""", nativeQuery = true)
+    List<Object[]>  getProductReportMiniStats(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("previousFrom") LocalDateTime previousFrom,
+            @Param("previousTo") LocalDateTime previousTo
+    );
+
+   @Query("""
+
+     SELECT new com.example.jwt_demo.DTOS.Common.GraphDataLongValue(sum(op.amountOfProduct), p.productName)
+      FROM Orders o
+        Join productsData op ON op.order.id = o.id
+        Join Product p On p.id = op.product.id
+        WHERE o.created >= :currentFrom
+AND o.created <= :currentTo
+        GROUP BY p.id, p.productName
+    
+        ORDER BY SUM(op.amountOfProduct) DESC
+        
+        
+
+
+""")
+   List<GraphDataLongValue>  getTopSellingProducts(
+           @Param("currentFrom") LocalDateTime currentFrom,
+           @Param("currentTo") LocalDateTime currentTo,
+           Pageable pageable
+   );
+
+    @Query("""
+
+     SELECT new com.example.jwt_demo.DTOS.Product.ProductReportPieChart(
+     p.category,sum(op.amountOfProduct))
+      FROM Orders o
+        Join productsData op ON op.order.id = o.id
+        Join Product p On p.id = op.product.id
+        WHERE o.created >= :currentFrom
+        AND o.created <= :currentTo
+        GROUP BY p.id, p.category
+    
+        
+        
+
+
+""")
+    List<ProductReportPieChart>  getProductByCategory(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo
+    );
 
 
 

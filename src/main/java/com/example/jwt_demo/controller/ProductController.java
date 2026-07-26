@@ -5,8 +5,11 @@ import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
+import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
@@ -348,6 +351,50 @@ public class ProductController {
     @GetMapping("/getProductMiniStats/{from}/{to}")
     public ResponseEntity<MiniStatHolder> getProductMiniStats(@PathVariable LocalDate from, @PathVariable LocalDate to){
         return ResponseEntity.ok(productRepository.getProductMiniStats(logic.dateConverter(from),logic.dateConverter(to)));
+    }
+
+    // report page calls
+
+    @GetMapping("/getMiniStats/{fromDate}/{toDate}")
+    public ResponseEntity<ReportMiniStatHolder> getMiniStats(
+            @PathVariable LocalDate fromDate,
+            @PathVariable LocalDate toDate) {
+
+        LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
+        LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
+
+
+
+        Object[] data = productRepository.getProductReportMiniStats(
+                logic.dateConverter(fromDate),
+                logic.dateConverter(toDate),
+                logic.dateConverter(preFrom),
+                logic.dateConverter(preTo)
+        ).get(0);
+
+
+        ReportMiniStatHolder holder = new ReportMiniStatHolder(
+                data[0],
+                data[1],
+                data[2],
+                data[3],
+                data[4],
+                data[5],
+                data[6],
+                data[7]
+        );
+
+        return ResponseEntity.ok(holder);
+    }
+
+    @GetMapping("/getTopProducts/{from}/{to}/{amountOfData}")
+    public ResponseEntity<List<GraphDataLongValue>> getTopProducts(@PathVariable LocalDate from, @PathVariable LocalDate to, @PathVariable int amountOfData){
+        return ResponseEntity.ok(productRepository.getTopSellingProducts(logic.dateConverter(from),logic.dateConverter(to),PageRequest.of(0,amountOfData)));
+    }
+
+    @GetMapping("/getPieChartProductReport/{from}/{to}")
+    public ResponseEntity<List<ProductReportPieChart>> getPieChartProductReport(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(productRepository.getProductByCategory(logic.dateConverter(from),logic.dateConverter(to)));
     }
 
 
