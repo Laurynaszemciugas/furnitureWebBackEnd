@@ -5,6 +5,8 @@ import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
+import com.example.jwt_demo.DTOS.Product.ProductLowStockList;
+import com.example.jwt_demo.DTOS.Product.ProductPerformanceReport;
 import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Enums.Category;
@@ -314,6 +316,57 @@ AND o.created <= :currentTo
             @Param("currentFrom") LocalDateTime currentFrom,
             @Param("currentTo") LocalDateTime currentTo
     );
+
+    @Query("""
+
+     SELECT new com.example.jwt_demo.DTOS.Product.ProductLowStockList(
+         p.id, pid.imageUrl,p.productName,p.stockQuantity,p.lowStockThreshold,p.stockCalculatedManually)
+         FROM Product p
+        left Join images pid on pid.product.id = p.id and pid.imageLogic = 'Main'
+         WHERE p.created >= :currentFrom
+        AND p.created <= :currentTo
+    
+        
+        
+
+
+""")
+    List<ProductLowStockList>  getProductLowList(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo
+    );
+
+    @Query("""
+SELECT new com.example.jwt_demo.DTOS.Product.ProductPerformanceReport(
+    p.id,
+    pid.imageUrl,
+    p.productName,
+    COALESCE(SUM(op.amountOfProduct), 0),
+    COALESCE(SUM(op.amountOfProduct * op.cost), 0),
+    COALESCE(AVG(pc.review), 0)
+)
+FROM Product p
+LEFT JOIN p.images pid
+    ON pid.imageLogic = 'Main'
+LEFT JOIN OrderProducts op
+    ON op.product.id = p.id
+LEFT JOIN Orders o
+    ON o.id = op.order.id
+LEFT JOIN p.comments pc
+WHERE o.orderStatus = 'Finished'
+AND o.created >= :currentFrom
+AND o.created <= :currentTo
+GROUP BY
+    p.id,
+    pid.imageUrl,
+    p.productName
+""")
+    List<ProductPerformanceReport> getProductPerformance(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo
+    );
+
+
 
 
 

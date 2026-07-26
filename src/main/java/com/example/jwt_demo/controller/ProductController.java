@@ -9,6 +9,8 @@ import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
+import com.example.jwt_demo.DTOS.Product.ProductLowStockList;
+import com.example.jwt_demo.DTOS.Product.ProductPerformanceReport;
 import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
@@ -396,6 +398,18 @@ public class ProductController {
     public ResponseEntity<List<ProductReportPieChart>> getPieChartProductReport(@PathVariable LocalDate from, @PathVariable LocalDate to){
         return ResponseEntity.ok(productRepository.getProductByCategory(logic.dateConverter(from),logic.dateConverter(to)));
     }
+
+    @GetMapping("/getLowStockAlerts/{from}/{to}")
+    public ResponseEntity<List<ProductLowStockList>> getLowStockAlerts(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(productRepository.getProductLowList(logic.dateConverter(from),logic.dateConverter(to)));
+    }
+
+    @GetMapping("/getProductPerformance/{from}/{to}")
+    public ResponseEntity<List<ProductPerformanceReport>> getProductPerformanceReport(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(productRepository.getProductPerformance(logic.dateConverter(from),logic.dateConverter(to)));
+    }
+
+
 
 
 }
