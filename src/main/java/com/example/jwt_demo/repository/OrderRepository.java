@@ -195,11 +195,12 @@ AND (
 
     SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
     o.createdDate,
-    SUM(op.cost))
+    SUM(o.totalPrice))
     FROM Orders o
     JOIN productsData op
     WHERE o.created >= :dateFrom
     AND o.created <= :dateTo
+    And o.orderStatus = 'Finished'
     GROUP BY o.createdDate
     ORDER BY createdDate
     
@@ -252,17 +253,19 @@ AND (
 
 
         COALESCE(
-            SUM(op.cost) FILTER (
+            SUM(o.totalPrice) FILTER (
                 WHERE o.created >= :currentFrom
                   AND o.created < :currentTo
+                   And o.orderStatus = 'Finished'
             ),
             0
         ),
 
         COALESCE(
-            SUM(op.cost) FILTER (
+            SUM(o.totalPrice) FILTER (
                 WHERE o.created >= :previousFrom
                   AND o.created < :previousTo
+                   And o.orderStatus = 'Finished'
             ),
             0
         )
@@ -270,8 +273,7 @@ AND (
     )
     FROM Orders o
     LEFT JOIN o.productsData op
-    WHERE o.created >= :previousFrom
-      AND o.created < :currentTo
+   
 """)
     ReportMiniStatHolder getOrderMiniStats(
             @Param("currentFrom") LocalDateTime currentFrom,
@@ -285,8 +287,8 @@ AND (
         u.id,
         u.fullName,
         COUNT(DISTINCT o.id),
-        SUM( op.cost),
-        (SUM( op.cost) / COUNT(DISTINCT o.id))
+        SUM( o.totalPrice),
+        (SUM( o.totalPrice) / COUNT(DISTINCT o.id))
     )
     FROM Orders o
     JOIN o.productsData op
@@ -294,8 +296,9 @@ AND (
     JOIN o.user u
     WHERE o.created >= :dateFrom
       AND o.created <= :dateTo
+      and o.orderStatus = 'Finished'
     GROUP BY u.id, u.fullName
-    ORDER BY SUM(op.amountOfProduct * op.cost) DESC
+    ORDER BY SUM(o.totalPrice) DESC
     
 """)
     List<TopCustomerDto> topCustomerList(
@@ -310,7 +313,7 @@ AND (
         o.id,
         SUM(op.amountOfProduct),
         o.orderStatus,
-        SUM(op.cost),
+        SUM(o.totalPrice),
         o.created)
     FROM Orders o
     JOIN productsData op

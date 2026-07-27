@@ -243,7 +243,8 @@ COALESCE((
         CASE
             WHEN o.created >= :currentFrom
             AND o.created <= :currentTo
-            THEN op.cost * op.amount_of_product
+                and o.order_status = 'Finished'
+            THEN o.total_price
             ELSE 0
         END
     ),0),
@@ -252,12 +253,13 @@ COALESCE((
         CASE
             WHEN o.created >= :previousFrom
             AND o.created <= :previousTo
-            THEN op.cost * op.amount_of_product
+                and o.order_status = 'Finished'
+            THEN o.total_price
             ELSE 0
         END
     ),0)
 
-FROM orders o
+FROM Orders o
 JOIN order_products op 
     ON op.order_id = o.id
 JOIN products p 
@@ -282,6 +284,7 @@ AND o.created <= :currentTo
         Join Product p On p.id = op.product.id
         WHERE o.created >= :currentFrom
 AND o.created <= :currentTo
+and o.orderStatus = 'Finished'
         GROUP BY p.id, p.productName
     
         ORDER BY SUM(op.amountOfProduct) DESC
@@ -305,7 +308,8 @@ AND o.created <= :currentTo
         Join Product p On p.id = op.product.id
         WHERE o.created >= :currentFrom
         AND o.created <= :currentTo
-        GROUP BY p.id, p.category
+        and o.orderStatus = 'Finished'
+        GROUP BY p.category
     
         
         
@@ -342,7 +346,7 @@ SELECT new com.example.jwt_demo.DTOS.Product.ProductPerformanceReport(
     pid.imageUrl,
     p.productName,
     COALESCE(SUM(op.amountOfProduct), 0),
-    COALESCE(SUM(op.amountOfProduct * op.cost), 0),
+    COALESCE(SUM(o.totalPrice), 0),
     COALESCE(AVG(pc.review), 0)
 )
 FROM Product p
