@@ -293,7 +293,7 @@ public class OrderController {
             OrderProducts orderProducts = new OrderProducts();
             orderProducts.setProduct(existingProduct);
             orderProducts.setOrder(sameExistingOrder);
-            orderProducts.setCost(totalPrice);
+            orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct()));
             orderProducts.setAmountOfProduct(s.getAmountOfProduct());
             products.add(orderProducts);
         }
@@ -343,6 +343,14 @@ public class OrderController {
     }
 
 
+    public Double materialCost(Long productId, Long amountTaken){
+
+        Product product = productRepository.findById(productId).orElseThrow();
+
+
+        return product.getPrice() * amountTaken;
+
+    }
 
     @PostMapping("/saveNewOrder")
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
@@ -373,6 +381,7 @@ public class OrderController {
 
             Double totalPrice = 0.0;
             for(var s : order.getProductsData()){
+                totalPrice = 0.0;
                 Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
                 totalPrice+= s.getAmountOfProduct()* product.getPrice();
             }
@@ -397,7 +406,7 @@ public class OrderController {
                     OrderProducts orderProducts = new OrderProducts();
                     orderProducts.setProduct(product);
                     orderProducts.setOrder(newOrder);
-                    orderProducts.setCost(totalPrice);
+                    orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct()));
                     orderProducts.setAmountOfProduct(s.getAmountOfProduct());
 
 
@@ -405,6 +414,8 @@ public class OrderController {
                 }
             newOrder.setProductsData(products);
         }
+
+
 
 
 

@@ -346,7 +346,7 @@ SELECT new com.example.jwt_demo.DTOS.Product.ProductPerformanceReport(
     pid.imageUrl,
     p.productName,
     COALESCE(SUM(op.amountOfProduct), 0),
-    COALESCE(SUM(o.totalPrice), 0),
+    COALESCE(SUM(op.cost * op.amountOfProduct), 0),
     COALESCE(AVG(pc.review), 0)
 )
 FROM Product p
