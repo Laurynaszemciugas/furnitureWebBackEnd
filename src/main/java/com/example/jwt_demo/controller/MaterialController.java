@@ -8,6 +8,7 @@ import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
+import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
 import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
@@ -458,7 +459,15 @@ public class MaterialController {
 
     }
 
+    @GetMapping("/getAllAvailableMaterials")
+    public ResponseEntity<List<MaterialInfo>> getProductPerformanceReport(){
+        return ResponseEntity.ok(materialRepository.getMaterialInfo());
+    }
 
+    @GetMapping("/getMaterialInfoAccordingToId/{id}")
+    public ResponseEntity<MaterialInfo> getMaterialInfoAccordingToId(@PathVariable Long id){
+        return ResponseEntity.ok(materialRepository.getMaterialInfoAccordingToId(id));
+    }
 
 
 

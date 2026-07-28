@@ -4,6 +4,7 @@ import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
+import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
 import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
@@ -276,7 +277,30 @@ ORDER BY DATE(o.created)
 
 
 
+        @Query("""
+    
+        SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo( m.id, mid.imageUrl, m.materialName, m.unitPrice, m.inStock, pm.amountUsed)
+        FROM Materials m
+        Left Join images mid ON mid.materials.id = m.id and mid.imageLogic = 'Main'
+        Left join ProductMaterials pm ON pm.materials.id = m.id
+        
+        
+    
+    """)
+        List<MaterialInfo> getMaterialInfo();
 
+
+    @Query("""
+    
+        SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo( m.id, mid.imageUrl, m.materialName, m.unitPrice, m.inStock, pm.amountUsed)
+        FROM Materials m
+        Left Join images mid ON mid.materials.id = m.id and mid.imageLogic = 'Main'
+        Left join ProductMaterials pm ON pm.materials.id = m.id
+        
+        where m.id = :id
+    
+    """)
+    MaterialInfo getMaterialInfoAccordingToId(Long id);
 
 
 

@@ -8,6 +8,7 @@ import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.DTOS.Product.ProductLowStockList;
 import com.example.jwt_demo.DTOS.Product.ProductPerformanceReport;
@@ -408,6 +409,8 @@ public class ProductController {
     public ResponseEntity<List<ProductPerformanceReport>> getProductPerformanceReport(@PathVariable LocalDate from, @PathVariable LocalDate to){
         return ResponseEntity.ok(productRepository.getProductPerformance(logic.dateConverter(from),logic.dateConverter(to)));
     }
+
+
 
 
 
