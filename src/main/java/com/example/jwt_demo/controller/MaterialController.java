@@ -362,14 +362,16 @@ public class MaterialController {
         existingMat.setDefaultTimePeriod(mat.getDefaultTimePeriod());
 
 
+
+
         if (mat.getImages() != null) {
+            existingMat.getImages().clear();
             for (var img : mat.getImages()) {
                 img.setMaterials(existingMat);
                 existingMat.getImages().add(img);
             }
         }
 
-        existingMat.setImages(existingMat.getImages());
 
         materialRepository.save(existingMat);
 

@@ -276,30 +276,54 @@ ORDER BY DATE(o.created)
                                                  Pageable pageable);
 
 
-
-        @Query("""
-    
-        SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo( m.id, mid.imageUrl, m.materialName, m.unitPrice, m.inStock, pm.amountUsed)
-        FROM Materials m
-        Left Join images mid ON mid.materials.id = m.id and mid.imageLogic = 'Main'
-        Left join ProductMaterials pm ON pm.materials.id = m.id
-        
-        
-    
-    """)
-        List<MaterialInfo> getMaterialInfo();
+    @Query("""
+SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo(
+    m.id,
+    mid.imageUrl,
+    m.materialName,
+    m.unitPrice,
+    m.inStock,
+    COALESCE(SUM(pm.amountUsed), 0)
+)
+FROM Materials m
+LEFT JOIN images mid
+    ON mid.materials.id = m.id
+    AND mid.imageLogic = 'Main'
+LEFT JOIN ProductMaterials pm
+    ON pm.materials.id = m.id
+GROUP BY
+    m.id,
+    mid.imageUrl,
+    m.materialName,
+    m.unitPrice,
+    m.inStock
+""")
+    List<MaterialInfo> getMaterialInfo();
 
 
     @Query("""
-    
-        SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo( m.id, mid.imageUrl, m.materialName, m.unitPrice, m.inStock, pm.amountUsed)
-        FROM Materials m
-        Left Join images mid ON mid.materials.id = m.id and mid.imageLogic = 'Main'
-        Left join ProductMaterials pm ON pm.materials.id = m.id
-        
-        where m.id = :id
-    
-    """)
+SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo(
+    m.id,
+    mid.imageUrl,
+    m.materialName,
+    m.unitPrice,
+    m.inStock,
+    COALESCE(SUM(pm.amountUsed),0)
+)
+FROM Materials m
+JOIN images mid
+    ON mid.materials.id = m.id
+    AND mid.imageLogic = 'Main'
+LEFT JOIN ProductMaterials pm
+    ON pm.materials.id = m.id
+WHERE m.id = :id
+GROUP BY
+    m.id,
+    mid.imageUrl,
+    m.materialName,
+    m.unitPrice,
+    m.inStock
+""")
     MaterialInfo getMaterialInfoAccordingToId(Long id);
 
 
