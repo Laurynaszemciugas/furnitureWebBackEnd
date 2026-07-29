@@ -93,7 +93,7 @@ public class OrderController {
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
         return ResponseEntity.ok(
-                orderRepository.getOrderData(
+                orderRepository.getNewOrders(
                         orderFilterHolder.getOrderStatusChoice(),
                         orderFilterHolder.getPriceFromChoice(),
                         orderFilterHolder.getPriceToChoice(),

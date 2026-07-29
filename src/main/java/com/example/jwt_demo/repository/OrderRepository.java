@@ -62,10 +62,59 @@ AND (
     OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
     OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
 )
+and o.orderStatus != 'NEW'
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
 HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)
 """)
     List<OrdersFeedData> getOrderData(
+            @Param("status") OrderStatus status,
+            @Param("priceFrom") Double priceFrom,
+            @Param("priceTo") Double priceTo,
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo,
+            @Param("amountOfProduct") Long amountOfProduct,
+            @Param("prompt") String prompt,
+            @Param("empId") Long empId,
+            @Param("matId") Long matId,
+            Pageable pageable
+    );
+
+
+    @Query("""
+SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
+    o.id,
+    o.orderStatus,
+    COALESCE(SUM(op.amountOfProduct), 0),
+    o.estimatedDueDate,
+    o.created,
+    o.totalPrice,
+    o.billingAddress,
+    o.orderCreatedByGmail
+)
+FROM Orders o
+JOIN o.employees oe
+LEFT JOIN o.productsData op
+LEFT JOIN o.productsData pd
+WHERE (:matId IS NULL OR pd.product.id = :matId)
+AND(:empId IS NULL OR oe.employee.id = :empId)
+AND (:status IS NULL OR o.orderStatus = :status)
+AND (:dateFrom IS NULL OR o.created >= :dateFrom)
+AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
+AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
+AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
+AND (
+    :prompt IS NULL
+    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+    OR LOWER(o.billingAddress) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
+)
+
+GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
+HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)
+""")
+    List<OrdersFeedData> getNewOrders(
             @Param("status") OrderStatus status,
             @Param("priceFrom") Double priceFrom,
             @Param("priceTo") Double priceTo,

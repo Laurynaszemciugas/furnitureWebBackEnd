@@ -18,12 +18,14 @@ import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Entity.StockMovement;
+import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.StockMovementRepository;
+import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -57,6 +59,9 @@ public class MaterialController {
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
+
+    @Autowired
+    UserRepository userRepository;
 
 
 
@@ -251,7 +256,8 @@ public class MaterialController {
 
         newMat.setMaterialType(mat.getMaterialType());
 
-        //newMat.setUser();
+        User user = userRepository.findById(1L).orElseThrow();
+        newMat.setUser(user);
 
         newMat.setMaterialUrl(mat.getMaterialUrl());
 
