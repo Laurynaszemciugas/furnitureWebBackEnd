@@ -2,6 +2,7 @@ package com.example.jwt_demo.Entity.CreateReport;
 
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.ReportCategory;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,7 @@ public class Report {
     private User user;
 
     @OneToMany(mappedBy = "report",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference("reportRef")
     private List<ReportItems> reportItemsList;
 
 }

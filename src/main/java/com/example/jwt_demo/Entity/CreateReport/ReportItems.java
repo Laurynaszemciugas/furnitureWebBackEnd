@@ -2,6 +2,7 @@ package com.example.jwt_demo.Entity.CreateReport;
 
 import com.example.jwt_demo.Enums.Widget;
 import com.example.jwt_demo.Enums.Widths;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,10 +25,11 @@ public class ReportItems {
     private Widget widget;
 
     @Enumerated(EnumType.STRING)
-    private Widths Width;
+    private Widths width;
 
     @ManyToOne
     @JoinColumn(name = "report_id")
+    @JsonBackReference("reportRef")
     private Report report;
 
 }
