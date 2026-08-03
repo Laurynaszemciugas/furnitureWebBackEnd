@@ -44,5 +44,14 @@ public class CustomReportController {
         return ResponseEntity.ok(customReportRepository.customRepostFeedList());
     }
 
+    @GetMapping("/getReportAccordingToId/{id}")
+    public ResponseEntity<Report> getReportAccordingToId(@PathVariable Long id){
+
+
+
+
+        return ResponseEntity.ok(customReportRepository.findById(id).orElseThrow());
+    }
+
 
 }

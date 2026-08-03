@@ -13,7 +13,7 @@ public interface CustomReportRepository extends JpaRepository<Report,Long> {
 
 @Query("""
 
-    SELECT new com.example.jwt_demo.DTOS.CustomReport.CustomReportFeed( r.id, r.reportName,reportColor)
+    SELECT new com.example.jwt_demo.DTOS.CustomReport.CustomReportFeed(r.id, r.reportName,r.dashboardWidget,r.reportColor, r.description, r.created)
      FROM Report r
 
 """)

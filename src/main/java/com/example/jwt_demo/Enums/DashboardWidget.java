@@ -1,0 +1,22 @@
+package com.example.jwt_demo.Enums;
+
+public enum DashboardWidget {
+
+    ORDER_STATS,
+    PRODUCT_STATS,
+    MATERIAL_STATS,
+    EMPLOYEE_STATS,
+    SALES_REPORT,
+    FINANCIAL_REPORT,
+    INVENTORY_REPORT,
+    LOW_STOCK,
+    RECENT_ORDERS,
+    TOP_PRODUCTS,
+    CUSTOMER_REPORT,
+    ORDER_STATUS,
+    REVENUE_CHART,
+    MATERIAL_USAGE,
+    PRODUCTION_PROGRESS,
+    CUSTOM_WIDGET
+
+}
