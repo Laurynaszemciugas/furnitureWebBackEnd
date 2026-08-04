@@ -53,5 +53,19 @@ public class CustomReportController {
         return ResponseEntity.ok(customReportRepository.findById(id).orElseThrow());
     }
 
+    @GetMapping("/deleteCustomReport/{id}")
+    public ResponseEntity<ErrorResponse> deleteCustomReport(@PathVariable Long id){
+
+
+        Report report = customReportRepository.findById(id).orElseThrow();
+
+        customReportRepository.deleteById(id);
+
+
+
+
+        return ResponseEntity.ok(new ErrorResponse(report.getReportName() + " was deleted successfully",Warnings.OK));
+    }
+
 
 }
