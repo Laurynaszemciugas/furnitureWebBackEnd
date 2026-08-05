@@ -6,7 +6,8 @@ public enum Widths {
     HALF_WIDTH,
     THREE_QUARTS,
     QUARTER_WIDTH,
-    AUTO_WIDTH
+    AUTO_WIDTH,
+    CUSTOM
 
 
 }

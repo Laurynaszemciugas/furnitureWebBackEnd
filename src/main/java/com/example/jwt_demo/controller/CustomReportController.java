@@ -24,9 +24,7 @@ public class CustomReportController {
     public ResponseEntity<ErrorResponse> addNewReport(@RequestBody Report report){
 
 
-        for(var s : report.getReportItemsList()){
-            System.out.println(s.getWidth());
-        }
+
 
         customReportRepository.save(report);
 
