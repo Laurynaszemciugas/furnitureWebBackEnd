@@ -27,6 +27,9 @@ public class ReportItems {
     @Enumerated(EnumType.STRING)
     private Widths width;
 
+    private Boolean widthIsStatic;
+    private String userPreferredWidth;
+
     @ManyToOne
     @JoinColumn(name = "report_id")
     @JsonBackReference("reportRef")
