@@ -3,12 +3,14 @@ package com.example.jwt_demo.controller;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.DTOS.CustomReport.CustomReportFeed;
 import com.example.jwt_demo.Entity.CreateReport.Report;
+import com.example.jwt_demo.Entity.CreateReport.ReportItems;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.repository.CustomReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -29,7 +31,35 @@ public class CustomReportController {
         customReportRepository.save(report);
 
 
-        return ResponseEntity.ok(new ErrorResponse("zaza", Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse(report.getReportName() + " was created successfully", Warnings.OK));
+    }
+
+
+    @PostMapping("/editCustomReport")
+    public ResponseEntity<ErrorResponse> editCustomReport(@RequestBody Report report){
+
+        Report existingReport = customReportRepository.findById(report.getId()).orElseThrow();
+
+        existingReport.setReportColor(report.getReportColor());
+        existingReport.setReportCategory(report.getReportCategory());
+        existingReport.setReportName(report.getReportName());
+        existingReport.setDescription(report.getDescription());
+        existingReport.setDashboardWidget(report.getDashboardWidget());
+
+        List<ReportItems> reportItemsList = new ArrayList<>();
+
+        existingReport.getReportItemsList().clear();
+
+        for (ReportItems item : report.getReportItemsList()) {
+            item.setReport(existingReport); // important for bidirectional relation
+            existingReport.getReportItemsList().add(item);
+        }
+
+
+        customReportRepository.save(existingReport);
+
+
+        return ResponseEntity.ok(new ErrorResponse(existingReport.getReportName() + " was edited successfully", Warnings.OK));
     }
 
 
