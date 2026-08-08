@@ -2,17 +2,11 @@ package com.example.jwt_demo.Enums;
 
 public enum EmployeeRole {
 
-    INTERN("Intern"),
-    JUNIOR_WORKER("Junior Worker"),
+    WORKER("Worker"),
     ASSEMBLER("Assembler"),
     CARPENTER("Carpenter"),
-    PAINTER("Painter"),
     FINISHER("Finisher"),
-    QUALITY_CHECKER("Quality Checker"),
-    WAREHOUSE_WORKER("Warehouse Worker"),
-    LOGISTICS_WORKER("Logistics Worker"),
-    DELIVERY_DRIVER("Delivery Driver"),
-    SUPERVISOR("Supervisor"),
+    WAREHOUSE("Warehouse"),
     MANAGER("Manager"),
 
     ALL("All");

@@ -13,6 +13,7 @@ import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.DTOS.Product.ProductLowStockList;
 import com.example.jwt_demo.DTOS.Product.ProductPerformanceReport;
 import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
+import com.example.jwt_demo.Entity.ActionTracker;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
@@ -21,6 +22,7 @@ import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
+import com.example.jwt_demo.repository.ActionTrackerRepository;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.ProductRepository;
 import com.example.jwt_demo.repository.UserRepository;
@@ -61,6 +63,8 @@ public class ProductController {
     @Autowired
     DatabaseChecks databaseChecks;
 
+    @Autowired
+    ActionTrackerRepository actionTrackerRepository;
 
 
     @PostMapping("/saveProduct")
@@ -152,7 +156,9 @@ public class ProductController {
 
         databaseChecks.calculateProductsStock(user.getId(),false);
 
-        return ResponseEntity.ok(new ErrorResponse("Success", Warnings.OK));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",cleanProduct.getProductName()),null,null, ActionTrackerEnum.USER,null));
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("product %s was saved successfully",cleanProduct.getProductName()), Warnings.OK));
     }
 
 
@@ -314,15 +320,23 @@ public class ProductController {
     @PostMapping("/removeProduct")
     public ResponseEntity<ErrorResponse> removeProduct(@RequestBody Long id){
 
+        Product product = productRepository.findById(id).orElseThrow();
+
         try {
             productRepository.deleteById(id);
         } catch (Exception e) {
-            Product product = productRepository.findById(id).orElseThrow();
                 product.setVisibility(Visibility.NonVisible);
                 product.setStatus(Status.Disabled);
                 productRepository.save(product);
-            return  ResponseEntity.ok(new ErrorResponse("Product is used it is put into a blackList you cannot use it but you can change that",Warnings.OK));
+
+            actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was placed to the blacklist successfully",product.getProductName()),null,null, ActionTrackerEnum.USER,null));
+
+            return  ResponseEntity.ok(new ErrorResponse(String.format("Product %s is used it is put into a blackList you cannot use it but you can change that",product.getProductName()),Warnings.OK));
         }
+
+
+        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",product.getProductName()),null,null, ActionTrackerEnum.USER,null));
+
         return ResponseEntity.ok(new ErrorResponse("Removed successfully",Warnings.OK));
     }
 
