@@ -4,6 +4,8 @@ import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
@@ -219,6 +221,12 @@ public class EmployeeController {
         return ResponseEntity.ok(employee);
     }
 
+    // dashboard
+
+    @GetMapping("/getEmployeeMiniStats/{from}/{to}")
+    public ResponseEntity<DashBoardEmployeeMiniInfo> getEmployeeMiniStats(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(employeeRepository.getEmployeeMiniStat(logic.dateConverter(from),logic.dateConverter(to)));
+    }
 
 
 }

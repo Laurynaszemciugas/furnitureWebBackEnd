@@ -619,6 +619,15 @@ public class OrderController {
     }
 
 
+    @GetMapping("/getGraphDashboard/{fromDate}/{toDate}")
+    public ResponseEntity<List<GraphDataDateValue>> getGraphDashboard(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        return ResponseEntity.ok(orderRepository.getGraphForDashBoard(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+
+    }
+
+
+
 
 
 

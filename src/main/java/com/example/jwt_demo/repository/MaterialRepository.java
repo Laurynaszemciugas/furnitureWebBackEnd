@@ -3,6 +3,8 @@ package com.example.jwt_demo.repository;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
@@ -327,6 +329,53 @@ GROUP BY
     MaterialInfo getMaterialInfoAccordingToId(Long id);
 
 
+
+    // dashboard
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock(
+        COALESCE(SUM(CASE
+            WHEN o.stock = 'Low_Stock' THEN 1L ELSE 0L
+        END), 0),
+
+        COALESCE(SUM(CASE
+            WHEN o.stock = 'No_Stock' THEN 1L ELSE 0L
+        END), 0)
+
+    )
+    FROM Materials o
+    WHERE o.created >= :dateFrom
+      AND o.created < :dateTo
+""")
+    DashBoardMaterialStock dashboardMiniStat(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
+    );
+
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo(
+        (
+            SELECT m2.materialName
+            FROM Materials m2
+            WHERE m2.created >= :from
+              AND m2.created < :to
+            GROUP BY m2.materialName
+            ORDER BY SUM(m2.inStock) DESC
+            LIMIT 1
+        ),
+        COALESCE(SUM(m.inStock), 0),
+        COALESCE(SUM(m.inStock * m.unitPrice), 0.0),
+        0.0
+    )
+    FROM Materials m
+    WHERE m.created >= :from
+      AND m.created < :to
+    """)
+    DashBoardMaterialUsageInfo getCurrentMonthMaterialUsage(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
 
 
 

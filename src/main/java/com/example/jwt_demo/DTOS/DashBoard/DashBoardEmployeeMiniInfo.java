@@ -13,14 +13,5 @@ public class DashBoardEmployeeMiniInfo {
 
     String topEmployee;
     long topEmployeeProduced;
-    double totalPaidSalary;
-    double totalUnpaidSalary;
-    double totalPaidLastMonth;
-    double totalUnpaidLastMonth;
-
-
-
-
-
 
 }

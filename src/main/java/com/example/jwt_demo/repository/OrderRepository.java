@@ -408,5 +408,27 @@ AND (
             @Param("previousTo") LocalDateTime previousTo
     );
 
+    // dashboard
+
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
+        Date(o.created),
+        SUM(o.totalPrice)
+    )
+    FROM Orders o
+    WHERE o.orderStatus = 'Finished'
+      AND o.created >= :dateFrom
+      AND o.created <= :dateTo
+    GROUP BY DATE(o.created)
+    ORDER BY DATE(o.created)
+    """)
+    List<GraphDataDateValue> getGraphForDashBoard(
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo
+    );
+
+
+
 
 }

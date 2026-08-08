@@ -1,6 +1,7 @@
 package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
@@ -114,6 +115,36 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
             @Param("toJoinedChoice") LocalDateTime toJoinedChoice,
             @Param("promtChoice") String promtChoice
     );
+
+    // dashboard
+
+
+
+    @Query("""
+
+     SELECT new com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo(
+        e.fullName,
+        COUNT(oe.employee.id))
+        FROM Employee e
+        JOIN OrderEmployees oe
+        ON oe.employee.id = e.id
+        JOIN Orders o
+        ON o.id = oe.order.id
+        WHERE o.orderStatus = 'Finished'
+    
+        GROUP BY e.id, fullName
+        ORDER BY oe.employee.id DESC
+    
+        LIMIT 1
+    
+
+
+""")
+    DashBoardEmployeeMiniInfo getEmployeeMiniStat(
+            @Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate
+    );
+
+
 
 
 }

@@ -7,6 +7,8 @@ import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
@@ -477,6 +479,18 @@ public class MaterialController {
         return ResponseEntity.ok(materialRepository.getMaterialInfoAccordingToId(id));
     }
 
+
+    // dashBoard
+
+    @GetMapping("/getDashBoardMiniStatas/{from}/{to}")
+    public ResponseEntity<DashBoardMaterialStock> getDashBoardMiniStatas(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(materialRepository.dashboardMiniStat(logic.dateConverter(from),logic.dateConverter(to)));
+    }
+
+    @GetMapping("/getMiniDashboardTwoMoreIndepth/{from}/{to}")
+    public ResponseEntity<DashBoardMaterialUsageInfo> getMiniDashboardTwoMoreIndepth(@PathVariable LocalDate from, @PathVariable LocalDate to){
+        return ResponseEntity.ok(materialRepository.getCurrentMonthMaterialUsage(logic.dateConverter(from),logic.dateConverter(to)));
+    }
 
 
 
