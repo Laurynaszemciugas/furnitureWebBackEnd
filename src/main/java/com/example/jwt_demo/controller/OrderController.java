@@ -7,6 +7,7 @@ import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -600,9 +601,22 @@ public class OrderController {
 
     }
 
+// dashboard
 
 
 
+    @GetMapping("/getDashboardOrderMini/{fromDate}/{toDate}")
+    public ResponseEntity<DashBoardMonthlyOrdersCompleted> getDashboardOrderMini(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+
+
+        LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
+
+        LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
+
+        return ResponseEntity.ok(orderRepository.getOrderDashboadrMini(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+
+    }
 
 
 

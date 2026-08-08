@@ -3,6 +3,7 @@ package com.example.jwt_demo.repository;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.OrderStatus;
@@ -382,5 +383,30 @@ AND (
     List<RecentOrdersReportPage> recentOrderReportPage(@Param("dateFrom") LocalDateTime dateFrom,
                                                        @Param("dateTo") LocalDateTime dateTo,
                                                        Pageable pageable);
+
+
+// dashboard
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted(
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :currentFrom
+              AND o.created <= :currentTo
+        ),
+        COUNT(DISTINCT o.id) FILTER (
+            WHERE o.created >= :previousFrom
+              AND o.created <= :previousTo
+        )
+    )
+    FROM Orders o
+    WHERE o.orderStatus = 'Finished'
+""")
+    DashBoardMonthlyOrdersCompleted getOrderDashboadrMini(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("previousFrom") LocalDateTime previousFrom,
+            @Param("previousTo") LocalDateTime previousTo
+    );
+
 
 }
