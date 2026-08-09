@@ -12,8 +12,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DashBoardMonthlyOrdersCompleted {
 
-    private long thisMonthOrders;
-    private long previousMonthOrders;
+    private Long thisMonthOrders;
+    private Long previousMonthOrders;
 
     public boolean isEmpty() {
         return thisMonthOrders == 0 && previousMonthOrders == 0;

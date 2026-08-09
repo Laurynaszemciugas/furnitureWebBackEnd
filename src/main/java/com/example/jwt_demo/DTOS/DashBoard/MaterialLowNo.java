@@ -11,10 +11,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MaterialLowNo {
 
-    private long id;
+    private Long id;
     private String name;
-    private long currentStock;
-    private long minTreshold;
-    private double pieceCost;
+    private Long currentStock;
+    private Long minTreshold;
+    private Double pieceCost;
 
 }

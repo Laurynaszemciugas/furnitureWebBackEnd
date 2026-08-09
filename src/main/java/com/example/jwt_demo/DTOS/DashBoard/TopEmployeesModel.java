@@ -14,10 +14,10 @@ public class TopEmployeesModel {
 
     private String profilePicUrl;
     private String name;
-    private long unitsProduced;
-    private double hourlySalary;
-    private long hoursWorkedTotal;
-    private long hoursWorkedThisMonth;
+    private Long unitsProduced;
+    private Double hourlySalary;
+    private Long hoursWorkedTotal;
+    private Long hoursWorkedThisMonth;
 
 
 }

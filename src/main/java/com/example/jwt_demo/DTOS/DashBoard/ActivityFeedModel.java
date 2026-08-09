@@ -14,7 +14,7 @@ public class ActivityFeedModel {
 
     private String actionDescription;
     private String whoMadeIt;
-    private long howLongAgoMinutes;
+    private Long howLongAgoMinutes;
     private String color;
 
 }

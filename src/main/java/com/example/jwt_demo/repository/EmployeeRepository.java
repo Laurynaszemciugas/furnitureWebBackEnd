@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee,Long> {
 
@@ -140,7 +141,7 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
 
 
 """)
-    DashBoardEmployeeMiniInfo getEmployeeMiniStat(
+    Optional<DashBoardEmployeeMiniInfo> getEmployeeMiniStat(
             @Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate
     );
 

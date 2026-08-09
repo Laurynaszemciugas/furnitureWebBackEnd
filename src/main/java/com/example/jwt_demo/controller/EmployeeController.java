@@ -224,8 +224,17 @@ public class EmployeeController {
     // dashboard
 
     @GetMapping("/getEmployeeMiniStats/{from}/{to}")
-    public ResponseEntity<DashBoardEmployeeMiniInfo> getEmployeeMiniStats(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(employeeRepository.getEmployeeMiniStat(logic.dateConverter(from),logic.dateConverter(to)));
+    public ResponseEntity<DashBoardEmployeeMiniInfo> getEmployeeMiniStats(
+            @PathVariable LocalDate from,
+            @PathVariable LocalDate to
+    ) {
+        DashBoardEmployeeMiniInfo data =
+                employeeRepository.getEmployeeMiniStat(
+                        logic.dateConverter(from),
+                        logic.dateConverter(to)
+                ).orElse(new DashBoardEmployeeMiniInfo("No data", 0L));
+
+        return ResponseEntity.ok(data);
     }
 
 
