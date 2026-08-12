@@ -313,9 +313,8 @@ SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo(
     COALESCE(SUM(pm.amountUsed),0)
 )
 FROM Materials m
-JOIN images mid
-    ON mid.materials.id = m.id
-    AND mid.imageLogic = 'Main'
+LEFT JOIN m.images mid
+    ON mid.imageLogic = 'Main'
 LEFT JOIN ProductMaterials pm
     ON pm.materials.id = m.id
 WHERE m.id = :id

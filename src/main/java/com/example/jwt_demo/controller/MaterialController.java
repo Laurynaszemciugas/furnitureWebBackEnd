@@ -342,7 +342,7 @@ public class MaterialController {
 
         // ============ in min setEnabled value ============================
         // default value
-        existingMat.setEnabled(ActiveInactive.ACTIVE);
+        existingMat.setEnabled(mat.getEnabled());
 
 
 
@@ -376,6 +376,7 @@ public class MaterialController {
             existingMat.getImages().clear();
             for (var img : mat.getImages()) {
                 img.setMaterials(existingMat);
+                img.setUser(null);
                 existingMat.getImages().add(img);
             }
         }
