@@ -2,9 +2,7 @@ package com.example.jwt_demo.controller;
 
 
 import com.example.jwt_demo.Common.ErrorResponse;
-import com.example.jwt_demo.Common.ai.AiQuestion;
-import com.example.jwt_demo.Common.ai.AiResponse;
-import com.example.jwt_demo.Common.ai.MaterialAiDto;
+import com.example.jwt_demo.Common.ai.*;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +34,8 @@ public class AiController {
 
         Class<T> referenceClass = (Class<T>) switch (aiQuestion.getReferenceToDataNeeded()) {
             case "Materials" -> MaterialAiDto.class;
+            case "Employees" -> EmployeeAiDto.class;
+            case "Orders" -> OrderAiDto.class;
             default -> throw new IllegalArgumentException("Unknown type");
         };
 
