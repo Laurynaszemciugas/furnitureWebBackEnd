@@ -6,6 +6,8 @@ import com.example.jwt_demo.Entity.CreateReport.Report;
 import com.example.jwt_demo.Entity.CreateReport.ReportItems;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.repository.CustomReportRepository;
+import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +23,19 @@ public class CustomReportController {
     @Autowired
     CustomReportRepository customReportRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    Common common;
+
 
     @PostMapping("/createNewCustomReport")
     public ResponseEntity<ErrorResponse> addNewReport(@RequestBody Report report){
 
+        CustomUserDetails user = common.getUserData();
 
+        report.setUser(userRepository.findById(user.getId()).orElseThrow());
 
 
         customReportRepository.save(report);
@@ -67,9 +77,9 @@ public class CustomReportController {
     public ResponseEntity<List<CustomReportFeed>> getCustomReportFeed(){
 
 
+        CustomUserDetails user = common.getUserData();
 
-
-        return ResponseEntity.ok(customReportRepository.customRepostFeedList());
+        return ResponseEntity.ok(customReportRepository.customRepostFeedList(user.getId()));
     }
 
     @GetMapping("/getReportAccordingToId/{id}")

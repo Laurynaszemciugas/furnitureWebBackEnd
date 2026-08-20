@@ -15,9 +15,11 @@ public interface CustomReportRepository extends JpaRepository<Report,Long> {
 
     SELECT new com.example.jwt_demo.DTOS.CustomReport.CustomReportFeed(r.id, r.reportName,r.dashboardWidget,r.reportColor, r.description, r.created)
      FROM Report r
+     
+     where r.user.id = :id
 
 """)
-    List<CustomReportFeed> customRepostFeedList();
+    List<CustomReportFeed> customRepostFeedList(Long id);
 
 
 }
