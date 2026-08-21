@@ -290,7 +290,9 @@ public class MaterialController {
         StockMovement stockMovement = new StockMovement();
         stockMovement.setMaterials(newMat);
         stockMovement.setType(Type.IN);
+        stockMovement.setBalance(newMat.getInStock());
         stockMovement.setAmountTakeAdd(newMat.getInStock());
+        stockMovement.setUser(userRepository.findById(user.getId()).orElseThrow());
 
         stockMovementRepository.save(stockMovement);
 
@@ -304,12 +306,12 @@ public class MaterialController {
     @PostMapping("/editExistingMaterial")
     public ResponseEntity<ErrorResponse> ediMaterial(@RequestBody Materials mat){
 
-
+        CustomUserDetails user = common.getUserData();
         // checks if there is any null or is empty values
         providedDataChecker.checkEmptyValue(mat, Materials.class);
 
         Materials existingMat = materialRepository.findById(mat.getId()).orElseThrow();
-
+        Long amountWas = existingMat.getInStock();
         Long stockWas = existingMat.getInStock();
 
 
@@ -388,8 +390,46 @@ public class MaterialController {
         }
 
 
+
+
+
+
+
+
+
+        Long amountCurrent = mat.getInStock();
+
+
+
+
+
+
+
+
+
         materialRepository.save(existingMat);
 
+        Materials newBalance = materialRepository.findById(mat.getId()).orElseThrow();
+
+        StockMovement stockMovement = new StockMovement();
+        stockMovement.setMaterials(existingMat);
+
+        Type type;
+
+        if(amountCurrent-amountWas < 0){
+            type = Type.OUT;
+        }
+        else{
+            type = Type.IN;
+        }
+
+        stockMovement.setType(type);
+        stockMovement.setAmountTakeAdd(Math.abs(amountCurrent-amountWas));
+        stockMovement.setUser(userRepository.findById(user.getId()).orElseThrow());
+
+        stockMovement.setBalance(newBalance.getInStock());
+
+        stockMovementRepository.save(stockMovement);
 
 
         databaseChecks.calculateProductsStock(null,false);

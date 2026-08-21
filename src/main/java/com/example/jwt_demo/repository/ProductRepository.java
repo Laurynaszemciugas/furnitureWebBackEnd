@@ -272,7 +272,7 @@ JOIN order_products op
 JOIN products p 
     ON p.id = op.product_id
 
-WHERE o.user.id = :id
+WHERE o.user_id = :id
  and o.created >= :previousFrom
 AND o.created <= :currentTo
 

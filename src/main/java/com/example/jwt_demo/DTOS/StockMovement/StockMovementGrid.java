@@ -1,5 +1,6 @@
 package com.example.jwt_demo.DTOS.StockMovement;
 
+import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.Type;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,5 +20,6 @@ public class StockMovementGrid {
     private Type type;
     private Long qty;
     private Long balance;
+    private User user;
 
 }

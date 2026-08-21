@@ -17,13 +17,13 @@ public interface StockMovementRepository extends JpaRepository<StockMovement,Lon
 @Query("""
     SELECT new com.example.jwt_demo.DTOS.StockMovement.StockMovementGrid(
     
-     st.created, m.materialName, st.type, st.amountTakeAdd,st.balance)
+     st.created, m.materialName, st.type, st.amountTakeAdd,st.balance,st.user)
      
      
     FROM StockMovement st
     
     Join Materials m ON m.id = st.materials.id
-    WHERE m.user.id = :id
+    WHERE st.user.id = :id
      and st.created >= :dateFrom
       AND st.created <= :dateTo
     ORDER BY st.created DESC
