@@ -6,6 +6,7 @@ import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.Orders;
+import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,14 +25,20 @@ SELECT DISTINCT o FROM Orders o
 LEFT JOIN FETCH o.productsData op
 LEFT JOIN FETCH op.product
 LEFT JOIN FETCH o.user
+
+   WHERE o.user.id = :id
+
 """)
-    List<Orders> findAllFull();
+    List<Orders> findAllFull(Long id);
 
     @Query("""
-SELECT  count(o) FROM Orders o where orderStatus = 'NEW' 
+SELECT  count(o)
+ FROM Orders o
+  WHERE o.user.id = :id
+   AND orderStatus = 'NEW' 
 
 """)
-    Long findNewOrdersCount();
+    Long findNewOrdersCount(Long id);
 
     @Query("""
 SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
@@ -48,7 +55,9 @@ FROM Orders o
 JOIN o.employees oe
 LEFT JOIN o.productsData op
 LEFT JOIN o.productsData pd
-WHERE (:matId IS NULL OR pd.product.id = :matId)
+WHERE o.user.id = :id
+AND(:active IS NULL OR o.activeInactive = :active)
+AND(:matId IS NULL OR pd.product.id = :matId)
 AND(:empId IS NULL OR oe.employee.id = :empId)
 AND (:status IS NULL OR o.orderStatus = :status)
 AND (:dateFrom IS NULL OR o.created >= :dateFrom)
@@ -77,7 +86,9 @@ HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amou
             @Param("prompt") String prompt,
             @Param("empId") Long empId,
             @Param("matId") Long matId,
-            Pageable pageable
+            @Param("active") ActiveInactive active,
+            Pageable pageable,
+            Long id
     );
 
 
@@ -96,7 +107,9 @@ FROM Orders o
 JOIN o.employees oe
 LEFT JOIN o.productsData op
 LEFT JOIN o.productsData pd
-WHERE (:matId IS NULL OR pd.product.id = :matId)
+WHERE o.user.id = :id
+AND(:active IS NULL OR o.activeInactive = :active)
+AND(:matId IS NULL OR pd.product.id = :matId)
 AND(:empId IS NULL OR oe.employee.id = :empId)
 AND (:status IS NULL OR o.orderStatus = :status)
 AND (:dateFrom IS NULL OR o.created >= :dateFrom)
@@ -125,7 +138,9 @@ HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amou
             @Param("prompt") String prompt,
             @Param("empId") Long empId,
             @Param("matId") Long matId,
-            Pageable pageable
+            @Param("active") ActiveInactive active,
+            Pageable pageable,
+            Long id
     );
 
 
@@ -136,7 +151,8 @@ SELECT
         ELSE CEIL(COUNT(o.id) / :pageCount)
     END
 FROM Orders o
-WHERE (:status IS NULL OR o.orderStatus = :status)
+WHERE o.user.id = :id
+AND(:status IS NULL OR o.orderStatus = :status)
 AND (:dateFrom IS NULL OR o.created >= :dateFrom)
 AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
 AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
@@ -161,7 +177,8 @@ AND (
             LocalDateTime dateTo,
             Long amountOfProduct,
             String prompt,
-            double pageCount
+            double pageCount,
+            Long id
     );
 
 
@@ -175,10 +192,12 @@ AND (
             SUM(CASE WHEN o.created >= :fromDate AND o.created <= :toDate THEN 1 ELSE 0 END))
          
             FROM Orders o
+            
+            WHERE o.user.id = :id
 
 
 """)
-    MiniStatHolder getOrderMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+    MiniStatHolder getOrderMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate, Long id);
 
 
     @Query("""
@@ -198,10 +217,12 @@ AND (
     LEFT JOIN ProductImageData img
         ON img.product.id = p.id
         AND img.imageLogic = 'Main'
-    WHERE o.id = :orderId
+    WHERE o.user.id = :id
+         AND o.id = :orderId
     """)
     List<NewOrderFeedData> getNewOrderFeedData(
-            @Param("orderId") Long orderId
+            @Param("orderId") Long orderId,
+            Long id
     );
 
 
@@ -232,12 +253,14 @@ AND (
         END), 0)
     )
     FROM Orders o
-    WHERE o.created >= :dateFrom
+    WHERE o.user.id = :id
+     AND o.created >= :dateFrom
       AND o.created < :dateTo
 """)
     OrderReportPieChart orderReportPieChart(
             @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo
+            @Param("dateTo") LocalDateTime dateTo,
+            Long id
     );
 
 
@@ -248,7 +271,8 @@ AND (
     SUM(o.totalPrice))
     FROM Orders o
     JOIN productsData op
-    WHERE o.created >= :dateFrom
+    WHERE o.user.id = :id
+     AND o.created >= :dateFrom
     AND o.created <= :dateTo
     And o.orderStatus = 'Finished'
     GROUP BY o.createdDate
@@ -258,7 +282,7 @@ AND (
 
 """)
     List<GraphDataDateValue> orderReportLineBar(@Param("dateFrom") LocalDateTime dateFrom,
-                                                @Param("dateTo") LocalDateTime dateTo);
+                                                @Param("dateTo") LocalDateTime dateTo, Long id);
 
 
     @Query("""
@@ -322,14 +346,19 @@ AND (
 
     )
     FROM Orders o
+    
+    
     LEFT JOIN o.productsData op
+    
+    WHERE o.user.id = :id
    
 """)
     ReportMiniStatHolder getOrderMiniStats(
             @Param("currentFrom") LocalDateTime currentFrom,
             @Param("currentTo") LocalDateTime currentTo,
             @Param("previousFrom") LocalDateTime previousFrom,
-            @Param("previousTo") LocalDateTime previousTo
+            @Param("previousTo") LocalDateTime previousTo,
+            Long id
     );
 
     @Query("""
@@ -344,7 +373,8 @@ AND (
     JOIN o.productsData op
     
     JOIN o.user u
-    WHERE o.created >= :dateFrom
+    WHERE o.user.id = :id
+     AND o.created >= :dateFrom
       AND o.created <= :dateTo
       and o.orderStatus = 'Finished'
     GROUP BY u.id, u.fullName
@@ -354,7 +384,8 @@ AND (
     List<TopCustomerDto> topCustomerList(
             @Param("dateFrom") LocalDateTime dateFrom,
             @Param("dateTo") LocalDateTime dateTo,
-            Pageable pageable
+            Pageable pageable,
+            Long id
     );
 
     @Query("""
@@ -368,7 +399,8 @@ AND (
     FROM Orders o
     JOIN productsData op
         
-        WHERE o.created >= :dateFrom
+        WHERE o.user.id = :id
+         AND o.created >= :dateFrom
       AND o.created <= :dateTo
         
     GROUP BY
@@ -382,7 +414,8 @@ AND (
 """)
     List<RecentOrdersReportPage> recentOrderReportPage(@Param("dateFrom") LocalDateTime dateFrom,
                                                        @Param("dateTo") LocalDateTime dateTo,
-                                                       Pageable pageable);
+                                                       Pageable pageable,
+                                                       Long id);
 
 
 // dashboard
@@ -399,13 +432,15 @@ AND (
         )
     )
     FROM Orders o
-    WHERE o.orderStatus = 'Finished'
+    WHERE o.user.id = :id
+    AND o.orderStatus = 'Finished'
 """)
     DashBoardMonthlyOrdersCompleted getOrderDashboadrMini(
             @Param("currentFrom") LocalDateTime currentFrom,
             @Param("currentTo") LocalDateTime currentTo,
             @Param("previousFrom") LocalDateTime previousFrom,
-            @Param("previousTo") LocalDateTime previousTo
+            @Param("previousTo") LocalDateTime previousTo,
+            Long id
     );
 
     // dashboard
@@ -417,7 +452,8 @@ AND (
         SUM(o.totalPrice)
     )
     FROM Orders o
-    WHERE o.orderStatus = 'Finished'
+    WHERE o.user.id = :id
+         AND o.orderStatus = 'Finished'
       AND o.created >= :dateFrom
       AND o.created <= :dateTo
     GROUP BY DATE(o.created)
@@ -425,7 +461,8 @@ AND (
     """)
     List<GraphDataDateValue> getGraphForDashBoard(
             @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo
+            @Param("dateTo") LocalDateTime dateTo,
+            Long id
     );
 
 

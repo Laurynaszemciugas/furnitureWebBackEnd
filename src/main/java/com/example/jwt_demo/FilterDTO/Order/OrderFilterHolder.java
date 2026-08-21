@@ -1,5 +1,6 @@
 package com.example.jwt_demo.FilterDTO.Order;
 
+import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class OrderFilterHolder {
     private LocalDate dateFromChoice= LocalDate.of(1000,12,12);
     private LocalDate dateToChoice= LocalDate.of(1000,12,12);
     private Long amountOfProductsChoice= 0L;
+    private ActiveInactive orderActiveInactive = ActiveInactive.ALL;
     private int page;
     private int pageCount;
 

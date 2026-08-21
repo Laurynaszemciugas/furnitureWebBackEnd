@@ -159,6 +159,8 @@ public class MaterialController {
             @RequestBody MaterialFilterHolder filter
     ) {
 
+        CustomUserDetails user = common.getUserData();
+
         filter = providedDataChecker.defaultValueChecker(filter, MaterialFilterHolder.class);
 
 
@@ -172,7 +174,8 @@ public class MaterialController {
                         logic.dateConverter(filter.getTodDateChoice()),
                         filter.getStockChoice(),
                         filter.getPromtChoice(),
-                        PageRequest.of(filter.getPage(), filter.getPageCount()))
+                        PageRequest.of(filter.getPage(), filter.getPageCount()),
+                        user.getId())
         );
     }
 
@@ -182,6 +185,7 @@ public class MaterialController {
             @RequestBody MaterialFilterHolder filter
     ) {
 
+        CustomUserDetails user = common.getUserData();
 
         filter = providedDataChecker.defaultValueChecker(filter, MaterialFilterHolder.class);
 
@@ -193,7 +197,8 @@ public class MaterialController {
                 logic.dateConverter(filter.getFromDateChoice()),
                 logic.dateConverter(filter.getTodDateChoice()),
                 filter.getStockChoice(),
-                filter.getPromtChoice());
+                filter.getPromtChoice(),
+                user.getId());
 
 
         return ResponseEntity.ok(count);
@@ -203,7 +208,8 @@ public class MaterialController {
 
     @GetMapping("/getMaterialMiniStats/{fromDate}/{toDate}")
     public ResponseEntity<MiniStatHolder> getMaterialMiniStats(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
-        return ResponseEntity.ok(materialRepository.getMaterialMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+        CustomUserDetails user = common.getUserData();
+        return ResponseEntity.ok(materialRepository.getMaterialMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
     }
 
 
@@ -431,35 +437,43 @@ public class MaterialController {
     @GetMapping("/getMaterialMiniStatData/{fromDate}/{toDate}")
     public ResponseEntity<ReportMiniStatHolder> getMaterialMiniStatData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
+        CustomUserDetails user = common.getUserData();
+
         LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
 
         LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
 
 
-        return ResponseEntity.ok(materialRepository.getProductMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+        return ResponseEntity.ok(materialRepository.getProductMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo), user.getId()));
 
     }
 
     @GetMapping("/getMaterialByStatus/{fromDate}/{toDate}")
     public ResponseEntity<MaterialReportPieChart> getMaterialPieChart(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
+        CustomUserDetails user = common.getUserData();
+
         System.out.println(fromDate);
 
-        return ResponseEntity.ok(materialRepository.MaterialReportPieChart(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+        return ResponseEntity.ok(materialRepository.MaterialReportPieChart(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
 
     }
 
     @GetMapping("/getMaterialByLineChart/{fromDate}/{toDate}")
     public ResponseEntity<List<GraphDataDateValue>> getProductLineChartData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-        return ResponseEntity.ok(materialRepository.productReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(materialRepository.productReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
 
     }
 
     @GetMapping("/getMaterialLowStock/{fromDate}/{toDate}")
     public ResponseEntity<List<MaterialLowStockGrid>> getLowStockMaterials(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-        return ResponseEntity.ok(materialRepository.getProductLowFeed(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(materialRepository.getProductLowFeed(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5), user.getId()));
 
     }
 
@@ -472,12 +486,18 @@ public class MaterialController {
 
     @GetMapping("/getAllAvailableMaterials")
     public ResponseEntity<List<MaterialInfo>> getProductPerformanceReport(){
-        return ResponseEntity.ok(materialRepository.getMaterialInfo());
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(materialRepository.getMaterialInfo(user.getId()));
     }
 
     @GetMapping("/getMaterialInfoAccordingToId/{id}")
     public ResponseEntity<MaterialInfo> getMaterialInfoAccordingToId(@PathVariable Long id){
-        return ResponseEntity.ok(materialRepository.getMaterialInfoAccordingToId(id));
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(materialRepository.getMaterialInfoAccordingToId(id, user.getId()));
     }
 
 
@@ -485,12 +505,16 @@ public class MaterialController {
 
     @GetMapping("/getDashBoardMiniStatas/{from}/{to}")
     public ResponseEntity<DashBoardMaterialStock> getDashBoardMiniStatas(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(materialRepository.dashboardMiniStat(logic.dateConverter(from),logic.dateConverter(to)));
+        CustomUserDetails user = common.getUserData();
+        return ResponseEntity.ok(materialRepository.dashboardMiniStat(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
     @GetMapping("/getMiniDashboardTwoMoreIndepth/{from}/{to}")
     public ResponseEntity<DashBoardMaterialUsageInfo> getMiniDashboardTwoMoreIndepth(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(materialRepository.getCurrentMonthMaterialUsage(logic.dateConverter(from),logic.dateConverter(to)));
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(materialRepository.getCurrentMonthMaterialUsage(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
 

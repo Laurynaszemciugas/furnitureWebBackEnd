@@ -23,9 +23,11 @@ public interface EmployeeRepository extends JpaRepository<Employee,Long> {
     @Query("""
 
     SELECT new com.example.jwt_demo.DTOS.Order.ComboBoxEmployees(e.id, e.fullName, e.employeeCategory, e.profileImage) FROM Employee e
+    
+    where e.user.id = :id
 
 """)
-    List<ComboBoxEmployees> getUserEmployees();
+    List<ComboBoxEmployees> getUserEmployees(Long id);
 
     @Query("""
 
@@ -36,10 +38,12 @@ public interface EmployeeRepository extends JpaRepository<Employee,Long> {
             SUM(CASE WHEN e.created >= :fromDate AND e.created <= :toDate THEN 1 ELSE 0 END))
          
             FROM Employee e
+            
+            where e.user.id = :id
 
 
 """)
-    MiniStatHolder getEmployeeMiniStats(@Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+    MiniStatHolder getEmployeeMiniStats(@Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate, Long id);
 
 
     @Query("""
@@ -56,7 +60,8 @@ SELECT new com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto(
     e.created
 )
 FROM Employee e
-WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
+WHERE   e.user.id = :id 
+ and (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
   AND (:employeeCategoryChoice IS NULL OR e.employeeCategory = :employeeCategoryChoice)
   AND (:employeeDepartmentChoice IS NULL OR e.employeeDepartment = :employeeDepartmentChoice)
   AND (:hourlyRateChoice IS NULL OR e.hourlyRate = :hourlyRateChoice)
@@ -80,7 +85,8 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
             @Param("fromJoinedChoice") LocalDateTime fromJoinedChoice,
             @Param("toJoinedChoice") LocalDateTime toJoinedChoice,
             @Param("promtChoice") String promtChoice,
-            Pageable pageable
+            Pageable pageable,
+            Long id
     );
 
 
@@ -91,7 +97,8 @@ SELECT    CASE
         ELSE CEIL(COUNT(DISTINCT e.id) / 5.0)
     END
 FROM Employee e
-WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
+WHERE  e.user.id = :id
+  AND (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
   AND (:employeeCategoryChoice IS NULL OR e.employeeCategory = :employeeCategoryChoice)
   AND (:employeeDepartmentChoice IS NULL OR e.employeeDepartment = :employeeDepartmentChoice)
   AND (:hourlyRateChoice IS NULL OR e.hourlyRate = :hourlyRateChoice)
@@ -114,7 +121,8 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
             @Param("hourlyRateChoice") Double hourlyRateChoice,
             @Param("fromJoinedChoice") LocalDateTime fromJoinedChoice,
             @Param("toJoinedChoice") LocalDateTime toJoinedChoice,
-            @Param("promtChoice") String promtChoice
+            @Param("promtChoice") String promtChoice,
+            Long id
     );
 
     // dashboard
@@ -122,29 +130,32 @@ WHERE (:employeeAcInChoice IS NULL OR e.employeeAcIn = :employeeAcInChoice)
 
 
     @Query("""
-
-     SELECT new com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo(
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo(
         e.fullName,
-        COUNT(oe.employee.id))
-        FROM Employee e
-        JOIN OrderEmployees oe
+        COUNT(oe.employee.id)
+    )
+    FROM Employee e
+    JOIN OrderEmployees oe
         ON oe.employee.id = e.id
-        JOIN Orders o
+    JOIN Orders o
         ON o.id = oe.order.id
-        WHERE o.orderStatus = 'Finished'
-    
-        GROUP BY e.id, fullName
-        ORDER BY oe.employee.id DESC
-    
-        LIMIT 1
-    
+           
+   WHERE e.empId.id = :id
+      and o.orderStatus = 'Finished'
+     and o.created >= :fromDate AND o.created <= :toDate
 
+    GROUP BY e.id, e.fullName
+    ORDER BY COUNT(oe.employee.id) DESC
 
-""")
+    LIMIT 1
+         
+            
+    """)
     Optional<DashBoardEmployeeMiniInfo> getEmployeeMiniStat(
-            @Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("id") Long id
     );
-
 
 
 

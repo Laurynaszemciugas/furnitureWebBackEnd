@@ -14,11 +14,13 @@ import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.ActionTrackerEnum;
+import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.*;
+import com.example.jwt_demo.security.CustomUserDetails;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -68,6 +70,7 @@ public class OrderController {
     @PostMapping("/getAllOrders")
     public ResponseEntity<List<OrdersFeedData>> getAllOrders(@RequestBody OrderFilterHolder orderFilterHolder) {
 
+        CustomUserDetails user = common.getUserData();
 
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
@@ -82,7 +85,9 @@ public class OrderController {
                         orderFilterHolder.getPromptChoice(),
                         orderFilterHolder.getEmployee(),
                         orderFilterHolder.getProducts(),
-                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount())
+                        orderFilterHolder.getOrderActiveInactive(),
+                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount()),
+                        user.getId()
                 )
         );
     }
@@ -91,9 +96,11 @@ public class OrderController {
     @PostMapping("/getAllNewOrders")
     public ResponseEntity<List<OrdersFeedData>> getAllNewOrders(@RequestBody OrderFilterHolder orderFilterHolder) {
 
+        CustomUserDetails user = common.getUserData();
 
         orderFilterHolder.setOrderStatusChoice(OrderStatus.NEW);
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
+
 
         return ResponseEntity.ok(
                 orderRepository.getNewOrders(
@@ -106,7 +113,9 @@ public class OrderController {
                         orderFilterHolder.getPromptChoice(),
                         orderFilterHolder.getEmployee(),
                         orderFilterHolder.getProducts(),
-                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount())
+                        orderFilterHolder.getOrderActiveInactive(),
+                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount()),
+                        user.getId()
                 )
         );
     }
@@ -115,7 +124,7 @@ public class OrderController {
     @PostMapping("/getAmountOfPages")
     public ResponseEntity<Long> getAmountOfPages(@RequestBody OrderFilterHolder orderFilterHolder) {
 
-
+        CustomUserDetails user = common.getUserData();
 
 
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
@@ -129,7 +138,9 @@ public class OrderController {
                 logic.dateConverter(orderFilterHolder.getDateToChoice()),
                 orderFilterHolder.getAmountOfProductsChoice(),
                 orderFilterHolder.getPromptChoice(),
-                Double.valueOf(orderFilterHolder.getPageCount())
+                Double.valueOf(orderFilterHolder.getPageCount()),
+                user.getId()
+
         );
 
 
@@ -148,6 +159,7 @@ public class OrderController {
 
     @GetMapping("/getOrderFromId/{id}")
     public ResponseEntity<Orders> getOrderFromId(@PathVariable Long id){
+
         return ResponseEntity.ok(orderRepository.findById(id).orElseThrow());
     }
 
@@ -360,6 +372,7 @@ public class OrderController {
     @PostMapping("/saveNewOrder")
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
 
+        CustomUserDetails user = common.getUserData();
 
         // checks if there is any null or is empty values
         providedDataChecker.checkEmptyValue(order, Orders.class);
@@ -367,7 +380,8 @@ public class OrderController {
         Orders newOrder = new Orders();
 
         newOrder.setOrderNote(order.getOrderNote());
-        newOrder.setOrderStatus(order.getOrderStatus());
+        newOrder.setOrderStatus(OrderStatus.NEW);
+        newOrder.setActiveInactive(ActiveInactive.ACTIVE);
         newOrder.setPayMethod(order.getPayMethod());
         newOrder.setPayStatus(order.getPayStatus());
         newOrder.setBillingAddress(order.getBillingAddress());
@@ -376,6 +390,7 @@ public class OrderController {
         newOrder.setOrderCreatedByGmail(order.getOrderCreatedByGmail());
         newOrder.setOrderCreatedByName(order.getOrderCreatedByName());
         newOrder.setCreatedDate(LocalDate.now());
+        newOrder.setUser(userRepository.findById(user.getId()).orElseThrow());
 
 
 
@@ -488,8 +503,9 @@ public class OrderController {
     @GetMapping("/getMiniStats/{from}/{to}")
     public ResponseEntity<MiniStatHolder> getOrderMiniStats(@PathVariable LocalDate from, @PathVariable LocalDate to){
 
+        CustomUserDetails user = common.getUserData();
 
-        return ResponseEntity.ok(orderRepository.getOrderMiniStats(logic.dateConverter(from),logic.dateConverter(to)));
+        return ResponseEntity.ok(orderRepository.getOrderMiniStats(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
 
     }
 
@@ -497,15 +513,18 @@ public class OrderController {
     @GetMapping("/getNewOrderCount")
     public ResponseEntity<Long> getOrderMiniStats(){
 
+        CustomUserDetails user = common.getUserData();
 
-        return ResponseEntity.ok(orderRepository.findNewOrdersCount());
+        return ResponseEntity.ok(orderRepository.findNewOrdersCount(user.getId()));
 
     }
 
     @GetMapping("/getGridStuff/{id}")
     public ResponseEntity<List<NewOrderFeedData>> getOrderMiniStats(@PathVariable Long id){
 
-        List<NewOrderFeedData> list = orderRepository.getNewOrderFeedData(id);
+        CustomUserDetails user = common.getUserData();
+
+        List<NewOrderFeedData> list = orderRepository.getNewOrderFeedData(id, user.getId());
 
         return ResponseEntity.ok(list);
 
@@ -567,7 +586,9 @@ public class OrderController {
 
         System.out.println(fromDate);
 
-        return ResponseEntity.ok(orderRepository.orderReportPieChart(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(orderRepository.orderReportPieChart(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
 
     }
 
@@ -575,13 +596,9 @@ public class OrderController {
     public ResponseEntity<List<GraphDataDateValue>> getOrderLineChartData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
 
-        System.out.println("line bar");
+        CustomUserDetails user = common.getUserData();
 
-
-        System.out.println(fromDate + "   "   + toDate);
-
-
-        return ResponseEntity.ok(orderRepository.orderReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+        return ResponseEntity.ok(orderRepository.orderReportLineBar(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
 
     }
 
@@ -589,26 +606,32 @@ public class OrderController {
     @GetMapping("/getOrderMiniStatData/{fromDate}/{toDate}")
     public ResponseEntity<ReportMiniStatHolder> getOrderMiniStatData(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
+        CustomUserDetails user = common.getUserData();
+
         LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
 
         LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
 
 
-        return ResponseEntity.ok(orderRepository.getOrderMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+        return ResponseEntity.ok(orderRepository.getOrderMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo), user.getId()));
 
     }
 
     @GetMapping("/getOrderTopConsumers/{fromDate}/{toDate}")
     public ResponseEntity< List<TopCustomerDto>> getOrderTopCustomerGrid(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-        return ResponseEntity.ok(orderRepository.topCustomerList(logic.dateConverter(fromDate), logic.dateConverter(toDate),PageRequest.of(0,5)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(orderRepository.topCustomerList(logic.dateConverter(fromDate), logic.dateConverter(toDate),PageRequest.of(0,5), user.getId()));
 
     }
 
     @GetMapping("/getRecentOrders/{fromDate}/{toDate}")
     public ResponseEntity<List<RecentOrdersReportPage>> getRecentOrderList(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-        return ResponseEntity.ok(orderRepository.recentOrderReportPage(logic.dateConverter(fromDate), logic.dateConverter(toDate),PageRequest.of(0,5)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(orderRepository.recentOrderReportPage(logic.dateConverter(fromDate), logic.dateConverter(toDate),PageRequest.of(0,5), user.getId()));
 
     }
 
@@ -619,13 +642,13 @@ public class OrderController {
     @GetMapping("/getDashboardOrderMini/{fromDate}/{toDate}")
     public ResponseEntity<DashBoardMonthlyOrdersCompleted> getDashboardOrderMini(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-
+        CustomUserDetails user = common.getUserData();
 
         LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
 
         LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
 
-        return ResponseEntity.ok(orderRepository.getOrderDashboadrMini(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo)));
+        return ResponseEntity.ok(orderRepository.getOrderDashboadrMini(logic.dateConverter(fromDate),logic.dateConverter(toDate),logic.dateConverter(preFrom),logic.dateConverter(preTo), user.getId()));
 
     }
 
@@ -633,7 +656,9 @@ public class OrderController {
     @GetMapping("/getGraphDashboard/{fromDate}/{toDate}")
     public ResponseEntity<List<GraphDataDateValue>> getGraphDashboard(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-        return ResponseEntity.ok(orderRepository.getGraphForDashBoard(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(orderRepository.getGraphForDashBoard(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
 
     }
 

@@ -19,6 +19,7 @@ import com.example.jwt_demo.FilterDTO.Employee.EmployeeFilterHolder;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -47,18 +48,27 @@ public class EmployeeController {
     @Autowired
     Logic logic;
 
+    @Autowired
+    Common common;
+
     @GetMapping("/getMiniEmployeeData")
     public ResponseEntity<List<ComboBoxEmployees>> getMiniEmployeeData(){
-        return ResponseEntity.ok(employeeRepository.getUserEmployees());
+        CustomUserDetails user = common.getUserData();
+        return ResponseEntity.ok(employeeRepository.getUserEmployees(user.getId()));
     }
 
     @GetMapping("/getEmployeeeMiniStats/{fromDate}/{toDate}")
     public ResponseEntity<MiniStatHolder> getMiniStat(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
-        return  ResponseEntity.ok(employeeRepository.getEmployeeMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate)));
+
+        CustomUserDetails user = common.getUserData();
+
+        return  ResponseEntity.ok(employeeRepository.getEmployeeMiniStats(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
     }
 
     @PostMapping("/getAllEmployeeForFeed")
     public ResponseEntity<List<EmployeeBriefDto>> getEmployeeBriefData(@RequestBody EmployeeFilterHolder filter){
+
+        CustomUserDetails user = common.getUserData();
 
         filter = providedDataChecker.defaultValueChecker(filter, EmployeeFilterHolder.class);
 
@@ -72,7 +82,8 @@ public class EmployeeController {
                 logic.dateConverter(filter.getFromJoined()),
                 logic.dateConverter(filter.getToJoined()),
                 filter.getPromt(),
-                PageRequest.of(filter.getPage(), filter.getPageCount()))
+                PageRequest.of(filter.getPage(), filter.getPageCount()),
+                        user.getId())
         );
 
     }
@@ -81,6 +92,7 @@ public class EmployeeController {
     @PostMapping("/getTotalPages")
     public ResponseEntity<Long> getAmountOfPages(@RequestBody EmployeeFilterHolder filter) {
 
+        CustomUserDetails user = common.getUserData();
 
         filter = providedDataChecker.defaultValueChecker(filter, EmployeeFilterHolder.class);
 
@@ -91,7 +103,8 @@ public class EmployeeController {
                 filter.getHourlyRate(),
                 logic.dateConverter(filter.getFromJoined()),
                 logic.dateConverter(filter.getToJoined()),
-                filter.getPromt());
+                filter.getPromt(),
+                user.getId());
 
 
         return ResponseEntity.ok(count);
@@ -100,6 +113,7 @@ public class EmployeeController {
     @PostMapping("/saveNewEmployee")
     public ResponseEntity<ErrorResponse> saveNewEmploee(@RequestBody Employee emp){
 
+        CustomUserDetails user = common.getUserData();
 
         User empUser = new User();
         empUser.setGmail(emp.getGmail());
@@ -129,7 +143,7 @@ public class EmployeeController {
         cleanEmpLoyee.setEmployeeAcIn(emp.getEmployeeAcIn());
         cleanEmpLoyee.setEmployeeCategory(emp.getEmployeeCategory());
         cleanEmpLoyee.setEmployeeDepartment(emp.getEmployeeDepartment());
-        //cleanEmpLoyee.setUser();
+        cleanEmpLoyee.setUser(userRepository.findById(user.getId()).orElseThrow());
         cleanEmpLoyee.setCreated(LocalDateTime.now());
 
 
@@ -228,10 +242,15 @@ public class EmployeeController {
             @PathVariable LocalDate from,
             @PathVariable LocalDate to
     ) {
+
+        CustomUserDetails user = common.getUserData();
+
         DashBoardEmployeeMiniInfo data =
                 employeeRepository.getEmployeeMiniStat(
                         logic.dateConverter(from),
-                        logic.dateConverter(to)
+                        logic.dateConverter(to),
+                        user.getId()
+
                 ).orElse(new DashBoardEmployeeMiniInfo("No data", 0L));
 
         return ResponseEntity.ok(data);

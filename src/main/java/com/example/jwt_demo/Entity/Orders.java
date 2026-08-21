@@ -3,6 +3,7 @@ package com.example.jwt_demo.Entity;
 import com.example.jwt_demo.Common.Annotations.RequiredField;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
+import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import com.example.jwt_demo.Enums.PayMethod;
 import com.example.jwt_demo.Enums.PayStatus;
@@ -75,6 +76,8 @@ public class Orders {
     private LocalDateTime created;
     @CreationTimestamp
     private LocalDate createdDate;
+    @Enumerated(EnumType.STRING)
+    private ActiveInactive activeInactive;
     @RequiredField
     private String orderCreatedByName;
     @RequiredField

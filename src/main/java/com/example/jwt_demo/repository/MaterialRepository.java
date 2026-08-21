@@ -59,7 +59,8 @@ FROM Materials m
 LEFT JOIN MaterialImageData mid 
     ON mid.materials.id = m.id 
    AND mid.imageLogic = 'Main'
-WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
+ WHERE m.user.id = :id
+  and (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
   AND (:enabled IS NULL OR m.enabled = :enabled)
   AND (:stockAmountChoice IS NULL OR m.inStock = :stockAmountChoice)
   AND (:minThresholdChoice IS NULL OR m.minThresHold = :minThresholdChoice)
@@ -85,7 +86,8 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
             @Param("todDateChoice") LocalDateTime todDateChoice,
             @Param("stockChoice") Stock stockChoice,
             @Param("promtChoice") String promtChoice,
-            Pageable pageable
+            Pageable pageable,
+            Long id
     );
 
 
@@ -100,7 +102,8 @@ FROM Materials m
 LEFT JOIN MaterialImageData mid
     ON mid.materials.id = m.id
    AND mid.imageLogic = 'Main'
-WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
+ WHERE m.user.id = :id
+  AND(:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
   AND (:enabled IS NULL OR m.enabled = :enabled)
   AND (:stockAmountChoice IS NULL OR m.inStock = :stockAmountChoice)
   AND (:minThresholdChoice IS NULL OR m.minThresHold = :minThresholdChoice)
@@ -125,7 +128,8 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
             LocalDateTime fromDateChoice,
             LocalDateTime todDateChoice,
             Stock stockChoice,
-            String promtChoice
+            String promtChoice,
+            Long id
     );
 
 
@@ -137,12 +141,16 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
             SUM(CASE WHEN m.enabled = 'ACTIVE' THEN 1 ELSE 0 END),
             SUM(CASE WHEN m.enabled = 'INACTIVE' THEN 1 ELSE 0 END),
             SUM(CASE WHEN m.created >= :fromDate AND m.created <= :toDate THEN 1 ELSE 0 END))
+            
+            
          
             FROM Materials m
+            
+             WHERE m.user.id = :id
 
 
 """)
-    MiniStatHolder getMaterialMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+    MiniStatHolder getMaterialMiniStats(@Param("fromDate")LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate, Long id);
 
 
     // report page stuff
@@ -206,14 +214,17 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
     )
     FROM Materials o
-    WHERE o.created >= :previousFrom
+    
+      WHERE o.user.id = :id
+     and o.created >= :previousFrom
       AND o.created <= :currentTo
 """)
     ReportMiniStatHolder getProductMiniStats(
             @Param("currentFrom") LocalDateTime currentFrom,
             @Param("currentTo") LocalDateTime currentTo,
             @Param("previousFrom") LocalDateTime previousFrom,
-            @Param("previousTo") LocalDateTime previousTo
+            @Param("previousTo") LocalDateTime previousTo,
+            Long id
     );
 
     @Query("""
@@ -232,12 +243,14 @@ WHERE (:materialTypeChoice IS NULL OR m.materialType = :materialTypeChoice)
 
     )
     FROM Materials o
-    WHERE o.created >= :dateFrom
+     WHERE o.user.id = :id
+      and o.created >= :dateFrom
       AND o.created <= :dateTo
 """)
     MaterialReportPieChart MaterialReportPieChart(
             @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo
+            @Param("dateTo") LocalDateTime dateTo,
+            Long id
     );
 
 
@@ -249,14 +262,16 @@ SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
     
     Join productsData op ON op.order.id = o.id
     Join ProductMaterials pm ON pm.product.id = op.product.id
-WHERE o.created >= :dateFrom
+ WHERE o.user.id = :id
+  and o.created >= :dateFrom
   AND o.created <= :dateTo
 GROUP BY DATE(o.created)
 ORDER BY DATE(o.created)
 """)
     List<GraphDataDateValue> productReportLineBar(
             @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo
+            @Param("dateTo") LocalDateTime dateTo,
+            Long id
     );
 
 
@@ -266,7 +281,8 @@ ORDER BY DATE(o.created)
      m.id, m.materialName, m.inStock, m.minThresHold, m.stock)
      FROM Materials m
      
-     where m.stock = 'Low_Stock'
+      WHERE m.user.id = :id
+       and m.stock = 'Low_Stock'
   
     and m.created >= :dateFrom
       AND m.created <= :dateTo
@@ -275,7 +291,8 @@ ORDER BY DATE(o.created)
 """)
     List<MaterialLowStockGrid> getProductLowFeed(@Param("dateFrom") LocalDateTime dateFrom,
                                                  @Param("dateTo") LocalDateTime dateTo,
-                                                 Pageable pageable);
+                                                 Pageable pageable,
+                                                 Long id);
 
 
     @Query("""
@@ -288,19 +305,27 @@ SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo(
     COALESCE(SUM(pm.amountUsed), 0)
 )
 FROM Materials m
+
+
+
 LEFT JOIN images mid
     ON mid.materials.id = m.id
     AND mid.imageLogic = 'Main'
 LEFT JOIN ProductMaterials pm
     ON pm.materials.id = m.id
+    
+    where m.user.id = :id
+    
 GROUP BY
     m.id,
     mid.imageUrl,
     m.materialName,
     m.unitPrice,
     m.inStock
+    
+    
 """)
-    List<MaterialInfo> getMaterialInfo();
+    List<MaterialInfo> getMaterialInfo(Long id);
 
 
     @Query("""
@@ -317,7 +342,8 @@ LEFT JOIN m.images mid
     ON mid.imageLogic = 'Main'
 LEFT JOIN ProductMaterials pm
     ON pm.materials.id = m.id
-WHERE m.id = :id
+ WHERE m.user.id = :userId
+  and m.id = :id
 GROUP BY
     m.id,
     mid.imageUrl,
@@ -325,7 +351,7 @@ GROUP BY
     m.unitPrice,
     m.inStock
 """)
-    MaterialInfo getMaterialInfoAccordingToId(Long id);
+    MaterialInfo getMaterialInfoAccordingToId(Long id, Long userId);
 
 
 
@@ -343,12 +369,14 @@ GROUP BY
 
     )
     FROM Materials o
-    WHERE o.created >= :dateFrom
+    WHERE o.user.id = :id
+     AND o.created >= :dateFrom
       AND o.created < :dateTo
 """)
     DashBoardMaterialStock dashboardMiniStat(
             @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo
+            @Param("dateTo") LocalDateTime dateTo,
+            Long id
     );
 
 
@@ -368,12 +396,14 @@ GROUP BY
         0.0
     )
     FROM Materials m
-    WHERE m.created >= :from
-      AND m.created < :to
+    WHERE m.user.id = :id
+         AND m.created >= :from
+      AND m.created <= :to
     """)
     DashBoardMaterialUsageInfo getCurrentMonthMaterialUsage(
             @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to
+            @Param("to") LocalDateTime to,
+            Long id
     );
 
 
