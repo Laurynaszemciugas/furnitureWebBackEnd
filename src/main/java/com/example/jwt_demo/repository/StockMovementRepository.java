@@ -23,14 +23,16 @@ public interface StockMovementRepository extends JpaRepository<StockMovement,Lon
     FROM StockMovement st
     
     Join Materials m ON m.id = st.materials.id
-    WHERE st.created >= :dateFrom
+    WHERE m.user.id = :id
+     and st.created >= :dateFrom
       AND st.created <= :dateTo
     ORDER BY st.created DESC
 
 """)
 
 List<StockMovementGrid> stockMovementHistory(@Param("dateFrom") LocalDateTime dateFrom,
-                                             @Param("dateTo") LocalDateTime dateTo, Pageable pageable);
+                                             @Param("dateTo") LocalDateTime dateTo, Pageable pageable,
+                                             Long id);
 
 
 }

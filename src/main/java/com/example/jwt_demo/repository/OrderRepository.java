@@ -49,7 +49,8 @@ SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
     o.created,
     o.totalPrice,
     o.billingAddress,
-    o.orderCreatedByGmail
+    o.orderCreatedByGmail,
+    o.activeInactive
 )
 FROM Orders o
 JOIN o.employees oe
@@ -101,7 +102,8 @@ SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
     o.created,
     o.totalPrice,
     o.billingAddress,
-    o.orderCreatedByGmail
+    o.orderCreatedByGmail,
+    o.activeInactive
 )
 FROM Orders o
 JOIN o.employees oe

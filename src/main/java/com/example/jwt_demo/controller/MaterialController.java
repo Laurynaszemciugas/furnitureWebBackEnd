@@ -480,7 +480,9 @@ public class MaterialController {
     @GetMapping("/getMaterialMovement/{fromDate}/{toDate}")
     public ResponseEntity<List<StockMovementGrid>> getMaterialMovement(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
 
-        return ResponseEntity.ok(stockMovementRepository.stockMovementHistory(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(stockMovementRepository.stockMovementHistory(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5), user.getId()));
 
     }
 

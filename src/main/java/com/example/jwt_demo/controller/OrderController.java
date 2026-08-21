@@ -155,6 +155,28 @@ public class OrderController {
 
 
 
+    @GetMapping("/deleteOrder/{id}")
+    public ResponseEntity<ErrorResponse> deleteOrder(@PathVariable Long id) {
+
+       Orders orders = orderRepository.findById(id).orElseThrow();
+
+
+       try{
+
+           orderRepository.delete(orders);
+
+           return ResponseEntity.ok(new ErrorResponse("Deleted successfully",Warnings.OK));
+
+       } catch (Exception e) {
+           orders.setActiveInactive(ActiveInactive.INACTIVE);
+           orderRepository.save(orders);
+           return ResponseEntity.ok(new ErrorResponse("Order was set to Inactive",Warnings.OK));
+       }
+
+
+
+    }
+
 
 
     @GetMapping("/getOrderFromId/{id}")

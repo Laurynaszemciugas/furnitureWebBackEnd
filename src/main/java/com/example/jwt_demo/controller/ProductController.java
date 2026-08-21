@@ -344,7 +344,9 @@ public class ProductController {
     @GetMapping("/getProductsForAddOrder")
     public ResponseEntity<List<OrderAddProducts>> getAllProductsForAddNewOrder(){
 
-        return ResponseEntity.ok(productRepository.getAllProductDataForAddNewOrder());
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getAllProductDataForAddNewOrder(user.getId()));
 
     }
 
@@ -352,22 +354,26 @@ public class ProductController {
     @GetMapping("/getExistingData/{id}")
     public ResponseEntity<List<OrderAddProducts>> getAllCurrentProducts(@PathVariable Long id){
 
+        CustomUserDetails user = common.getUserData();
+
         System.out.println(id);
 
         System.out.println("getting data ");
-        List<OrderAddProducts> list = productRepository.getExistingDataForOrder(id);
+        List<OrderAddProducts> list = productRepository.getExistingDataForOrder(id,user.getId());
 
         for(var s : list){
             System.out.println(s.getId());
         }
 
-        return ResponseEntity.ok(productRepository.getExistingDataForOrder(id));
+        return ResponseEntity.ok(productRepository.getExistingDataForOrder(id, user.getId()));
 
     }
 
     @GetMapping("/getProductMiniStats/{from}/{to}")
     public ResponseEntity<MiniStatHolder> getProductMiniStats(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(productRepository.getProductMiniStats(logic.dateConverter(from),logic.dateConverter(to)));
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getProductMiniStats(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
     // report page calls
@@ -376,6 +382,8 @@ public class ProductController {
     public ResponseEntity<ReportMiniStatHolder> getMiniStats(
             @PathVariable LocalDate fromDate,
             @PathVariable LocalDate toDate) {
+
+        CustomUserDetails user = common.getUserData();
 
         LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
         LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
@@ -386,7 +394,8 @@ public class ProductController {
                 logic.dateConverter(fromDate),
                 logic.dateConverter(toDate),
                 logic.dateConverter(preFrom),
-                logic.dateConverter(preTo)
+                logic.dateConverter(preTo),
+                user.getId()
         ).get(0);
 
 
@@ -406,22 +415,34 @@ public class ProductController {
 
     @GetMapping("/getTopProducts/{from}/{to}/{amountOfData}")
     public ResponseEntity<List<GraphDataLongValue>> getTopProducts(@PathVariable LocalDate from, @PathVariable LocalDate to, @PathVariable int amountOfData){
-        return ResponseEntity.ok(productRepository.getTopSellingProducts(logic.dateConverter(from),logic.dateConverter(to),PageRequest.of(0,amountOfData)));
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getTopSellingProducts(logic.dateConverter(from),logic.dateConverter(to),PageRequest.of(0,amountOfData),user.getId()));
     }
 
     @GetMapping("/getPieChartProductReport/{from}/{to}")
     public ResponseEntity<List<ProductReportPieChart>> getPieChartProductReport(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(productRepository.getProductByCategory(logic.dateConverter(from),logic.dateConverter(to)));
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getProductByCategory(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
     @GetMapping("/getLowStockAlerts/{from}/{to}")
     public ResponseEntity<List<ProductLowStockList>> getLowStockAlerts(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(productRepository.getProductLowList(logic.dateConverter(from),logic.dateConverter(to)));
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getProductLowList(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
     @GetMapping("/getProductPerformance/{from}/{to}")
     public ResponseEntity<List<ProductPerformanceReport>> getProductPerformanceReport(@PathVariable LocalDate from, @PathVariable LocalDate to){
-        return ResponseEntity.ok(productRepository.getProductPerformance(logic.dateConverter(from),logic.dateConverter(to)));
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getProductPerformance(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
 

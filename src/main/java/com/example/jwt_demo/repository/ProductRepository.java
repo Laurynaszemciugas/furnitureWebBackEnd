@@ -133,11 +133,12 @@ AND (
 
         SELECT new com.example.jwt_demo.DTOS.Order.OrderAddProducts(p.id,pid.imageUrl, p.productName, p.sku,p.category, p.stockQuantity, p.lowStockThreshold, p.stock,p.price,1L) FROM Product p
         LEFT JOIN ProductImageData pid ON pid.product.id = p.id AND pid.imageLogic = 'Main'
-        WHERE p.visibility = 'Visible'
+        WHERE p.user.id = :id
+         and p.visibility = 'Visible'
         
    
 """)
-    List<OrderAddProducts> getAllProductDataForAddNewOrder();
+    List<OrderAddProducts> getAllProductDataForAddNewOrder(Long id);
 
 
     @Query("""
@@ -158,9 +159,10 @@ JOIN op.product p
 JOIN op.order o
 LEFT JOIN ProductImageData pid 
     ON pid.product.id = p.id AND pid.imageLogic = 'Main'
-WHERE o.id = :id
+WHERE p.user.id = :userid
+ and o.id = :id
 """)
-    List<OrderAddProducts> getExistingDataForOrder(@Param("id") Long id);
+    List<OrderAddProducts> getExistingDataForOrder(@Param("id") Long id, Long userid);
 
 
     @Query("""
@@ -172,15 +174,20 @@ WHERE o.id = :id
             SUM(CASE WHEN p.created >= :fromDate AND p.created <= :toDate THEN 1 ELSE 0 END))
          
             FROM Product p
+            
+            WHERE p.user.id = :id
 
 
 """)
-    MiniStatHolder getProductMiniStats(@Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate);
+    MiniStatHolder getProductMiniStats(@Param("fromDate") LocalDateTime fromDate, @Param("toDate")LocalDateTime toDate, Long id);
 
 
     @Query("""
 
         SELECT p FROM Product p where p.user.id = :userId
+        
+        
+        
 
 """)
     List<Product> getProductsAccordingToUserId(@Param("userId") Long userId);
@@ -265,7 +272,8 @@ JOIN order_products op
 JOIN products p 
     ON p.id = op.product_id
 
-WHERE o.created >= :previousFrom
+WHERE o.user.id = :id
+ and o.created >= :previousFrom
 AND o.created <= :currentTo
 
 """, nativeQuery = true)
@@ -273,7 +281,8 @@ AND o.created <= :currentTo
             @Param("currentFrom") LocalDateTime currentFrom,
             @Param("currentTo") LocalDateTime currentTo,
             @Param("previousFrom") LocalDateTime previousFrom,
-            @Param("previousTo") LocalDateTime previousTo
+            @Param("previousTo") LocalDateTime previousTo,
+            Long id
     );
 
    @Query("""
@@ -282,7 +291,8 @@ AND o.created <= :currentTo
       FROM Orders o
         Join productsData op ON op.order.id = o.id
         Join Product p On p.id = op.product.id
-        WHERE o.created >= :currentFrom
+        WHERE o.user.id = :id
+         and o.created >= :currentFrom
 AND o.created <= :currentTo
 and o.orderStatus = 'Finished'
         GROUP BY p.id, p.productName
@@ -296,7 +306,8 @@ and o.orderStatus = 'Finished'
    List<GraphDataLongValue>  getTopSellingProducts(
            @Param("currentFrom") LocalDateTime currentFrom,
            @Param("currentTo") LocalDateTime currentTo,
-           Pageable pageable
+           Pageable pageable,
+           Long id
    );
 
     @Query("""
@@ -306,7 +317,8 @@ and o.orderStatus = 'Finished'
       FROM Orders o
         Join productsData op ON op.order.id = o.id
         Join Product p On p.id = op.product.id
-        WHERE o.created >= :currentFrom
+        WHERE o.user.id = :id
+         and o.created >= :currentFrom
         AND o.created <= :currentTo
         and o.orderStatus = 'Finished'
         GROUP BY p.category
@@ -318,7 +330,8 @@ and o.orderStatus = 'Finished'
 """)
     List<ProductReportPieChart>  getProductByCategory(
             @Param("currentFrom") LocalDateTime currentFrom,
-            @Param("currentTo") LocalDateTime currentTo
+            @Param("currentTo") LocalDateTime currentTo,
+            Long id
     );
 
     @Query("""
@@ -327,7 +340,8 @@ and o.orderStatus = 'Finished'
          p.id, pid.imageUrl,p.productName,p.stockQuantity,p.lowStockThreshold,p.stockCalculatedManually)
          FROM Product p
         left Join images pid on pid.product.id = p.id and pid.imageLogic = 'Main'
-         WHERE p.created >= :currentFrom
+         WHERE p.user.id = :id
+          and p.created >= :currentFrom
         AND p.created <= :currentTo
     
         
@@ -337,7 +351,8 @@ and o.orderStatus = 'Finished'
 """)
     List<ProductLowStockList>  getProductLowList(
             @Param("currentFrom") LocalDateTime currentFrom,
-            @Param("currentTo") LocalDateTime currentTo
+            @Param("currentTo") LocalDateTime currentTo,
+            Long id
     );
 
     @Query("""
@@ -357,7 +372,8 @@ LEFT JOIN OrderProducts op
 LEFT JOIN Orders o
     ON o.id = op.order.id
 LEFT JOIN p.comments pc
-WHERE o.orderStatus = 'Finished'
+WHERE o.user.id = :id
+ and o.orderStatus = 'Finished'
 AND o.created >= :currentFrom
 AND o.created <= :currentTo
 GROUP BY
@@ -367,7 +383,8 @@ GROUP BY
 """)
     List<ProductPerformanceReport> getProductPerformance(
             @Param("currentFrom") LocalDateTime currentFrom,
-            @Param("currentTo") LocalDateTime currentTo
+            @Param("currentTo") LocalDateTime currentTo,
+            Long id
     );
 
 

@@ -1,5 +1,6 @@
 package com.example.jwt_demo.DTOS.Order;
 
+import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,4 +23,5 @@ public class OrdersFeedData {
     private Double totalPrice;
     private String address;
     private String gmail;
+    private ActiveInactive activeInactive;
 }
