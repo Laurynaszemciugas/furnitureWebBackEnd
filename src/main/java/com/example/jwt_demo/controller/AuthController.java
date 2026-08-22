@@ -75,7 +75,8 @@ public class AuthController {
             throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
         }
         // Create new user's account
-        User newUser = new User(
+        User newUser =
+                new User(
                 null,
                 user.getGmail(),
                 user.getName(),
@@ -86,6 +87,8 @@ public class AuthController {
                 AccountStatus.ALLOWED,
                 null,
                 LocalDateTime.now(),
+                null,
+                null,
                 user.getName() + " " + user.getLastName(),
                 user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
         userRepository.save(newUser);
@@ -109,6 +112,8 @@ public class AuthController {
                 AccountStatus.ALLOWED,
                 null,
                 LocalDateTime.now(),
+                null,
+                null,
                 user.getName() + " " + user.getLastName(),
                 user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
         userRepository.save(newUser);

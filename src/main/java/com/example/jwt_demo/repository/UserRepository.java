@@ -1,5 +1,7 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Material.MaterialInfo;
+import com.example.jwt_demo.DTOS.User.ProfileInformation;
 import com.example.jwt_demo.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +13,25 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByGmail(String username);
     boolean existsByGmail(String username);
+
+
+
+    @Query("""
+SELECT new com.example.jwt_demo.DTOS.User.ProfileInformation(
+    u.fullName,
+    u.gmail,
+    u.role,
+    u.phoneNumber,
+    u.bio,
+    u.imageUrl
+)
+FROM User u
+
+ WHERE u.id = :userId
+  
+""")
+    ProfileInformation getProfileInfo(Long userId);
+
 
 
 }
