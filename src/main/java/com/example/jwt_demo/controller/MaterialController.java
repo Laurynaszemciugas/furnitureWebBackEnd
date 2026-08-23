@@ -216,6 +216,7 @@ public class MaterialController {
     @PostMapping("/createNewMaterial")
     public ResponseEntity<ErrorResponse> createNewMaterial(@RequestBody Materials mat){
 
+        CustomUserDetails user = common.getUserData();
 
         // checks if there is any null or is empty values
         providedDataChecker.checkEmptyValue(mat, Materials.class);
@@ -264,8 +265,8 @@ public class MaterialController {
 
         newMat.setMaterialType(mat.getMaterialType());
 
-        User user = userRepository.findById(1L).orElseThrow();
-        newMat.setUser(user);
+        User user1 = userRepository.findById(user.getId()).orElseThrow();
+        newMat.setUser(user1);
 
         newMat.setMaterialUrl(mat.getMaterialUrl());
 

@@ -33,6 +33,12 @@ public class UserSettings {
 
     private boolean receiveGmail = true;
 
+    private String theme = "Light";
+
+    private String accent = "Blue";
+
+    private String sidebarSize = "Large";
+
     @OneToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore

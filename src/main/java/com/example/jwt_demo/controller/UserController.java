@@ -2,11 +2,13 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.DTOS.User.AccountOverview;
+import com.example.jwt_demo.DTOS.User.Appearance;
 import com.example.jwt_demo.DTOS.User.PersonalPrefrences;
 import com.example.jwt_demo.DTOS.User.ProfileInformation;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Entity.UserSettings;
 import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,6 +102,82 @@ public class UserController {
 
 
         return ResponseEntity.ok(new com.example.jwt_demo.Common.ErrorResponse("Personal preferences updated",Warnings.OK));
+
+    }
+
+    @GetMapping("/getAppearance")
+    public ResponseEntity<Appearance> getAppearance(){
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(userRepository.getAppearance(user.getId()));
+
+    }
+
+
+    @GetMapping("/saveTheme/{value}")
+    public ResponseEntity<ErrorResponse> saveTheme(@PathVariable String value){
+
+        CustomUserDetails user = common.getUserData();
+
+        User user1 = userRepository.findById(user.getId()).orElseThrow();
+        UserSettings userSettings = user1.getUserSettingsList();
+
+
+//        if(!value.equals("Light") || !value.equals("Dark")){
+//            return ResponseEntity.ok(new ErrorResponse("Fail",Warnings.ERROR));
+//        }
+
+        userSettings.setTheme(value);
+
+        userRepository.save(user1);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Successfully changed theme",Warnings.OK));
+
+    }
+
+    @GetMapping("/saveAccent/{value}")
+    public ResponseEntity<ErrorResponse> saveAccent(@PathVariable String value){
+
+        CustomUserDetails user = common.getUserData();
+
+        User user1 = userRepository.findById(user.getId()).orElseThrow();
+        UserSettings userSettings = user1.getUserSettingsList();
+
+
+//        if(value != "Light" || value != "Dark"){
+//            return ResponseEntity.ok(new ErrorResponse("Fail",Warnings.ERROR));
+//        }
+
+        userSettings.setAccent(value);
+
+        userRepository.save(user1);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Successfully changed accent",Warnings.OK));
+
+    }
+
+    @GetMapping("/saveSidebar/{value}")
+    public ResponseEntity<ErrorResponse> saveSidebar (@PathVariable String value){
+
+        CustomUserDetails user = common.getUserData();
+
+        User user1 = userRepository.findById(user.getId()).orElseThrow();
+        UserSettings userSettings = user1.getUserSettingsList();
+
+
+//        if(value != "Large" || value != "Small"){
+//            return ResponseEntity.ok(new ErrorResponse("Fail",Warnings.ERROR));
+//        }
+
+        userSettings.setSidebarSize(value);
+
+        userRepository.save(user1);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Successfully changed sidebar",Warnings.OK));
 
     }
 

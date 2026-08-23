@@ -86,7 +86,7 @@ public class CustomReportController {
     public ResponseEntity<Report> getReportAccordingToId(@PathVariable Long id){
 
 
-
+        System.out.println(customReportRepository.findById(id).orElseThrow());
 
         return ResponseEntity.ok(customReportRepository.findById(id).orElseThrow());
     }

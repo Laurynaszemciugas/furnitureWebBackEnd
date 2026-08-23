@@ -11,7 +11,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@ToString
 public class ReportItems {
 
 
@@ -27,7 +26,6 @@ public class ReportItems {
     @Enumerated(EnumType.STRING)
     private Widths width;
 
-    private Boolean widthIsStatic;
     private String userPreferredWidth;
 
     @ManyToOne
