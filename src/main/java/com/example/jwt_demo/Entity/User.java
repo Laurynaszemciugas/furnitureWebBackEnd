@@ -1,7 +1,6 @@
 package com.example.jwt_demo.Entity;
 
-import com.example.jwt_demo.Enums.AccountStatus;
-import com.example.jwt_demo.Enums.Role;
+import com.example.jwt_demo.Enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,6 +8,8 @@ import org.hibernate.annotations.CurrentTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,18 +31,32 @@ public class User {
     private Role role;
     @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus;
-    private LocalDate bannedTill;
+    private LocalDateTime bannedTill;
     @CreationTimestamp
     private LocalDateTime created;
 
     private String bio;
 
+
     private String phoneNumber;
+
+
+
+    @Enumerated(EnumType.STRING)
+    private Verification verification;
+
+    private LocalDateTime lastLogin;
+
+
+
+    private String ip;
 
     private String fullName;
     @Lob
     private String imageUrl;
 
+    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
+    private UserSettings userSettingsList;
 
 
 }

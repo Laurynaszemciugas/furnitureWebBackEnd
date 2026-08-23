@@ -1,6 +1,7 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
+import com.example.jwt_demo.Entity.UserSettings;
 import com.example.jwt_demo.Enums.AccountStatus;
 import com.example.jwt_demo.Enums.Role;
 import com.example.jwt_demo.Entity.User;
@@ -9,6 +10,7 @@ import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import com.example.jwt_demo.security.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -37,6 +39,7 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<ErrorResponse> authenticateUser(@RequestBody User user) {
 
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -45,6 +48,12 @@ public class AuthController {
                     )
             );
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            User user1 = userRepository.findByGmail(user.getGmail());
+
+            user1.setLastLogin(LocalDateTime.now());
+
+            userRepository.save(user1);
 
             return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
 
@@ -70,10 +79,15 @@ public class AuthController {
 
 
     @PostMapping("/signup")
-    public String registerUser(@RequestBody User user) {
+    public String registerUser(@RequestBody User user, HttpServletRequest request) {
         if (userRepository.existsByGmail(user.getGmail())) {
             throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
         }
+
+        String ip = request.getRemoteAddr();
+
+        UserSettings userSettings = new UserSettings();
+
         // Create new user's account
         User newUser =
                 new User(
@@ -89,8 +103,15 @@ public class AuthController {
                 LocalDateTime.now(),
                 null,
                 null,
+                        null,
+                        null,
+                        ip,
                 user.getName() + " " + user.getLastName(),
-                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
+                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl(),
+                        userSettings);
+
+        userSettings.setUser(newUser);
+
         userRepository.save(newUser);
         return "User registered successfully!";
     }
@@ -100,6 +121,9 @@ public class AuthController {
         if (userRepository.existsByGmail(user.getGmail())) {
             throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
         }
+
+        UserSettings userSettings = new UserSettings();
+
         // Create new user's account
         User newUser = new User(
                 null,
@@ -114,8 +138,15 @@ public class AuthController {
                 LocalDateTime.now(),
                 null,
                 null,
+                null,
+                null,
+                null,
                 user.getName() + " " + user.getLastName(),
-                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl());
+                user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl(),
+                userSettings);
+
+        userSettings.setUser(newUser);
+
         userRepository.save(newUser);
 
 
