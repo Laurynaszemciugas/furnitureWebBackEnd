@@ -16,8 +16,6 @@ public class TopEmployeesModel {
     private String name;
     private Long unitsProduced;
     private Double hourlySalary;
-    private Long hoursWorkedTotal;
-    private Long hoursWorkedThisMonth;
 
 
 }

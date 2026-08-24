@@ -13,8 +13,7 @@ import lombok.Setter;
 public class ActivityFeedModel {
 
     private String actionDescription;
-    private String whoMadeIt;
     private Long howLongAgoMinutes;
-    private String color;
+    private String name;
 
 }

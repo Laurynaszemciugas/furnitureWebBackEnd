@@ -46,6 +46,7 @@ public class UserController {
 
         existingUser.setPhoneNumber(userData.getPhoneNumber());
         existingUser.setBio(userData.getBio());
+        existingUser.setImageUrl(userData.getImageUrl());
 
         userRepository.save(existingUser);
 

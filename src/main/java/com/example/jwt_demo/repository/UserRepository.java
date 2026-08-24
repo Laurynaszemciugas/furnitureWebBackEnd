@@ -5,6 +5,7 @@ import com.example.jwt_demo.DTOS.User.AccountOverview;
 import com.example.jwt_demo.DTOS.User.Appearance;
 import com.example.jwt_demo.DTOS.User.PersonalPrefrences;
 import com.example.jwt_demo.DTOS.User.ProfileInformation;
+import com.example.jwt_demo.Entity.ActionTracker;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Entity.UserSettings;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -87,6 +88,9 @@ WHERE s.user.id = :userId
     WHERE s.user.id = :userId
 """)
     Appearance getAppearance(Long userId);
+
+
+
 
 
 

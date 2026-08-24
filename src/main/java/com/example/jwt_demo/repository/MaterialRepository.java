@@ -3,8 +3,10 @@ package com.example.jwt_demo.repository;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
+import com.example.jwt_demo.DTOS.DashBoard.MaterialLowNo;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
@@ -405,6 +407,25 @@ GROUP BY
             @Param("to") LocalDateTime to,
             Long id
     );
+
+
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.MaterialLowNo(
+    
+    
+    s.id,
+    s.materialName,
+    s.inStock,
+    s.minThresHold,
+    s.unitPrice
+    
+    )
+    FROM Materials s
+    WHERE s.user.id = :userId
+""")
+    List<MaterialLowNo> getMaterialLowNoStock(Long userId);
+
 
 
 

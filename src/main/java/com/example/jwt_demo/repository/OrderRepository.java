@@ -3,8 +3,10 @@ package com.example.jwt_demo.repository;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.Order.*;
+import com.example.jwt_demo.Entity.ActionTracker;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
@@ -466,6 +468,22 @@ AND (
             @Param("dateTo") LocalDateTime dateTo,
             Long id
     );
+
+
+    // dashboard
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel(
+    
+    s.actionName,
+    TIMESTAMPDIFF(MINUTE, s.created, CURRENT_TIMESTAMP),
+    s.name
+    
+    )
+    FROM ActionTracker s
+    WHERE s.user.id = :userId
+""")
+    List<ActivityFeedModel> getActionTracker(Long userId);
 
 
 

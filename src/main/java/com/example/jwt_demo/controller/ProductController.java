@@ -156,7 +156,7 @@ public class ProductController {
 
         databaseChecks.calculateProductsStock(user.getId(),false);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",cleanProduct.getProductName()),null,null, ActionTrackerEnum.USER,null));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",cleanProduct.getProductName()),null,null, ActionTrackerEnum.USER,null, user.getUsername()));
 
         return ResponseEntity.ok(new ErrorResponse(String.format("product %s was saved successfully",cleanProduct.getProductName()), Warnings.OK));
     }
@@ -320,6 +320,8 @@ public class ProductController {
     @PostMapping("/removeProduct")
     public ResponseEntity<ErrorResponse> removeProduct(@RequestBody Long id){
 
+        CustomUserDetails user = common.getUserData();
+
         Product product = productRepository.findById(id).orElseThrow();
 
         try {
@@ -329,13 +331,13 @@ public class ProductController {
                 product.setStatus(Status.Disabled);
                 productRepository.save(product);
 
-            actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was placed to the blacklist successfully",product.getProductName()),null,null, ActionTrackerEnum.USER,null));
+            actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was placed to the blacklist successfully",product.getProductName()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,null, user.getUsername()));
 
             return  ResponseEntity.ok(new ErrorResponse(String.format("Product %s is used it is put into a blackList you cannot use it but you can change that",product.getProductName()),Warnings.OK));
         }
 
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",product.getProductName()),null,null, ActionTrackerEnum.USER,null));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",product.getProductName()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,null, user.getUsername()));
 
         return ResponseEntity.ok(new ErrorResponse("Removed successfully",Warnings.OK));
     }

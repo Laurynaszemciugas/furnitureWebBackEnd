@@ -36,5 +36,8 @@ public class ActionTracker {
     @CreationTimestamp
     private LocalDateTime created;
 
+    private String name;
+
+
 
 }

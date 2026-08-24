@@ -1,7 +1,9 @@
 package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
+import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
@@ -140,7 +142,7 @@ WHERE  e.user.id = :id
     JOIN Orders o
         ON o.id = oe.order.id
            
-   WHERE e.empId.id = :id
+   WHERE e.user.id = :id
       and o.orderStatus = 'Finished'
      and o.created >= :fromDate AND o.created <= :toDate
 
@@ -156,6 +158,22 @@ WHERE  e.user.id = :id
             @Param("toDate") LocalDateTime toDate,
             @Param("id") Long id
     );
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel(
+    
+    s.profileImage,
+    s.fullName,
+    s.productsFinished,
+    s.hourlyRate
+    
+    
+    
+    )
+    FROM Employee s
+    WHERE s.user.id = :userId
+""")
+    List<TopEmployeesModel> getTopEmployeesModel(Long userId);
 
 
 

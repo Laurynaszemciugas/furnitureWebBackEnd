@@ -36,6 +36,7 @@ public class AiController {
             case "Materials" -> MaterialAiDto.class;
             case "Employees" -> EmployeeAiDto.class;
             case "Orders" -> OrderAiDto.class;
+            case "Products" -> ProductAiDto.class;
             default -> throw new IllegalArgumentException("Unknown type");
         };
 

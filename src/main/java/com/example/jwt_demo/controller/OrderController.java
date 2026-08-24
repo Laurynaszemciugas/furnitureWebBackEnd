@@ -7,6 +7,7 @@ import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
+import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.*;
@@ -28,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -294,6 +296,7 @@ public class OrderController {
     @PostMapping("/saveModifiedOrder")
     public ResponseEntity<ErrorResponse> saveModifiedOrder(@RequestBody Orders order){
 
+        CustomUserDetails user = common.getUserData();
 
         Orders sameExistingOrder = orderRepository.findById(order.getId()).orElseThrow();
         Orders nonModified = copyOrder(sameExistingOrder);
@@ -376,7 +379,7 @@ public class OrderController {
         databaseChecks.calculateMaterialsStock(order.getId());
         orderRepository.save(sameExistingOrder);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),null,null, ActionTrackerEnum.USER,null));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
 
         return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
     }
@@ -486,7 +489,7 @@ public class OrderController {
 
 
         // get creator which is admin in this case
-        User creator = userRepository.findById(1l).orElseThrow();
+        User creator = userRepository.findById(user.getId()).orElseThrow();
         // if buyer not found then system cant pinpoint to whom it is needed not big deal it will be null
         User buyer = userRepository.findByGmail(order.getOrderCreatedByGmail());
         newOrder.setUser(creator);
@@ -514,7 +517,7 @@ public class OrderController {
 
         databaseChecks.calculateMaterialsStock(newOrder.getId());
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] was created successfully",newOrder.getId()),null,null, ActionTrackerEnum.USER,null));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] was created successfully",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER, LocalDateTime.now(), user.getUsername()));
 
 
         return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),Warnings.OK));
@@ -555,12 +558,14 @@ public class OrderController {
     @GetMapping("/rejectNewOrder/{id}")
     public ResponseEntity<ErrorResponse> rejectNewOrder(@PathVariable Long id){
 
+        CustomUserDetails user = common.getUserData();
+
         Orders newOrder = orderRepository.findById(id).orElseThrow();
         newOrder.setOrderStatus(OrderStatus.CANCELLED);
 
         orderRepository.save(newOrder);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),null,null, ActionTrackerEnum.USER,null));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
 
 
         return ResponseEntity.ok(new ErrorResponse("Changed successfully to cancelled", Warnings.OK));
@@ -569,6 +574,9 @@ public class OrderController {
 
     @GetMapping("/acceptNewOrder/{id}")
     public ResponseEntity<ErrorResponse> acceptNewOrder(@PathVariable Long id){
+
+
+        CustomUserDetails user = common.getUserData();
 
         Orders newOrder = orderRepository.findById(id).orElseThrow();
 
@@ -580,7 +588,7 @@ public class OrderController {
             if(amountTaken > amountAvailable){
                 newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
                 newOrder.setServerNote("Order not possible will be automatically changed to Pending when supply exists");
-                actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),null,null, ActionTrackerEnum.USER,null));
+                actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
             }
 
             else{
@@ -593,7 +601,7 @@ public class OrderController {
 
         orderRepository.save(newOrder);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),null,null, ActionTrackerEnum.USER,null));
+        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
 
 
         return ResponseEntity.ok(new ErrorResponse("Changed successfully to Pending", Warnings.OK));
@@ -681,6 +689,15 @@ public class OrderController {
         CustomUserDetails user = common.getUserData();
 
         return ResponseEntity.ok(orderRepository.getGraphForDashBoard(logic.dateConverter(fromDate),logic.dateConverter(toDate), user.getId()));
+
+    }
+
+    @GetMapping("/getActionTracker")
+    public ResponseEntity<List<ActivityFeedModel>> getActionTracker(){
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(orderRepository.getActionTracker(user.getId()));
 
     }
 
