@@ -381,6 +381,8 @@ public class OrderController {
 
         actionTrackerRepository.save(new ActionTracker(null,String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
 
+        orderRepository.incrementProductsFinished(order.getId());
+
         return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
     }
 
@@ -697,7 +699,7 @@ public class OrderController {
 
         CustomUserDetails user = common.getUserData();
 
-        return ResponseEntity.ok(orderRepository.getActionTracker(user.getId()));
+        return ResponseEntity.ok(orderRepository.getActionTracker(user.getId(),PageRequest.of(0,5)));
 
     }
 

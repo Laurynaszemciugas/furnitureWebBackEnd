@@ -11,8 +11,10 @@ import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Enums.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -161,19 +163,22 @@ WHERE  e.user.id = :id
 
     @Query("""
     SELECT new com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel(
-    
-    s.profileImage,
-    s.fullName,
-    s.productsFinished,
-    s.hourlyRate
-    
-    
-    
+        s.profileImage,
+        s.fullName,
+        s.productsFinished,
+        s.hourlyRate
     )
     FROM Employee s
     WHERE s.user.id = :userId
+    ORDER BY s.productsFinished DESC
 """)
-    List<TopEmployeesModel> getTopEmployeesModel(Long userId);
+    List<TopEmployeesModel> getTopEmployeesModel(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+
+    // updating stuff
 
 
 

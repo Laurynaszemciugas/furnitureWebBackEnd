@@ -12,8 +12,10 @@ import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -474,16 +476,33 @@ AND (
 
     @Query("""
     SELECT new com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel(
-    
-    s.actionName,
-    TIMESTAMPDIFF(MINUTE, s.created, CURRENT_TIMESTAMP),
-    s.name
-    
+        s.actionName,
+        TIMESTAMPDIFF(MINUTE, s.created, CURRENT_TIMESTAMP),
+        s.name
     )
     FROM ActionTracker s
     WHERE s.user.id = :userId
+    ORDER BY s.created DESC
 """)
-    List<ActivityFeedModel> getActionTracker(Long userId);
+    List<ActivityFeedModel> getActionTracker(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+
+    // updating
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+    UPDATE employee e
+    JOIN order_employees oe ON oe.employee_id = e.id
+    JOIN orders o ON o.id = oe.order_id
+    SET e.products_finished = COALESCE(e.products_finished, 0) + 1
+    WHERE o.id = :orderId
+      AND o.order_status = 'FINISHED'
+    """, nativeQuery = true)
+    void incrementProductsFinished(@Param("orderId") Long orderId);
 
 
 

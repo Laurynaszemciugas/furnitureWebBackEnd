@@ -6,6 +6,7 @@ import com.example.jwt_demo.Common.ProvidedDataChecker;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
+import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
@@ -254,6 +255,15 @@ public class EmployeeController {
                 ).orElse(new DashBoardEmployeeMiniInfo("No data", 0L));
 
         return ResponseEntity.ok(data);
+    }
+
+
+    @GetMapping("/getTopEmployeesModel")
+    public ResponseEntity<List<TopEmployeesModel>> getTopEmployeesModel() {
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(employeeRepository.getTopEmployeesModel(user.getId(),PageRequest.of(0,5)));
     }
 
 
