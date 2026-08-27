@@ -152,6 +152,17 @@ public class ProductController {
                 cleanProduct.getComments().add(comment);
             }
         }
+
+        if (product.getSteps() != null) {
+            cleanProduct.getSteps().clear();
+            for (var steps : product.getSteps()) {
+                steps.setProduct(cleanProduct);
+                cleanProduct.getSteps().add(steps);
+            }
+        }
+
+        System.out.println(product.getComments());
+
         productRepository.save(cleanProduct);
 
         databaseChecks.calculateProductsStock(user.getId(),false);
@@ -307,6 +318,15 @@ public class ProductController {
                 existingProduct.getComments().add(comment);
             }
         }
+
+        if (product.getSteps() != null) {
+            existingProduct.getSteps().clear();
+            for (var steps : product.getSteps()) {
+                steps.setProduct(existingProduct);
+                existingProduct.getSteps().add(steps);
+            }
+        }
+
 
 
         productRepository.save(existingProduct);
