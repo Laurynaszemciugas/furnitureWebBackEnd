@@ -1,6 +1,7 @@
 package com.example.jwt_demo.Entity;
 
 
+import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Status;
@@ -60,6 +61,9 @@ public class Product {
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private List<ProductComments> comments= new ArrayList<>();
+
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
+    private List<ProductFinishSteps> steps = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id")
