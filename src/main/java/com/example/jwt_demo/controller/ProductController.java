@@ -1,10 +1,7 @@
 package com.example.jwt_demo.controller;
 
 
-import com.example.jwt_demo.Common.DatabaseChecks;
-import com.example.jwt_demo.Common.ErrorResponse;
-import com.example.jwt_demo.Common.Logic;
-import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -66,6 +63,8 @@ public class ProductController {
     @Autowired
     ActionTrackerRepository actionTrackerRepository;
 
+    @Autowired
+    ActionMaker actionMaker;
 
     @PostMapping("/saveProduct")
     public ResponseEntity<ErrorResponse> saveProduct(@RequestBody Product product){
@@ -167,7 +166,8 @@ public class ProductController {
 
         databaseChecks.calculateProductsStock(user.getId(),false);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",cleanProduct.getProductName()),null,null, ActionTrackerEnum.USER,null, user.getUsername()));
+        actionMaker.makeAction(String.format("product %s was saved successfully",cleanProduct.getProductName()),user.getId(),null,ActionTrackerEnum.USER);
+
 
         return ResponseEntity.ok(new ErrorResponse(String.format("product %s was saved successfully",cleanProduct.getProductName()), Warnings.OK));
     }
@@ -351,13 +351,15 @@ public class ProductController {
                 product.setStatus(Status.Disabled);
                 productRepository.save(product);
 
-            actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was placed to the blacklist successfully",product.getProductName()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,null, user.getUsername()));
+
+            actionMaker.makeAction(String.format("product %s was placed to the blacklist successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM);
 
             return  ResponseEntity.ok(new ErrorResponse(String.format("Product %s is used it is put into a blackList you cannot use it but you can change that",product.getProductName()),Warnings.OK));
         }
 
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("product %s was saved successfully",product.getProductName()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,null, user.getUsername()));
+
+        actionMaker.makeAction(String.format("product %s was removed successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM);
 
         return ResponseEntity.ok(new ErrorResponse("Removed successfully",Warnings.OK));
     }

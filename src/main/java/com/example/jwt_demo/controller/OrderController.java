@@ -1,9 +1,6 @@
 package com.example.jwt_demo.controller;
 
-import com.example.jwt_demo.Common.DatabaseChecks;
-import com.example.jwt_demo.Common.ErrorResponse;
-import com.example.jwt_demo.Common.Logic;
-import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -62,6 +59,9 @@ public class OrderController {
 
     @Autowired
     Common common;
+
+    @Autowired
+    ActionMaker actionMaker;
 
 
     @Autowired
@@ -379,7 +379,8 @@ public class OrderController {
         databaseChecks.calculateMaterialsStock(order.getId());
         orderRepository.save(sameExistingOrder);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
+        actionMaker.makeAction(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),user.getId(),null,ActionTrackerEnum.USER);
+
 
         orderRepository.incrementProductsFinished(order.getId());
 
@@ -519,8 +520,7 @@ public class OrderController {
 
         databaseChecks.calculateMaterialsStock(newOrder.getId());
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] was created successfully",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER, LocalDateTime.now(), user.getUsername()));
-
+        actionMaker.makeAction(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),Warnings.OK));
 
@@ -567,7 +567,8 @@ public class OrderController {
 
         orderRepository.save(newOrder);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
+        actionMaker.makeAction(String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER);
+
 
 
         return ResponseEntity.ok(new ErrorResponse("Changed successfully to cancelled", Warnings.OK));
@@ -590,7 +591,9 @@ public class OrderController {
             if(amountTaken > amountAvailable){
                 newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
                 newOrder.setServerNote("Order not possible will be automatically changed to Pending when supply exists");
-                actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
+
+                actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),user.getId(),null,ActionTrackerEnum.SYSTEM);
+
             }
 
             else{
@@ -603,7 +606,8 @@ public class OrderController {
 
         orderRepository.save(newOrder);
 
-        actionTrackerRepository.save(new ActionTracker(null,String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),null,userRepository.findById(user.getId()).orElseThrow(), ActionTrackerEnum.USER,LocalDateTime.now(), user.getUsername()));
+        actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER);
+
 
 
         return ResponseEntity.ok(new ErrorResponse("Changed successfully to Pending", Warnings.OK));
