@@ -4,7 +4,10 @@ public enum ActionTrackerEnum {
 
     SYSTEM,
     USER,
-    SYSTEM_EXTRA_DATA
+    EMPLOYEE,
+    CLIENT,
+    MANAGER,
+    ALL
 
 
 }

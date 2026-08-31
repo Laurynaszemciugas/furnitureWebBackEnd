@@ -1,5 +1,6 @@
 package com.example.jwt_demo.Entity;
 
+import com.example.jwt_demo.Enums.ActionDesciptionEnum;
 import com.example.jwt_demo.Enums.ActionTrackerEnum;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,6 +33,9 @@ public class ActionTracker {
 
     @Enumerated(EnumType.STRING)
     private ActionTrackerEnum typeOfActionRecorded;
+
+    @Enumerated(EnumType.STRING)
+    private ActionDesciptionEnum action;
 
     @CreationTimestamp
     private LocalDateTime created;
