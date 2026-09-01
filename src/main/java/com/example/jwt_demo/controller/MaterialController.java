@@ -1,9 +1,6 @@
 package com.example.jwt_demo.controller;
 
-import com.example.jwt_demo.Common.DatabaseChecks;
-import com.example.jwt_demo.Common.ErrorResponse;
-import com.example.jwt_demo.Common.Logic;
-import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -66,6 +63,9 @@ public class MaterialController {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    ActionMaker actionMaker;
 
 
 
@@ -301,6 +301,7 @@ public class MaterialController {
 
 
 
+        actionMaker.makeAction(String.format("Material %s was saved successfully",newMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Created);
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
     }
@@ -437,13 +438,17 @@ public class MaterialController {
 
         databaseChecks.calculateProductsStock(null,false);
 
+        actionMaker.makeAction(String.format("Material %s was edited successfully",existingMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Updated);
 
-        return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material edited successfully", Warnings.OK));
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Material %s was edited successfully",existingMat.getMaterialName()), Warnings.OK));
     }
 
 
     @GetMapping("/deleteMaterial/{id}")
     public ResponseEntity<ErrorResponse> deleteMaterial(@PathVariable Long id){
+
+        CustomUserDetails user = common.getUserData();
 
         Materials material = materialRepository.findById(id).orElseThrow();
 
@@ -458,10 +463,15 @@ public class MaterialController {
 
             materialRepository.save(material);
 
+            actionMaker.makeAction(String.format("Material %s was set to Inactive successfully",material.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Status_Change);
+
             return ResponseEntity.ok(new ErrorResponse(  material.getMaterialName() + " was set to Inactive successfully", Warnings.OK));
 
         }
-        return ResponseEntity.ok(new ErrorResponse(material.getMaterialName() + "Material removed successfully", Warnings.OK));
+
+        actionMaker.makeAction(String.format("Material %s was deleted successfully",material.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Deleted);
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Material %s was deleted successfully",material.getMaterialName()), Warnings.OK));
     }
 
 

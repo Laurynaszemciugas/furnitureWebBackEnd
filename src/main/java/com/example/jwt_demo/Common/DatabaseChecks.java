@@ -6,6 +6,8 @@ import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Entity.User;
+import com.example.jwt_demo.Enums.ActionDesciptionEnum;
+import com.example.jwt_demo.Enums.ActionTrackerEnum;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
@@ -41,6 +43,8 @@ public class DatabaseChecks {
     @Autowired
     Logic logic;
 
+    @Autowired
+    ActionMaker actionMaker;
 
     public void calculateProductsStock(Long userId, boolean changeMaterialSupply) {
 
@@ -121,8 +125,12 @@ public class DatabaseChecks {
 
                 prods.setStockQuantity(lowestAmountToMake);
 
+
+
                 productRepository.save(prods);
 
+
+                actionMaker.makeAction(String.format("Stock of %s was was changed",prods.getProductName()),s.getId(),null, ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.System_Check);
 
             }
 

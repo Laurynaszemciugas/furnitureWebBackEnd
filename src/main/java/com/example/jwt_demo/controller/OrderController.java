@@ -11,10 +11,7 @@ import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
-import com.example.jwt_demo.Enums.ActionTrackerEnum;
-import com.example.jwt_demo.Enums.ActiveInactive;
-import com.example.jwt_demo.Enums.OrderStatus;
-import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.*;
@@ -379,7 +376,7 @@ public class OrderController {
         databaseChecks.calculateMaterialsStock(order.getId());
         orderRepository.save(sameExistingOrder);
 
-        actionMaker.makeAction(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),user.getId(),null,ActionTrackerEnum.USER);
+        actionMaker.makeAction(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Updated);
 
 
         orderRepository.incrementProductsFinished(order.getId());
@@ -520,7 +517,7 @@ public class OrderController {
 
         databaseChecks.calculateMaterialsStock(newOrder.getId());
 
-        actionMaker.makeAction(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER);
+        actionMaker.makeAction(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Created);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),Warnings.OK));
 
@@ -567,7 +564,7 @@ public class OrderController {
 
         orderRepository.save(newOrder);
 
-        actionMaker.makeAction(String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER);
+        actionMaker.makeAction(String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Status_Change);
 
 
 
@@ -592,7 +589,7 @@ public class OrderController {
                 newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
                 newOrder.setServerNote("Order not possible will be automatically changed to Pending when supply exists");
 
-                actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),user.getId(),null,ActionTrackerEnum.SYSTEM);
+                actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Order_Status_Change);
 
             }
 
@@ -606,7 +603,7 @@ public class OrderController {
 
         orderRepository.save(newOrder);
 
-        actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER);
+        actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Status_Change);
 
 
 

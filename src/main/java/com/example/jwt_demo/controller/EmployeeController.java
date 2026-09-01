@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.ActionMaker;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.Logic;
 import com.example.jwt_demo.Common.ProvidedDataChecker;
@@ -12,10 +13,7 @@ import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.User;
-import com.example.jwt_demo.Enums.ActiveInactive;
-import com.example.jwt_demo.Enums.EmployeeAcIn;
-import com.example.jwt_demo.Enums.Role;
-import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Employee.EmployeeFilterHolder;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.repository.EmployeeRepository;
@@ -51,6 +49,9 @@ public class EmployeeController {
 
     @Autowired
     Common common;
+
+    @Autowired
+    ActionMaker actionMaker;
 
     @GetMapping("/getMiniEmployeeData")
     public ResponseEntity<List<ComboBoxEmployees>> getMiniEmployeeData(){
@@ -154,7 +155,9 @@ public class EmployeeController {
         employeeRepository.save(cleanEmpLoyee);
 
 
-        return ResponseEntity.ok(new ErrorResponse("saved", Warnings.OK));
+        actionMaker.makeAction(String.format("Employee of %s was saved successfully",cleanEmpLoyee.getFullName()),user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.Employee_Created);
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Employee of %s was saved successfully",cleanEmpLoyee.getFullName()), Warnings.OK));
 
 
     }
@@ -162,7 +165,7 @@ public class EmployeeController {
     @PostMapping("/editEmployee")
     public ResponseEntity<ErrorResponse> editEmployee(@RequestBody Employee emp){
 
-
+        CustomUserDetails user = common.getUserData();
 
         Employee cleanEmpLoyee = employeeRepository.findById(emp.getId()).orElseThrow();
         cleanEmpLoyee.setHourlyRate(emp.getHourlyRate());
@@ -199,7 +202,9 @@ public class EmployeeController {
 
         employeeRepository.save(cleanEmpLoyee);
 
-        return ResponseEntity.ok(new ErrorResponse("Edited", Warnings.OK));
+        actionMaker.makeAction(String.format("Employee of %s was edited successfully",cleanEmpLoyee.getFullName()),user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.Employee_Updated);
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Employee of %s was edited successfully",cleanEmpLoyee.getFullName()), Warnings.OK));
 
 
     }
@@ -207,6 +212,8 @@ public class EmployeeController {
 
     @GetMapping("/deleteEmployee/{id}")
     public ResponseEntity<ErrorResponse> deleteEmployee(@PathVariable Long id){
+
+        CustomUserDetails user = common.getUserData();
 
         Employee employee = employeeRepository.findById(id).orElseThrow();
 
@@ -221,10 +228,14 @@ public class EmployeeController {
 
             employeeRepository.save(employee);
 
-            return ResponseEntity.ok(new ErrorResponse(  employee.getFullName() + " was set to Inactive successfully", Warnings.OK));
+            actionMaker.makeAction(String.format("Employee of %s was set to Inactive successfully",employee.getFullName()),user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.System_Check);
+
+            return ResponseEntity.ok(new ErrorResponse(  String.format("Employee of %s was set to Inactive successfully",employee.getFullName()), Warnings.OK));
 
         }
-        return ResponseEntity.ok(new ErrorResponse(employee.getFullName() + "Material removed successfully", Warnings.OK));
+        actionMaker.makeAction(String.format("Employee of %s was deleted successfully",employee.getFullName()),user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.Employee_Deleted);
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Employee of %s was deleted successfully",employee.getFullName()), Warnings.OK));
     }
 
     @GetMapping("/getEmployee/{id}")

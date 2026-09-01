@@ -166,7 +166,7 @@ public class ProductController {
 
         databaseChecks.calculateProductsStock(user.getId(),false);
 
-        actionMaker.makeAction(String.format("product %s was saved successfully",cleanProduct.getProductName()),user.getId(),null,ActionTrackerEnum.USER);
+        actionMaker.makeAction(String.format("product %s was saved successfully",cleanProduct.getProductName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Product_Created);
 
 
         return ResponseEntity.ok(new ErrorResponse(String.format("product %s was saved successfully",cleanProduct.getProductName()), Warnings.OK));
@@ -333,7 +333,9 @@ public class ProductController {
 
         databaseChecks.calculateProductsStock(user.getId(),false);
 
-        return ResponseEntity.ok(new ErrorResponse("Product was edited successfully",Warnings.OK));
+        actionMaker.makeAction(String.format("product %s was modified successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Product_Updated);
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("product %s was modified successfully",product.getProductName()),Warnings.OK));
 
     }
 
@@ -352,14 +354,14 @@ public class ProductController {
                 productRepository.save(product);
 
 
-            actionMaker.makeAction(String.format("product %s was placed to the blacklist successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM);
+            actionMaker.makeAction(String.format("product %s was placed to the blacklist successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Product_Status_Change);
 
             return  ResponseEntity.ok(new ErrorResponse(String.format("Product %s is used it is put into a blackList you cannot use it but you can change that",product.getProductName()),Warnings.OK));
         }
 
 
 
-        actionMaker.makeAction(String.format("product %s was removed successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM);
+        actionMaker.makeAction(String.format("product %s was removed successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Product_Deleted);
 
         return ResponseEntity.ok(new ErrorResponse("Removed successfully",Warnings.OK));
     }
