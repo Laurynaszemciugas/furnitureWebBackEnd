@@ -333,7 +333,7 @@ public class ProductController {
 
         databaseChecks.calculateProductsStock(user.getId(),false);
 
-        actionMaker.makeAction(String.format("product %s was modified successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Product_Updated);
+        actionMaker.makeAction(String.format("product %s was modified successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Product_Updated);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("product %s was modified successfully",product.getProductName()),Warnings.OK));
 
@@ -361,7 +361,7 @@ public class ProductController {
 
 
 
-        actionMaker.makeAction(String.format("product %s was removed successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Product_Deleted);
+        actionMaker.makeAction(String.format("product %s was removed successfully",product.getProductName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Product_Deleted);
 
         return ResponseEntity.ok(new ErrorResponse("Removed successfully",Warnings.OK));
     }

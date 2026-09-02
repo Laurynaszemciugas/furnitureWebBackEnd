@@ -301,7 +301,7 @@ public class MaterialController {
 
 
 
-        actionMaker.makeAction(String.format("Material %s was saved successfully",newMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Created);
+        actionMaker.makeAction(String.format("Material %s was saved successfully",newMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Material_Created);
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
     }
@@ -438,7 +438,7 @@ public class MaterialController {
 
         databaseChecks.calculateProductsStock(null,false);
 
-        actionMaker.makeAction(String.format("Material %s was edited successfully",existingMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Updated);
+        actionMaker.makeAction(String.format("Material %s was edited successfully",existingMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Material_Updated);
 
 
         return ResponseEntity.ok(new ErrorResponse(String.format("Material %s was edited successfully",existingMat.getMaterialName()), Warnings.OK));
@@ -469,7 +469,7 @@ public class MaterialController {
 
         }
 
-        actionMaker.makeAction(String.format("Material %s was deleted successfully",material.getMaterialName()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Material_Deleted);
+        actionMaker.makeAction(String.format("Material %s was deleted successfully",material.getMaterialName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Material_Deleted);
 
         return ResponseEntity.ok(new ErrorResponse(String.format("Material %s was deleted successfully",material.getMaterialName()), Warnings.OK));
     }
