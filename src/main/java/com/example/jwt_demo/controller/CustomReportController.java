@@ -5,6 +5,7 @@ import com.example.jwt_demo.DTOS.CustomReport.CustomReportFeed;
 import com.example.jwt_demo.Entity.CreateReport.Report;
 import com.example.jwt_demo.Entity.CreateReport.ReportItems;
 import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.CustomReportRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
@@ -83,12 +84,26 @@ public class CustomReportController {
     }
 
     @GetMapping("/getReportAccordingToId/{id}")
-    public ResponseEntity<Report> getReportAccordingToId(@PathVariable Long id){
+    public ResponseEntity<?> getReportAccordingToId(@PathVariable Long id){
+
+        CustomUserDetails user = common.getUserData();
+
+        Report customReportFeed;
+
+            customReportFeed = customReportRepository.findById(id).orElseThrow();
+
+            if(!user.getId().equals(customReportFeed.getUser().getId())){
+                throw new ValidationException("No authorization",Warnings.ERROR);
+            }
+
+            // doing the same for safety so it would be diffrent
+            else if(!customReportRepository.existsById(id)){
+                throw new ValidationException("No authorization",Warnings.ERROR);
+            }
 
 
-        System.out.println(customReportRepository.findById(id).orElseThrow());
 
-        return ResponseEntity.ok(customReportRepository.findById(id).orElseThrow());
+        return ResponseEntity.ok(customReportFeed);
     }
 
     @GetMapping("/deleteCustomReport/{id}")

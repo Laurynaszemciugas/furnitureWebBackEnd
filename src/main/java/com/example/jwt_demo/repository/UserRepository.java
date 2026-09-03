@@ -21,7 +21,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
 
-//    User findBy
+
+    @Query("""
+SELECT
+    u.googleId
+   
+
+FROM User u
+
+ WHERE u.gmail = :gmail
+  
+""")
+    String findGoogleId(String gmail);
 
 
 

@@ -11,6 +11,8 @@ import java.util.List;
 public interface CustomReportRepository extends JpaRepository<Report,Long> {
 
 
+    boolean existsById(Long id);
+
 @Query("""
 
     SELECT new com.example.jwt_demo.DTOS.CustomReport.CustomReportFeed(r.id, r.reportName,r.dashboardWidget,r.reportColor, r.description, r.created)
@@ -20,6 +22,9 @@ public interface CustomReportRepository extends JpaRepository<Report,Long> {
 
 """)
     List<CustomReportFeed> customRepostFeedList(Long id);
+
+
+
 
 
 }

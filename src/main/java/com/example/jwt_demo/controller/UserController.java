@@ -81,6 +81,10 @@ public class UserController {
 
         CustomUserDetails user = common.getUserData();
 
+        System.out.println("sssssssssssssssssssssssssssssssssssssssssss");
+        System.out.println(user);
+
+
         return ResponseEntity.ok(userRepository.getUserSettings(user.getId()));
 
     }

@@ -46,9 +46,12 @@ public class AuthController {
 
 
     @PostMapping("/google")
-    public ResponseEntity<ErrorResponse> authenticateUserGoogle(@RequestBody String googleToken) throws GeneralSecurityException, IOException {
+    public ResponseEntity<?> authenticateUserGoogle(@RequestBody String googleToken, HttpServletRequest request) throws GeneralSecurityException, IOException {
 
         googleToken = googleToken.replace("\"", "");
+
+
+        String ip = request.getRemoteAddr();
 
         System.out.println(googleToken);
 
@@ -57,6 +60,7 @@ public class AuthController {
         String googleId = payload.getSubject();
         String email = payload.getEmail();
         String name = (String) payload.get("name");
+        String lastName = (String) payload.get("family_name");
         String picture = (String) payload.get("picture");
 
         System.out.println("Google ID: " + googleId);
@@ -66,12 +70,63 @@ public class AuthController {
 
         // find if account doesnt exists
 
+        if(userRepository.existsByGmail(email)){
+
+            // check if ids match
+            if(googleId.equals(userRepository.findGoogleId(email))){
+
+                User user = userRepository.findByGmail(email);
+
+                CustomUserDetails userDetails = new CustomUserDetails();
+                userDetails.setUsername(user.getGmail());
+                userDetails.setId(user.getId());
+                userDetails.setEmail(user.getGmail());
+                userDetails.setPassword(user.getPassword());
+                userDetails.setRole(user.getRole());
+
+                return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
+
+            }
+
+
+        }
+        else{
+            UserSettings userSettings = new UserSettings();
+
+            // Create new user's account
+            User newUser =
+                    new User(
+                            null,
+                            email,
+                            name,
+                            lastName,
+                            null,
+                            "",
+                            Role.USER,
+                            AccountStatus.ALLOWED,
+                            null,
+                            LocalDateTime.now(),
+                            null,
+                            null,
+                            googleId,
+                            null,
+                            null,
+                            ip,
+                            name + " " + lastName,
+                            picture,
+                            userSettings);
+
+            userSettings.setUser(newUser);
+
+            userRepository.save(newUser);
+            return ResponseEntity.ok(new ErrorResponse("Account was created successfully",Warnings.OK));
+        }
 
 
 
 
 
-    return ResponseEntity.ok(new ErrorResponse("doing stuff",Warnings.OK));
+    return ResponseEntity.ok(new ErrorResponse("Something went wrong",Warnings.WARNING));
 
     }
 
