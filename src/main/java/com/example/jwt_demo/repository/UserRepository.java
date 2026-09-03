@@ -21,6 +21,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
 
+//    User findBy
+
+
+
     @Query("""
 SELECT new com.example.jwt_demo.DTOS.User.ProfileInformation(
     u.fullName,
@@ -88,6 +92,9 @@ WHERE s.user.id = :userId
     WHERE s.user.id = :userId
 """)
     Appearance getAppearance(Long userId);
+
+
+
 
 
 

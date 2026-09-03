@@ -40,6 +40,8 @@ public class User {
 
     private String phoneNumber;
 
+    private String googleId;
+
 
 
     @Enumerated(EnumType.STRING)
