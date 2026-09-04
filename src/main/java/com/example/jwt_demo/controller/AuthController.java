@@ -2,12 +2,15 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.GoogleTokenVerifier;
+import com.example.jwt_demo.Entity.Authenfication.GmailAuth;
 import com.example.jwt_demo.Entity.UserSettings;
 import com.example.jwt_demo.Enums.AccountStatus;
 import com.example.jwt_demo.Enums.Role;
 import com.example.jwt_demo.Entity.User;
+import com.example.jwt_demo.Enums.Verification;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
+import com.example.jwt_demo.repository.GmailVerificationRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import com.example.jwt_demo.security.JwtUtil;
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -43,10 +47,17 @@ public class AuthController {
     @Autowired
     GoogleTokenVerifier googleTokenVerifier;
 
+    @Autowired
+    EmailSenderContoller emailSenderContoller;
+
+    @Autowired
+    GmailVerificationRepository gmailVerificationRepository;
 
 
     @PostMapping("/google")
     public ResponseEntity<?> authenticateUserGoogle(@RequestBody String googleToken, HttpServletRequest request) throws GeneralSecurityException, IOException {
+
+        emailSenderContoller.welcomeMessage();
 
         googleToken = googleToken.replace("\"", "");
 
@@ -62,6 +73,7 @@ public class AuthController {
         String name = (String) payload.get("name");
         String lastName = (String) payload.get("family_name");
         String picture = (String) payload.get("picture");
+        Boolean emailVerified = payload.getEmailVerified();
 
         System.out.println("Google ID: " + googleId);
         System.out.println("Email: " + email);
@@ -109,7 +121,7 @@ public class AuthController {
                             null,
                             null,
                             googleId,
-                            null,
+                            emailVerified ? Verification.VERIFIED : Verification.NOT_VERIFIED,
                             null,
                             ip,
                             name + " " + lastName,
@@ -134,6 +146,22 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> authenticateUser(@RequestBody User user) {
 
 
+
+        User userForCheck = userRepository.findByGmail(user.getGmail());
+
+        if(userRepository.findGoogleId(user.getGmail()) != null){
+            throw new ValidationException(
+                    "This gmail is already in use",
+                    Warnings.ERROR);
+        }
+
+
+        if(userForCheck.getVerification() == Verification.NOT_VERIFIED){
+            throw new ValidationException(
+                    "Gmail is not verified please go to your gmail and verify it or just use Google sign in",
+                    Warnings.ERROR);
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -146,6 +174,8 @@ public class AuthController {
             User user1 = userRepository.findByGmail(user.getGmail());
 
             user1.setLastLogin(LocalDateTime.now());
+
+
 
             userRepository.save(user1);
 
@@ -178,6 +208,16 @@ public class AuthController {
             throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
         }
 
+
+
+        Random random = new Random();
+
+        long number = 100_000_000_000_000L + (long)(random.nextDouble() * 900_000_000_000_000L);
+
+
+
+
+
         String ip = request.getRemoteAddr();
 
         UserSettings userSettings = new UserSettings();
@@ -198,7 +238,7 @@ public class AuthController {
                 null,
                 null,
                         null,
-                        null,
+                        Verification.NOT_VERIFIED,
                         null,
                         ip,
                 user.getName() + " " + user.getLastName(),
@@ -207,7 +247,15 @@ public class AuthController {
 
         userSettings.setUser(newUser);
 
+        GmailAuth gmailAuth = new GmailAuth();
+        gmailAuth.setOneTimeCode(String.valueOf(number));
+        gmailAuth.setUser(newUser);
+
+
         userRepository.save(newUser);
+        gmailVerificationRepository.save(gmailAuth);
+        emailSenderContoller.verificationGmail(newUser.getGmail(),String.valueOf(number));
+
         return "User registered successfully!";
     }
 
@@ -247,6 +295,33 @@ public class AuthController {
 
 
         return "User registered successfully!";
+    }
+
+    @PostMapping("/verifyGmail")
+    public ResponseEntity<ErrorResponse> gmailVerification(@RequestBody String code){
+        code = code.replace("\"","");
+        if(!gmailVerificationRepository.existsByOneTimeCode(code)){
+
+            System.out.println(code);
+            return ResponseEntity.ok(new ErrorResponse("Code doesnt match", Warnings.ERROR));
+        }
+
+        else{
+            GmailAuth gmailAuth = gmailVerificationRepository.findByOneTimeCode(code);
+            User user = userRepository.findByGmail(gmailAuth.getUser().getGmail());
+
+            user.setVerification(Verification.VERIFIED);
+
+            userRepository.save(user);
+
+            gmailVerificationRepository.delete(gmailAuth);
+            return ResponseEntity.ok(new ErrorResponse("Success gmail verified", Warnings.OK));
+
+        }
+
+
+
+
     }
 
 }
