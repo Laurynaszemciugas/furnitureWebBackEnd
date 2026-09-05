@@ -85,6 +85,8 @@ public class UserController {
         System.out.println(user);
 
 
+
+
         return ResponseEntity.ok(userRepository.getUserSettings(user.getId()));
 
     }

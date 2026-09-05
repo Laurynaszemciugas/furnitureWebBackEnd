@@ -91,4 +91,16 @@ public class CustomUserDetails implements UserDetails {
     public void setPassword(String password) {
         this.password = password;
     }
+
+
+    @Override
+    public String toString() {
+        return "CustomUserDetails{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + role +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }

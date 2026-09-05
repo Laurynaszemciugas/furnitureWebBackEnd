@@ -14,14 +14,14 @@ public class EmailSenderContoller {
     private JavaMailSender javaMailSender;
 
 
-   public void welcomeMessage(){
+   public void welcomeMessage(String setTo){
 
        SimpleMailMessage message = new SimpleMailMessage();
        message.setFrom("laurynaszemciugas@gmail.com");
 
-       message.setTo("laurynas.zem426@go.kauko.lt");
-       message.setText("YO SUP");
-       message.setSubject("SUP");
+       message.setTo(setTo);
+       message.setText("Welcome to Furniture management system");
+       message.setSubject("You are all set you can go and use the system");
 
 
        javaMailSender.send(message);

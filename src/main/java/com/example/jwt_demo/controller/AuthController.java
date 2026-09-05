@@ -28,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -57,16 +58,24 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<?> authenticateUserGoogle(@RequestBody String googleToken, HttpServletRequest request) throws GeneralSecurityException, IOException {
 
-        emailSenderContoller.welcomeMessage();
+
+        System.out.println("1");
 
         googleToken = googleToken.replace("\"", "");
 
+        System.out.println("2");
 
         String ip = request.getRemoteAddr();
 
+        System.out.println("3");
+
         System.out.println(googleToken);
 
+        System.out.println("4");
+
         GoogleIdToken.Payload payload = googleTokenVerifier.verify(googleToken);
+
+        System.out.println("5");
 
         String googleId = payload.getSubject();
         String email = payload.getEmail();
@@ -75,17 +84,34 @@ public class AuthController {
         String picture = (String) payload.get("picture");
         Boolean emailVerified = payload.getEmailVerified();
 
+        System.out.println("6");
+
+
+
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            emailSenderContoller.welcomeMessage(email);
+            System.out.println("gmail sendd");
+        });
+
+        System.out.println("7");
+
         System.out.println("Google ID: " + googleId);
         System.out.println("Email: " + email);
         System.out.println("Name: " + name);
         System.out.println("Picture: " + picture);
 
+        System.out.println("8");
+
         // find if account doesnt exists
 
         if(userRepository.existsByGmail(email)){
 
+            System.out.println("9");
+
             // check if ids match
             if(googleId.equals(userRepository.findGoogleId(email))){
+
+                System.out.println("10");
 
                 User user = userRepository.findByGmail(email);
 
@@ -96,6 +122,8 @@ public class AuthController {
                 userDetails.setPassword(user.getPassword());
                 userDetails.setRole(user.getRole());
 
+                System.out.println("10");
+
                 return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
 
             }
@@ -104,6 +132,8 @@ public class AuthController {
         }
         else{
             UserSettings userSettings = new UserSettings();
+
+            System.out.println("11");
 
             // Create new user's account
             User newUser =
