@@ -147,7 +147,25 @@ public class AuthController {
             userSettings.setUser(newUser);
 
             userRepository.save(newUser);
-            return ResponseEntity.ok(new ErrorResponse("Account was created successfully",Warnings.OK));
+
+            // LOG IN THE person
+
+
+
+                User user = userRepository.findByGmail(email);
+
+                CustomUserDetails userDetails = new CustomUserDetails();
+                userDetails.setUsername(user.getGmail());
+                userDetails.setId(user.getId());
+                userDetails.setEmail(user.getGmail());
+                userDetails.setPassword(user.getPassword());
+                userDetails.setRole(user.getRole());
+
+
+
+
+
+            return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
         }
 
 
