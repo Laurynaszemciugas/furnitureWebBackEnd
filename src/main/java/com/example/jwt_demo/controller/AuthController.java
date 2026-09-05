@@ -59,23 +59,16 @@ public class AuthController {
     public ResponseEntity<?> authenticateUserGoogle(@RequestBody String googleToken, HttpServletRequest request) throws GeneralSecurityException, IOException {
 
 
-        System.out.println("1");
-
         googleToken = googleToken.replace("\"", "");
-
-        System.out.println("2");
 
         String ip = request.getRemoteAddr();
 
-        System.out.println("3");
 
         System.out.println(googleToken);
 
-        System.out.println("4");
 
         GoogleIdToken.Payload payload = googleTokenVerifier.verify(googleToken);
 
-        System.out.println("5");
 
         String googleId = payload.getSubject();
         String email = payload.getEmail();
@@ -84,13 +77,11 @@ public class AuthController {
         String picture = (String) payload.get("picture");
         Boolean emailVerified = payload.getEmailVerified();
 
-        System.out.println("6");
 
 
 
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
             emailSenderContoller.welcomeMessage(email);
-            System.out.println("gmail sendd");
         });
 
         System.out.println("7");
@@ -106,12 +97,9 @@ public class AuthController {
 
         if(userRepository.existsByGmail(email)){
 
-            System.out.println("9");
 
             // check if ids match
             if(googleId.equals(userRepository.findGoogleId(email))){
-
-                System.out.println("10");
 
                 User user = userRepository.findByGmail(email);
 
@@ -122,7 +110,6 @@ public class AuthController {
                 userDetails.setPassword(user.getPassword());
                 userDetails.setRole(user.getRole());
 
-                System.out.println("10");
 
                 return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
 
@@ -133,7 +120,6 @@ public class AuthController {
         else{
             UserSettings userSettings = new UserSettings();
 
-            System.out.println("11");
 
             // Create new user's account
             User newUser =
@@ -176,8 +162,14 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> authenticateUser(@RequestBody User user) {
 
 
-
         User userForCheck = userRepository.findByGmail(user.getGmail());
+
+
+        if(userForCheck == null){
+            throw new ValidationException(
+                    "Password or the login name is incorrect",
+                    Warnings.ERROR);
+        }
 
         if(userRepository.findGoogleId(user.getGmail()) != null){
             throw new ValidationException(
@@ -331,8 +323,6 @@ public class AuthController {
     public ResponseEntity<ErrorResponse> gmailVerification(@RequestBody String code){
         code = code.replace("\"","");
         if(!gmailVerificationRepository.existsByOneTimeCode(code)){
-
-            System.out.println(code);
             return ResponseEntity.ok(new ErrorResponse("Code doesnt match", Warnings.ERROR));
         }
 

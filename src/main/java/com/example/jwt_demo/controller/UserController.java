@@ -51,7 +51,7 @@ public class UserController {
         userRepository.save(existingUser);
 
 
-        return ResponseEntity.ok(new com.example.jwt_demo.Common.ErrorResponse("User settings updated",Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse("User settings updated",Warnings.OK));
 
     }
 
@@ -79,15 +79,21 @@ public class UserController {
     @GetMapping("/getUserSettings")
     public ResponseEntity<UserSettings> getUserSettings(){
 
-        CustomUserDetails user = common.getUserData();
 
-        System.out.println("sssssssssssssssssssssssssssssssssssssssssss");
-        System.out.println(user);
+        UserSettings userSettings = new UserSettings();
+        try {
+            CustomUserDetails user = common.getUserData();
+            userSettings = userRepository.getUserSettings(user.getId());
+
+        } catch (RuntimeException e) {
+            System.out.println("user not found can be because user tried to login into non existing user");
+        }
 
 
 
 
-        return ResponseEntity.ok(userRepository.getUserSettings(user.getId()));
+
+        return ResponseEntity.ok(userSettings);
 
     }
 
@@ -108,7 +114,7 @@ public class UserController {
         userRepository.save(existingUser);
 
 
-        return ResponseEntity.ok(new com.example.jwt_demo.Common.ErrorResponse("Personal preferences updated",Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse("Personal preferences updated",Warnings.OK));
 
     }
 
