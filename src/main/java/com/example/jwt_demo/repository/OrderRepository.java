@@ -5,9 +5,11 @@ import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
+import com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.ActionTracker;
 import com.example.jwt_demo.Entity.Orders;
+import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Orders,Long> {
+
 
 
     @Query("""
@@ -505,6 +508,33 @@ AND (
     void incrementProductsFinished(@Param("orderId") Long orderId);
 
 
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection(
+        o.id,
+        o.created,
+        o.estimatedDueDate,
+        o.orderStatus,
+        COUNT(DISTINCT op.product.id),
+        
+         FUNCTION('GROUP_CONCAT', i.imageUrl)
+        )
+    FROM Orders o
+    JOIN o.employees oe
+    JOIN o.productsData op
+    JOIN op.product p
+    Left join p.images i
+    WHERE oe.employee.id = :employeeId and o.orderStatus = 'Pending'
+    GROUP BY
+        o.id,
+        o.created,
+        o.estimatedDueDate,
+        o.orderStatus
+""")
+    List<EmployeeOrderProjection> findOrdersForEmployee(
+            @Param("employeeId") Long employeeId,
+            Pageable pageable
+    );
 
 
 }

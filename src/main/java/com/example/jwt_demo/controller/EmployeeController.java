@@ -125,6 +125,7 @@ public class EmployeeController {
         empUser.setPassword(emp.getUser().getPassword());
         empUser.setRole(Role.EMPLOYEE);
         empUser.setCreated(LocalDateTime.now());
+        empUser.setVerification(Verification.VERIFIED);
         authController.systemRegister(empUser);
 
         User savedEmpUser = userRepository.findByGmail(emp.getGmail());
@@ -147,6 +148,7 @@ public class EmployeeController {
         cleanEmpLoyee.setEmployeeDepartment(emp.getEmployeeDepartment());
         cleanEmpLoyee.setUser(userRepository.findById(user.getId()).orElseThrow());
         cleanEmpLoyee.setCreated(LocalDateTime.now());
+
 
 
         cleanEmpLoyee.setEmpId(savedEmpUser);

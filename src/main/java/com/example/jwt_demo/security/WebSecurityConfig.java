@@ -47,6 +47,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/**").permitAll()
+                                .requestMatchers("/uploads/**").permitAll()
 //                                .requestMatchers("/api/**/**", "/api/test/all").permitAll() // Use 'requestMatchers' instead of 'antMatchers'
 //                                .anyRequest().authenticated()
                 );

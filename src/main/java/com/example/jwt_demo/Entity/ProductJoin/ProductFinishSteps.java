@@ -19,15 +19,15 @@ public class ProductFinishSteps {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private Long step;
-    private String stepName;
-    private String stepDescription;
+    private Long id = null;
+    private Long stepId = null;
+    private String stepName = null;
+    private String stepDescription = null;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
     @JsonIgnore
-    private Product product;
+    private Product product = null;
 
 
 

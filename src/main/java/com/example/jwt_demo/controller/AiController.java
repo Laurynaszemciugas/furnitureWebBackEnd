@@ -46,6 +46,8 @@ public class AiController {
 
         try {
 
+            System.out.println("1");
+
             HttpClient client = HttpClient.newHttpClient();
 
             String json = mapper.writeValueAsString(
@@ -56,7 +58,7 @@ public class AiController {
                     )
             );
 
-
+            System.out.println("2");
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:11434/api/generate"))
                     .header("Content-Type", "application/json")
@@ -64,24 +66,37 @@ public class AiController {
                     .timeout(Duration.ofSeconds(20))
                     .build();
 
+            System.out.println("3");
 
             HttpResponse<String> response = client.send(
                     request,
                     HttpResponse.BodyHandlers.ofString()
             );
 
+            System.out.println("4");
+
             System.out.println("================================");
             System.out.println(response.body());
             System.out.println("=================================");
 
+            System.out.println("5");
+
             AiResponse aiResponse = mapper.readValue(response.body(), AiResponse.class);
 
+            System.out.println("6");
+
             value = mapper.readValue(aiResponse.getResponse(), referenceClass);
+
+            System.out.println("7");
+
 
 
         }catch (Exception e){
 
-            throw  new ValidationException("Something went wrong with your Ai request ", Warnings.ERROR);
+            fillDataUsingAi(aiQuestion);
+            System.out.println("AI RESPONSE FAILED RETRYING");
+//           throw  new ValidationException("Something went wrong with your Ai request RETRYING ", Warnings.ERROR);
+            System.out.println(e);
 
         }
 

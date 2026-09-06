@@ -33,11 +33,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/material")
@@ -280,6 +288,12 @@ public class MaterialController {
         if (mat.getImages() != null) {
             for (var img : mat.getImages()) {
                 img.setMaterials(newMat);
+                try {
+                    img.setImageUrl(saveImage(img.getImageData()));
+                    img.setImageData(null);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 newMat.getImages().add(img);
             }
         }
@@ -304,6 +318,22 @@ public class MaterialController {
         actionMaker.makeAction(String.format("Material %s was saved successfully",newMat.getMaterialName()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Material_Created);
 
         return ResponseEntity.ok(new ErrorResponse(mat.getMaterialName() + " Material saved successfully", Warnings.OK));
+    }
+
+
+    public String saveImage(byte[] imageData) throws IOException {
+
+        Path folder = Paths.get("uploads/materials");
+
+        Files.createDirectories(folder);
+
+        String fileName = UUID.randomUUID() + ".png";
+
+        Path file = folder.resolve(fileName);
+
+        Files.write(file, imageData);
+
+        return "http://localhost:8080/uploads/materials/" + fileName;
     }
 
 

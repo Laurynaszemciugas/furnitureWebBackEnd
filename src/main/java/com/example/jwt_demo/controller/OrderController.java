@@ -6,6 +6,7 @@ import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
+import com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
@@ -705,6 +706,23 @@ public class OrderController {
     }
 
 
+
+    // employee page
+
+
+    @GetMapping("/getEmployeeOrderProjection")
+    public ResponseEntity<List<EmployeeOrderProjection>> getEmployeeOrderProjection(){
+
+        System.out.println("call");
+
+        CustomUserDetails user = common.getUserData();
+
+       Long employee = employeeRepository.employeeId(user.getId());
+
+
+        return ResponseEntity.ok(orderRepository.findOrdersForEmployee(employee,PageRequest.of(0,5)));
+
+    }
 
 
 

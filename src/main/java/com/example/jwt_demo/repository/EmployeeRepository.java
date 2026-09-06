@@ -8,6 +8,7 @@ import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
+import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,6 +22,20 @@ import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee,Long> {
+
+
+
+
+    @Query("""
+    SELECT e.id
+    FROM Employee e
+    WHERE e.empId.id = :userId
+""")
+    Long employeeId(@Param("userId") Long userId);
+
+
+
+
 
 
     // add user id check
