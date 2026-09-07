@@ -4,7 +4,6 @@ import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
-import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.DashBoard.MaterialLowNo;
@@ -12,18 +11,14 @@ import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
 import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
-import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.DTOS.StockMovement.StockMovementGrid;
 import com.example.jwt_demo.Entity.Materials;
-import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Entity.StockMovement;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
-import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
-import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.StockMovementRepository;
 import com.example.jwt_demo.repository.UserRepository;
@@ -33,19 +28,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/material")
@@ -74,6 +61,9 @@ public class MaterialController {
 
     @Autowired
     ActionMaker actionMaker;
+
+    @Autowired
+    ConvertImages convertImages;
 
 
 
@@ -289,7 +279,7 @@ public class MaterialController {
             for (var img : mat.getImages()) {
                 img.setMaterials(newMat);
                 try {
-                    img.setImageUrl(saveImage(img.getImageData()));
+                    img.setImageUrl(convertImages.saveImage(img.getImageData()));
                     img.setImageData(null);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -321,20 +311,7 @@ public class MaterialController {
     }
 
 
-    public String saveImage(byte[] imageData) throws IOException {
 
-        Path folder = Paths.get("uploads/materials");
-
-        Files.createDirectories(folder);
-
-        String fileName = UUID.randomUUID() + ".png";
-
-        Path file = folder.resolve(fileName);
-
-        Files.write(file, imageData);
-
-        return "http://localhost:8080/uploads/materials/" + fileName;
-    }
 
 
     @PostMapping("/editExistingMaterial")
@@ -419,6 +396,17 @@ public class MaterialController {
             for (var img : mat.getImages()) {
                 img.setMaterials(existingMat);
                 img.setUser(null);
+                try {
+                    if(img.getImageData() == null) {
+                        img.setImageUrl(img.getImageUrl());
+                    }
+                    else {
+                        img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                        img.setImageData(null);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 existingMat.getImages().add(img);
             }
         }

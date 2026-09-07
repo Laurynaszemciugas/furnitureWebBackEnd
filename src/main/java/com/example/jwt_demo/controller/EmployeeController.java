@@ -1,21 +1,15 @@
 package com.example.jwt_demo.controller;
 
-import com.example.jwt_demo.Common.ActionMaker;
-import com.example.jwt_demo.Common.ErrorResponse;
-import com.example.jwt_demo.Common.Logic;
-import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
-import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
-import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Employee.EmployeeFilterHolder;
-import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
@@ -52,6 +46,9 @@ public class EmployeeController {
 
     @Autowired
     ActionMaker actionMaker;
+
+    @Autowired
+    ConvertImages convertImages;
 
     @GetMapping("/getMiniEmployeeData")
     public ResponseEntity<List<ComboBoxEmployees>> getMiniEmployeeData(){
@@ -148,6 +145,8 @@ public class EmployeeController {
         cleanEmpLoyee.setEmployeeDepartment(emp.getEmployeeDepartment());
         cleanEmpLoyee.setUser(userRepository.findById(user.getId()).orElseThrow());
         cleanEmpLoyee.setCreated(LocalDateTime.now());
+
+
 
 
 

@@ -31,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,6 +66,9 @@ public class ProductController {
 
     @Autowired
     ActionMaker actionMaker;
+
+    @Autowired
+    ConvertImages convertImages;
 
     @PostMapping("/saveProduct")
     public ResponseEntity<ErrorResponse> saveProduct(@RequestBody Product product){
@@ -107,11 +111,17 @@ public class ProductController {
             }
         }
 
+
+
         if (product.getImages() != null) {
-            cleanProduct.getImages().clear();
             for (var img : product.getImages()) {
                 img.setProduct(cleanProduct);
-                img.setUser(currentUser);
+                try {
+                    img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                    img.setImageData(null);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 cleanProduct.getImages().add(img);
             }
         }
@@ -277,14 +287,35 @@ public class ProductController {
             }
         }
 
+
         if (product.getImages() != null) {
             existingProduct.getImages().clear();
             for (var img : product.getImages()) {
                 img.setProduct(existingProduct);
-                img.setUser(currentUser);
+                img.setUser(null);
+                try {
+                    if(img.getImageData() == null) {
+                        img.setImageUrl(img.getImageUrl());
+                    }
+                    else {
+                        img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                        img.setImageData(null);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 existingProduct.getImages().add(img);
             }
         }
+
+//        if (product.getImages() != null) {
+//            existingProduct.getImages().clear();
+//            for (var img : product.getImages()) {
+//                img.setProduct(existingProduct);
+//                img.setUser(currentUser);
+//                existingProduct.getImages().add(img);
+//            }
+//        }
 
         if (product.getMaterials() != null) {
             existingProduct.getMaterials().clear();
