@@ -509,6 +509,9 @@ AND (
 
 
 
+    // employee dashboard
+
+
     @Query("""
     SELECT new com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection(
         o.id,
@@ -534,6 +537,22 @@ AND (
     List<EmployeeOrderProjection> findOrdersForEmployee(
             @Param("employeeId") Long employeeId,
             Pageable pageable
+    );
+
+    @Query("""
+    SELECT
+       
+       count(o.id)
+        FROM Orders o
+     JOIN o.employees oe
+   
+        
+    WHERE oe.employee.id = :employeeId and o.orderStatus = 'Pending'
+    
+""")
+    Long findHowManyItemsAreAvailable(
+            @Param("employeeId") Long employeeId
+
     );
 
 

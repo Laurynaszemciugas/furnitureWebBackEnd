@@ -713,14 +713,26 @@ public class OrderController {
     @GetMapping("/getEmployeeOrderProjection")
     public ResponseEntity<List<EmployeeOrderProjection>> getEmployeeOrderProjection(){
 
-        System.out.println("call");
 
         CustomUserDetails user = common.getUserData();
 
        Long employee = employeeRepository.employeeId(user.getId());
 
 
-        return ResponseEntity.ok(orderRepository.findOrdersForEmployee(employee,PageRequest.of(0,5)));
+        return ResponseEntity.ok(orderRepository.findOrdersForEmployee(employee,PageRequest.of(0,2)));
+
+    }
+
+    @GetMapping("/findHowManyItemsAreAvailable")
+    public ResponseEntity<Long> findHowManyItemsAreAvailable(){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        Long employee = employeeRepository.employeeId(user.getId());
+
+
+        return ResponseEntity.ok(orderRepository.findHowManyItemsAreAvailable(employee));
 
     }
 
