@@ -34,11 +34,12 @@ public class WorkDone {
     private LocalDateTime started;
 
 
-    private LocalDateTime ended;
+    private LocalDateTime workDayEnd;
 
     @ManyToOne
     @JoinColumn(name = "order_id")
     private Orders order;
+
 
     private String whatWasDone;
 

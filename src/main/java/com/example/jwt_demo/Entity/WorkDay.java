@@ -33,6 +33,9 @@ public class WorkDay {
 
     private LocalDateTime workDayEnd;
 
+    private Long workedForMinutes;
+
+
 
     @ManyToOne
     @JoinColumn(name = "user_id")
