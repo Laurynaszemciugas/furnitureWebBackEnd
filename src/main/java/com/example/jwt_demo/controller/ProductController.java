@@ -166,6 +166,7 @@ public class ProductController {
             cleanProduct.getSteps().clear();
             for (var steps : product.getSteps()) {
                 steps.setProduct(cleanProduct);
+                steps.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
                 cleanProduct.getSteps().add(steps);
             }
         }

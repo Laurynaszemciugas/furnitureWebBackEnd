@@ -43,6 +43,9 @@ public class Employee {
     @Lob
     private String profileImage;
 
+    @Lob
+    private byte[] imageData;
+
 
     @Enumerated(EnumType.STRING)
     private EmployeeAcIn employeeAcIn;

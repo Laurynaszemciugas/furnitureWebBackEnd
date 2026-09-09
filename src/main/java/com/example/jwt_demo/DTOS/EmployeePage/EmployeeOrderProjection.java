@@ -22,6 +22,10 @@ public class EmployeeOrderProjection {
     private Long amountOfItems;
     private Object images;
 
+    private Object employeeNames;
+
+    private Object employeeImages;
+
 
 
 }

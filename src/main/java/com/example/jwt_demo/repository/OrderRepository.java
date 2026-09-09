@@ -519,15 +519,23 @@ AND (
         o.estimatedDueDate,
         o.orderStatus,
         COUNT(DISTINCT op.product.id),
-        
-         FUNCTION('GROUP_CONCAT', i.imageUrl)
-        )
+
+        FUNCTION('GROUP_CONCAT', i.imageUrl),
+        FUNCTION('GROUP_CONCAT', allE.fullName),
+        FUNCTION('GROUP_CONCAT', allE.profileImage)
+    )
     FROM Orders o
-    JOIN o.employees oe
+    JOIN o.employees currentEmployee
+    JOIN o.employees allEmployees
     JOIN o.productsData op
+
+    JOIN allEmployees.employee allE
     JOIN op.product p
-    Left join p.images i
-    WHERE oe.employee.id = :employeeId and o.orderStatus = 'Pending'
+    LEFT JOIN p.images i
+
+    WHERE currentEmployee.employee.id = :employeeId
+      AND o.orderStatus = 'Pending'
+
     GROUP BY
         o.id,
         o.created,

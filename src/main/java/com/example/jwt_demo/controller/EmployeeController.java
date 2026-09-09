@@ -13,11 +13,13 @@ import com.example.jwt_demo.FilterDTO.Employee.EmployeeFilterHolder;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -109,6 +111,7 @@ public class EmployeeController {
         return ResponseEntity.ok(count);
     }
 
+    @SneakyThrows
     @PostMapping("/saveNewEmployee")
     public ResponseEntity<ErrorResponse> saveNewEmploee(@RequestBody Employee emp){
 
@@ -139,12 +142,23 @@ public class EmployeeController {
         cleanEmpLoyee.setAddress(emp.getAddress());
         cleanEmpLoyee.setJobTittle(emp.getJobTittle());
         cleanEmpLoyee.setEmploymentType(emp.getEmploymentType());
-        cleanEmpLoyee.setProfileImage(emp.getProfileImage());
+
         cleanEmpLoyee.setEmployeeAcIn(emp.getEmployeeAcIn());
         cleanEmpLoyee.setEmployeeCategory(emp.getEmployeeCategory());
         cleanEmpLoyee.setEmployeeDepartment(emp.getEmployeeDepartment());
         cleanEmpLoyee.setUser(userRepository.findById(user.getId()).orElseThrow());
         cleanEmpLoyee.setCreated(LocalDateTime.now());
+
+
+
+
+
+
+        cleanEmpLoyee.setProfileImage(convertImages.saveImage(emp.getImageData()));
+        cleanEmpLoyee.setImageData(null);
+
+
+
 
 
 

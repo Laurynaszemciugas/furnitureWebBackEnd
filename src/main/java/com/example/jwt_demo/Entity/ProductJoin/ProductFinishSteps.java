@@ -2,6 +2,8 @@ package com.example.jwt_demo.Entity.ProductJoin;
 
 
 import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.Entity.User;
+import com.example.jwt_demo.Enums.ProductFinishStepStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,6 +31,12 @@ public class ProductFinishSteps {
     @JsonIgnore
     private Product product = null;
 
+    @Enumerated(EnumType.STRING)
+    private ProductFinishStepStatus productFinishStepStatus;
+
+    @ManyToOne
+    @JoinColumn(name = "employee_id")
+    private User employee;
 
 
 }
