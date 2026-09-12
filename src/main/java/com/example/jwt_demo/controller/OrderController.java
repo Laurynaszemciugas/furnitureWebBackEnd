@@ -11,6 +11,8 @@ import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
+import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
+import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
@@ -368,10 +370,6 @@ public class OrderController {
 
 
 
-
-
-
-
             databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
         databaseChecks.calculateProductsStock(null,false);
         databaseChecks.calculateMaterialsStock(order.getId());
@@ -397,6 +395,9 @@ public class OrderController {
 
     @PostMapping("/saveNewOrder")
     public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
+
+
+        System.out.println("adddddddddddddddddddddddddddddddddddddd");
 
         CustomUserDetails user = common.getUserData();
 
@@ -489,6 +490,31 @@ public class OrderController {
         }
 
 
+        List<OrderStepsToComplete> orderSteps = new ArrayList<>();
+        for(var s : order.getProductsData()){
+            Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
+            List<ProductFinishSteps> productFinishSteps = product.getSteps();
+            for(var step : productFinishSteps){
+
+                OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+                orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
+                orderStepsToComplete.setStepsNeeded(s.getAmountOfProduct());
+                orderStepsToComplete.setOrder(newOrder);
+                orderStepsToComplete.setStepsCompleted(0L);
+                orderStepsToComplete.setProductFinishSteps(step);
+
+                orderSteps.add(orderStepsToComplete);
+            }
+
+
+        }
+
+        newOrder.setOrderSteps(orderSteps);
+
+
+
+
+
         // get creator which is admin in this case
         User creator = userRepository.findById(user.getId()).orElseThrow();
         // if buyer not found then system cant pinpoint to whom it is needed not big deal it will be null
@@ -501,22 +527,24 @@ public class OrderController {
                     countTheTimesAccordingToUser.remove(newOrder.getId());
 
                     orderRepository.save(newOrder);
+                    databaseChecks.checkNewAddedOrder(newOrder.getId(),false);
+
                     return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully", newOrder.getId()), Warnings.OK));
             }
             countTheTimesAccordingToUser.put(newOrder.getId(),times);
-            throw new ValidationException(order.getOrderCreatedByGmail() + " is not found this is not nessasary (PRESS AGAIN TO CONFIRM) ", Warnings.WARNING);
+            throw new ValidationException(order.getOrderCreatedByGmail() + " is not found this is not necessary (PRESS AGAIN TO CONFIRM) ", Warnings.WARNING);
         }
 
 
 
 
-        orderRepository.save(newOrder);
 
 
-        databaseChecks.calculateProductsStock(1L,false);
 
 
-        databaseChecks.calculateMaterialsStock(newOrder.getId());
+
+
+
 
         actionMaker.makeAction(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Created);
 
@@ -596,6 +624,12 @@ public class OrderController {
 
             else{
                 newOrder.setOrderStatus(OrderStatus.Pending);
+
+                databaseChecks.checkNewAddedOrder(newOrder.getId(),true);
+
+                databaseChecks.calculateProductsStock(null,false);
+
+                databaseChecks.calculateMaterialsStock(newOrder.getId());
             }
 
 
@@ -719,7 +753,7 @@ public class OrderController {
        Long employee = employeeRepository.employeeId(user.getId());
 
 
-        return ResponseEntity.ok(orderRepository.findOrdersForEmployee(employee,PageRequest.of(0,2)));
+        return ResponseEntity.ok(orderRepository.findOrdersForEmployee(employee,PageRequest.of(0,100)));
 
     }
 

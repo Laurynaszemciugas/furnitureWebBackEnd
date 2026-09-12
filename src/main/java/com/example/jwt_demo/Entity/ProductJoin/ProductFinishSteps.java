@@ -31,12 +31,10 @@ public class ProductFinishSteps {
     @JsonIgnore
     private Product product = null;
 
-    @Enumerated(EnumType.STRING)
-    private ProductFinishStepStatus productFinishStepStatus;
 
-    @ManyToOne
-    @JoinColumn(name = "employee_id")
-    private User employee;
+
+
+
 
 
 }
