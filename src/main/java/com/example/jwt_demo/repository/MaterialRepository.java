@@ -337,15 +337,16 @@ SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo(
     m.materialName,
     m.unitPrice,
     m.inStock,
-    COALESCE(SUM(pm.amountUsed),0)
+    COALESCE(SUM(pm.amountUsed), 0)
 )
 FROM Materials m
 LEFT JOIN m.images mid
     ON mid.imageLogic = 'Main'
 LEFT JOIN ProductMaterials pm
     ON pm.materials.id = m.id
- WHERE m.user.id = :userId
-  and m.id = :id
+    AND pm.product.id = :productId
+WHERE m.user.id = :userId
+  AND m.id = :id
 GROUP BY
     m.id,
     mid.imageUrl,
@@ -353,7 +354,39 @@ GROUP BY
     m.unitPrice,
     m.inStock
 """)
-    MaterialInfo getMaterialInfoAccordingToId(Long id, Long userId);
+    MaterialInfo getMaterialInfoAccordingToId(
+            Long id,
+            Long userId,
+            Long productId
+    );
+
+    @Query("""
+SELECT new com.example.jwt_demo.DTOS.Material.MaterialInfo(
+    m.id,
+    mid.imageUrl,
+    m.materialName,
+    m.unitPrice,
+    m.inStock,
+    COALESCE(SUM(pm.amountUsed), 0)
+)
+FROM Materials m
+LEFT JOIN m.images mid
+    ON mid.imageLogic = 'Main'
+LEFT JOIN ProductMaterials pm
+    ON pm.materials.id = m.id
+WHERE m.user.id = :userId
+  AND m.id = :id
+GROUP BY
+    m.id,
+    mid.imageUrl,
+    m.materialName,
+    m.unitPrice,
+    m.inStock
+""")
+    MaterialInfo getMaterialInfoAccordingToIdNoProduct(
+            Long id,
+            Long userId
+    );
 
 
 

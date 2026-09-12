@@ -117,7 +117,7 @@ public class ProductController {
             for (var img : product.getImages()) {
                 img.setProduct(cleanProduct);
                 try {
-                    img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                    img.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
                     img.setImageData(null);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -240,7 +240,12 @@ public class ProductController {
         Product product = productRepository.findById(id).orElse(null);
 
         if(product!=null){
-            System.out.println("found");
+
+            for(var s : product.getMaterials()){
+                System.out.println(s.getAmountUsed());
+            }
+
+
             return ResponseEntity.ok(product);
         }
 
@@ -298,7 +303,7 @@ public class ProductController {
                         img.setImageUrl(img.getImageUrl());
                     }
                     else {
-                        img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                        img.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
                         img.setImageData(null);
                     }
                 } catch (IOException e) {
@@ -318,18 +323,25 @@ public class ProductController {
 //        }
 
         if (product.getMaterials() != null) {
+
             existingProduct.getMaterials().clear();
+
             for (var mat : product.getMaterials()) {
 
-                Materials usedMaterial = materialRepository.findByMaterialName(mat.getId(),user.getId());
+                Materials usedMaterial =
+                        materialRepository.findByMaterialName(mat.getId(), user.getId());
 
-                mat.setMaterials(usedMaterial);
-                mat.setUnitPrice(usedMaterial.getUnitPrice());
+                ProductMaterials newProductMaterial = new ProductMaterials();
 
-                mat.setProduct(existingProduct);
-                mat.setUser(currentUser);
+                newProductMaterial.setNameForRefrence(mat.getNameForRefrence());
+                newProductMaterial.setNewMaterial(mat.isNewMaterial());
+                newProductMaterial.setAmountUsed(mat.getAmountUsed());
+                newProductMaterial.setUnitPrice(usedMaterial.getUnitPrice());
+                newProductMaterial.setMaterials(usedMaterial);
+                newProductMaterial.setProduct(existingProduct);
+                newProductMaterial.setUser(currentUser);
 
-                existingProduct.getMaterials().add(mat);
+                existingProduct.getMaterials().add(newProductMaterial);
             }
         }
 

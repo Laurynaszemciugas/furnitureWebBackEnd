@@ -5,11 +5,13 @@ import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,6 +34,11 @@ public class OrderProducts {
     private Orders order;
     private Long amountOfProduct;
     private Double cost;
+
+
+    @OneToMany(mappedBy = "orderProducts",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference("orderSteps")
+    private List<OrderStepsToComplete> orderSteps;
 
 
 

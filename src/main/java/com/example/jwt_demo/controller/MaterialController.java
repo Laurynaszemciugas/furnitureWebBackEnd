@@ -279,7 +279,7 @@ public class MaterialController {
             for (var img : mat.getImages()) {
                 img.setMaterials(newMat);
                 try {
-                    img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                    img.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
                     img.setImageData(null);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -401,7 +401,7 @@ public class MaterialController {
                         img.setImageUrl(img.getImageUrl());
                     }
                     else {
-                        img.setImageUrl(convertImages.saveImage(img.getImageData()));
+                        img.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
                         img.setImageData(null);
                     }
                 } catch (IOException e) {
@@ -565,12 +565,22 @@ public class MaterialController {
         return ResponseEntity.ok(materialRepository.getMaterialInfo(user.getId()));
     }
 
-    @GetMapping("/getMaterialInfoAccordingToId/{id}")
-    public ResponseEntity<MaterialInfo> getMaterialInfoAccordingToId(@PathVariable Long id){
+    @GetMapping("/getMaterialInfoAccordingToId/{id}/{productId}")
+    public ResponseEntity<MaterialInfo> getMaterialInfoAccordingToId(@PathVariable Long id,@PathVariable Long productId){
 
         CustomUserDetails user = common.getUserData();
 
-        return ResponseEntity.ok(materialRepository.getMaterialInfoAccordingToId(id, user.getId()));
+        MaterialInfo materialInfo;
+
+        if(productId != null){
+            materialInfo = materialRepository.getMaterialInfoAccordingToId(id, user.getId(),productId);
+        }
+        else{
+            materialInfo = materialRepository.getMaterialInfoAccordingToIdNoProduct(id, user.getId());
+        }
+
+
+        return ResponseEntity.ok(materialInfo);
     }
 
 

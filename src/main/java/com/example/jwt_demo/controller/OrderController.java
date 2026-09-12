@@ -129,6 +129,7 @@ public class OrderController {
         CustomUserDetails user = common.getUserData();
 
 
+
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
 
@@ -138,14 +139,14 @@ public class OrderController {
                 orderFilterHolder.getPriceToChoice(),
                 logic.dateConverter(orderFilterHolder.getDateFromChoice()),
                 logic.dateConverter(orderFilterHolder.getDateToChoice()),
-                orderFilterHolder.getAmountOfProductsChoice(),
                 orderFilterHolder.getPromptChoice(),
-                Double.valueOf(orderFilterHolder.getPageCount()),
+                orderFilterHolder.getEmployee(),
+                orderFilterHolder.getProducts(),
+                orderFilterHolder.getOrderActiveInactive(),
+                orderFilterHolder.getPageCount(),
                 user.getId()
 
         );
-
-
 
 
 
@@ -301,8 +302,6 @@ public class OrderController {
         Orders sameExistingOrder = orderRepository.findById(order.getId()).orElseThrow();
         Orders nonModified = copyOrder(sameExistingOrder);
 
-        sameExistingOrder.getProductsData().clear();
-        sameExistingOrder.getEmployees().clear();
 
 
 
@@ -367,10 +366,7 @@ public class OrderController {
             sameExistingOrder.setPayStatus(order.getPayStatus());
 
 
-
-
-
-            databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
+        databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
         databaseChecks.calculateProductsStock(null,false);
         databaseChecks.calculateMaterialsStock(order.getId());
         orderRepository.save(sameExistingOrder);
@@ -457,10 +453,40 @@ public class OrderController {
                     orderProducts.setAmountOfProduct(s.getAmountOfProduct());
 
 
+
+                List<OrderStepsToComplete> orderSteps = new ArrayList<>();
+
+                for (var step : product.getSteps()) {
+
+                    OrderStepsToComplete orderStep = new OrderStepsToComplete();
+
+                    orderStep.setProductFinishStepStatus(
+                            ProductFinishStepStatus.NOT_STARTED
+                    );
+
+                    orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                    orderStep.setStepsCompleted(0L);
+
+                    orderStep.setStepRealId(step.getId());
+                    orderStep.setStepId(step.getStepId());
+                    orderStep.setStepName(step.getStepName());
+                    orderStep.setStepDescription(step.getStepDescription());
+
+                    orderStep.setOrderProducts(orderProducts);
+
+                    orderSteps.add(orderStep);
+                }
+
+                orderProducts.setOrderSteps(orderSteps);
+
+
+
+
                     products.add(orderProducts);
                 }
             newOrder.setProductsData(products);
         }
+
 
 
 
@@ -489,27 +515,10 @@ public class OrderController {
             newOrder.setEmployees(employees);
         }
 
-
-        List<OrderStepsToComplete> orderSteps = new ArrayList<>();
-        for(var s : order.getProductsData()){
-            Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
-            List<ProductFinishSteps> productFinishSteps = product.getSteps();
-            for(var step : productFinishSteps){
-
-                OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
-                orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
-                orderStepsToComplete.setStepsNeeded(s.getAmountOfProduct());
-                orderStepsToComplete.setOrder(newOrder);
-                orderStepsToComplete.setStepsCompleted(0L);
-                orderStepsToComplete.setProductFinishSteps(step);
-
-                orderSteps.add(orderStepsToComplete);
-            }
+        // steps
 
 
-        }
 
-        newOrder.setOrderSteps(orderSteps);
 
 
 
@@ -527,6 +536,7 @@ public class OrderController {
                     countTheTimesAccordingToUser.remove(newOrder.getId());
 
                     orderRepository.save(newOrder);
+
                     databaseChecks.checkNewAddedOrder(newOrder.getId(),false);
 
                     return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully", newOrder.getId()), Warnings.OK));
@@ -609,32 +619,32 @@ public class OrderController {
 
         Orders newOrder = orderRepository.findById(id).orElseThrow();
 
-        for(var ord : newOrder.getProductsData()){
+        for (var ord : newOrder.getProductsData()) {
 
             Long amountTaken = ord.getAmountOfProduct();
             Long amountAvailable = ord.getProduct().getStockQuantity();
 
-            if(amountTaken > amountAvailable){
+            if (amountTaken > amountAvailable) {
                 newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
-                newOrder.setServerNote("Order not possible will be automatically changed to Pending when supply exists");
+                newOrder.setServerNote(
+                        "Order not possible will be automatically changed to Pending when supply exists"
+                );
 
-                actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Lack of supply",newOrder.getId()),user.getId(),null,ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.Order_Status_Change);
-
+                orderRepository.save(newOrder);
+                return ResponseEntity.ok(
+                        new ErrorResponse(
+                                "Changed successfully to Lack of supply",
+                                Warnings.OK
+                        )
+                );
             }
-
-            else{
-                newOrder.setOrderStatus(OrderStatus.Pending);
-
-                databaseChecks.checkNewAddedOrder(newOrder.getId(),true);
-
-                databaseChecks.calculateProductsStock(null,false);
-
-                databaseChecks.calculateMaterialsStock(newOrder.getId());
-            }
-
-
-
         }
+
+        newOrder.setOrderStatus(OrderStatus.Pending);
+
+        databaseChecks.checkNewAddedOrder(newOrder.getId(), true);
+        databaseChecks.calculateProductsStock(null, false);
+        databaseChecks.calculateMaterialsStock(newOrder.getId());
 
         orderRepository.save(newOrder);
 

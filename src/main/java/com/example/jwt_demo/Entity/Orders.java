@@ -42,9 +42,7 @@ public class Orders {
     @RequiredField
     private List<OrderEmployees> employees;
 
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JsonManagedReference("orderSteps")
-    private List<OrderStepsToComplete> orderSteps;
+
 
 
     @ManyToOne

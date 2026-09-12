@@ -156,38 +156,45 @@ HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amou
     @Query("""
 SELECT
     CASE
-        WHEN COUNT(o.id) = 0 THEN 1
-        ELSE CEIL(COUNT(o.id) / :pageCount)
+        WHEN COUNT(DISTINCT o.id) = 0 THEN 1
+        ELSE CEIL(COUNT(DISTINCT o.id) / :pageCount)
     END
 FROM Orders o
+JOIN o.employees oe
+LEFT JOIN o.productsData pd
 WHERE o.user.id = :id
-AND(:status IS NULL OR o.orderStatus = :status)
+AND (:active IS NULL OR o.activeInactive = :active)
+AND (:matId IS NULL OR pd.product.id = :matId)
+AND (:empId IS NULL OR oe.employee.id = :empId)
+AND (:status IS NULL OR o.orderStatus = :status)
 AND (:dateFrom IS NULL OR o.created >= :dateFrom)
 AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
 AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
 AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
 AND (
-      :prompt IS NULL
-      OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+    :prompt IS NULL
+    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+    OR LOWER(o.billingAddress) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    
+    
 )
-AND (
-      :amountOfProduct IS NULL
-      OR (
-            SELECT SUM(op.amountOfProduct)
-            FROM o.productsData op
-         ) = :amountOfProduct
-)
+
 """)
     Long getNumberOfOrderPages(
-            OrderStatus status,
-            Double priceFrom,
-            Double priceTo,
-            LocalDateTime dateFrom,
-            LocalDateTime dateTo,
-            Long amountOfProduct,
-            String prompt,
-            double pageCount,
-            Long id
+            @Param("status") OrderStatus status,
+            @Param("priceFrom") Double priceFrom,
+            @Param("priceTo") Double priceTo,
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo,
+            @Param("prompt") String prompt,
+            @Param("empId") Long empId,
+            @Param("matId") Long matId,
+            @Param("active") ActiveInactive active,
+            @Param("pageCount") int pageCount,
+            @Param("id") Long id
     );
 
 

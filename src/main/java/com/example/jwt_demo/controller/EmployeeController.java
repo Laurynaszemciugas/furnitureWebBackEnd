@@ -154,7 +154,7 @@ public class EmployeeController {
 
 
 
-        cleanEmpLoyee.setProfileImage(convertImages.saveImage(emp.getImageData()));
+        cleanEmpLoyee.setProfileImage(convertImages.saveImage(emp.getImageData(), savedEmpUser.getImageUrl()));
         cleanEmpLoyee.setImageData(null);
 
 

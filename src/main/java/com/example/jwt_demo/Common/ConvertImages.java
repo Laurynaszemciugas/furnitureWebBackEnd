@@ -12,22 +12,28 @@ import java.util.UUID;
 public class ConvertImages {
 
 
-    public String saveImage(byte[] imageData) throws IOException {
+    public String saveImage(byte[] imageData, String url) throws IOException {
 
 
 
+        if(imageData != null) {
 
-        Path folder = Paths.get("uploads/materials");
+            Path folder = Paths.get("uploads/materials");
 
-        Files.createDirectories(folder);
+            Files.createDirectories(folder);
 
-        String fileName = UUID.randomUUID() + ".png";
+            String fileName = UUID.randomUUID() + ".png";
 
-        Path file = folder.resolve(fileName);
+            Path file = folder.resolve(fileName);
 
-        Files.write(file, imageData);
+            Files.write(file, imageData);
+            return "http://localhost:8080/uploads/materials/" + fileName;
+        }
 
-        return "http://localhost:8080/uploads/materials/" + fileName;
+        else{
+            return url;
+        }
+
     }
 
 }
