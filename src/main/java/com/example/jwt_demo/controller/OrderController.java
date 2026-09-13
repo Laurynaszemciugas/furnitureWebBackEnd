@@ -321,6 +321,7 @@ public class OrderController {
         }
 
         List<OrderProducts> products = new ArrayList<>();
+        sameExistingOrder.getProductsData().clear();
         for(var s : order.getProductsData()) {
             Long productId = s.getProduct().getId();
             Product existingProduct = productRepository.findById(productId).orElseThrow();
