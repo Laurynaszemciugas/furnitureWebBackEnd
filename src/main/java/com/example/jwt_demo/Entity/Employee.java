@@ -1,9 +1,13 @@
 package com.example.jwt_demo.Entity;
 
+import com.example.jwt_demo.Common.Annotations.RequiredField;
+import com.example.jwt_demo.Entity.EmployeeJoin.EmployeeActiveOrders;
+import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Enums.EmployeeAcIn;
 import com.example.jwt_demo.Enums.EmployeeDepartment;
 import com.example.jwt_demo.Enums.EmployeeRole;
 import com.example.jwt_demo.Enums.EmploymentType;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,6 +17,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -63,6 +68,10 @@ public class Employee {
 
     @CreationTimestamp
     private LocalDateTime created;
+
+    @OneToMany(mappedBy = "employee",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("employeeActiveOrders")
+    private List<EmployeeActiveOrders> employeeActiveOrders;
 
 
 }
