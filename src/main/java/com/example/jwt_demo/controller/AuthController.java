@@ -142,6 +142,7 @@ public class AuthController {
                             ip,
                             name + " " + lastName,
                             picture,
+                            null,
                             userSettings);
 
             userSettings.setUser(newUser);
@@ -283,6 +284,7 @@ public class AuthController {
                         ip,
                 user.getName() + " " + user.getLastName(),
                 user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl(),
+                        null,
                         userSettings);
 
         userSettings.setUser(newUser);
@@ -327,6 +329,7 @@ public class AuthController {
                 null,
                 user.getName() + " " + user.getLastName(),
                 user.getImageUrl() == null ? "No_picture.png" : user.getImageUrl(),
+                null,
                 userSettings);
 
         userSettings.setUser(newUser);

@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller;
 
+import com.example.jwt_demo.Common.ConvertImages;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.DTOS.User.AccountOverview;
 import com.example.jwt_demo.DTOS.User.Appearance;
@@ -11,6 +12,7 @@ import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,8 @@ public class UserController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    ConvertImages convertImages;
 
     @GetMapping("/getProfileInfo")
     public ResponseEntity<ProfileInformation> getProfileInfo(){
@@ -37,6 +41,7 @@ public class UserController {
 
     }
 
+    @SneakyThrows
     @PostMapping("/saveProfileInfo")
     public ResponseEntity<ErrorResponse> saveProfileInfo(@RequestBody User userData){
 
@@ -46,7 +51,13 @@ public class UserController {
 
         existingUser.setPhoneNumber(userData.getPhoneNumber());
         existingUser.setBio(userData.getBio());
-        existingUser.setImageUrl(userData.getImageUrl());
+
+
+
+        existingUser.setImageUrl(convertImages.saveImage(userData.getImageData(), userData.getImageUrl()));
+        existingUser.setImageData(null);
+
+
 
         userRepository.save(existingUser);
 

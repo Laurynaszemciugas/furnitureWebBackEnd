@@ -57,6 +57,9 @@ public class User {
     @Lob
     private String imageUrl;
 
+    @Lob
+    private byte[] imageData;
+
     @OneToOne(mappedBy = "user",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private UserSettings userSettingsList;
 
