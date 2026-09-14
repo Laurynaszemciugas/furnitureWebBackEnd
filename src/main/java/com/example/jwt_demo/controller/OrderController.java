@@ -9,6 +9,7 @@ import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.*;
+import com.example.jwt_demo.Entity.EmployeeJoin.EmployeeActiveOrders;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
@@ -62,6 +63,9 @@ public class OrderController {
 
     @Autowired
     ActionMaker actionMaker;
+
+    @Autowired
+    EmployeeActiveOrdersRepository employeeActiveOrdersRepository;
 
 
     @Autowired
@@ -782,6 +786,47 @@ public class OrderController {
     }
 
 
+    @GetMapping("/acceptOrderEmployee/{orderId}")
+    public ResponseEntity<ErrorResponse> acceptOrderEmployee(@PathVariable Long orderId){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        Long employeeId = employeeRepository.employeeId(user.getId());
+
+        Orders orders = orderRepository.findById(orderId).orElseThrow();
+
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow();
+
+        EmployeeActiveOrders employeeActiveOrders = new EmployeeActiveOrders();
+        employeeActiveOrders.setOrder(orders);
+        employeeActiveOrders.setEmployee(employee);
+
+
+        employeeActiveOrdersRepository.save(employeeActiveOrders);
+
+
+
+        return ResponseEntity.ok(new ErrorResponse("Order accepted ", Warnings.OK));
+
+    }
+
+
+    @GetMapping("/findEmployeeActiveOrders")
+    public ResponseEntity<List<EmployeeActiveOrders>> findEmployeeActiveOrders(){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        Long employeeId = employeeRepository.employeeId(user.getId());
+
+
+
+
+
+        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrders(employeeId));
+
+    }
     
 
 

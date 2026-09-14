@@ -7,6 +7,7 @@ import com.example.jwt_demo.Enums.EmployeeAcIn;
 import com.example.jwt_demo.Enums.EmployeeDepartment;
 import com.example.jwt_demo.Enums.EmployeeRole;
 import com.example.jwt_demo.Enums.EmploymentType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -70,7 +71,8 @@ public class Employee {
     private LocalDateTime created;
 
     @OneToMany(mappedBy = "employee",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference("employeeActiveOrders")
+    @JsonIgnore
+
     private List<EmployeeActiveOrders> employeeActiveOrders;
 
 

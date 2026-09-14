@@ -8,6 +8,7 @@ import com.example.jwt_demo.DTOS.DashBoard.DashBoardMonthlyOrdersCompleted;
 import com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection;
 import com.example.jwt_demo.DTOS.Order.*;
 import com.example.jwt_demo.Entity.ActionTracker;
+import com.example.jwt_demo.Entity.EmployeeJoin.EmployeeActiveOrders;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.ActiveInactive;
@@ -543,6 +544,13 @@ AND (
     WHERE currentEmployee.employee.id = :employeeId
       AND o.orderStatus = 'Pending'
 
+      AND NOT EXISTS (
+          SELECT 1
+          FROM EmployeeActiveOrders activeOrder
+          WHERE activeOrder.order.id = o.id
+            AND activeOrder.employee.id = :employeeId
+      )
+
     GROUP BY
         o.id,
         o.created,
@@ -569,6 +577,26 @@ AND (
             @Param("employeeId") Long employeeId
 
     );
+
+
+    @Query("""
+    SELECT
+       
+       o
+       
+        FROM EmployeeActiveOrders o
+   
+ 
+        
+    WHERE o.employee.id = :employeeId
+    
+""")
+    List<EmployeeActiveOrders> findEmployeeActiveOrders(
+            @Param("employeeId") Long employeeId
+
+    );
+
+
 
 
 }

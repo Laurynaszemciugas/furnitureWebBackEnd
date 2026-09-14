@@ -1,14 +1,11 @@
 package com.example.jwt_demo.Entity.EmployeeJoin;
 
-
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.Orders;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -24,19 +21,14 @@ public class EmployeeActiveOrders {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "orders_id")
     private Orders order;
 
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "employee_id")
-    @JsonBackReference("employeeActiveOrders")
     private Employee employee;
-
 
     @CreationTimestamp
     private LocalDateTime created;
-
 }
