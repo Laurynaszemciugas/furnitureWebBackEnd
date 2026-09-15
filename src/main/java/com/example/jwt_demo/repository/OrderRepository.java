@@ -567,9 +567,9 @@ AND (
        count(o.id)
         FROM Orders o
      JOIN o.employees oe
-   
+    left JOIN EmployeeActiveOrders activeOrder  ON activeOrder.order.id = o.id
         
-    WHERE oe.employee.id = :employeeId and o.orderStatus = 'Pending'
+    WHERE oe.employee.id = :employeeId and o.orderStatus = 'Pending' and activeOrder.order.id is null
     
 """)
     Long findHowManyItemsAreAvailable(
