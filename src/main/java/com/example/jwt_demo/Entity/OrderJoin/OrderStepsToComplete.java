@@ -11,7 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -46,6 +48,9 @@ public class OrderStepsToComplete {
     @ManyToOne
     @JsonBackReference("orderSteps")
     private OrderProducts orderProducts;
+
+    @CreationTimestamp
+    private LocalDateTime created;
 
 
 }

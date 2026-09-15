@@ -67,6 +67,8 @@ public class OrderController {
     @Autowired
     EmployeeActiveOrdersRepository employeeActiveOrdersRepository;
 
+    @Autowired
+    OrderStepsToCompleteRepository orderStepsToCompleteRepository;
 
     @Autowired
     ActionTrackerRepository actionTrackerRepository;
@@ -831,8 +833,67 @@ public class OrderController {
     }
     
 
+    // accept step
+
+    @GetMapping("/acceptStep/{stepId}")
+    public ResponseEntity<ErrorResponse> acceptStep(@PathVariable Long stepId){
 
 
+        CustomUserDetails user = common.getUserData();
+
+        User actualUser = userRepository.findById(user.getId()).orElseThrow();
+
+        OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
+
+        orderStepsToComplete.setEmployee(actualUser);
+        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.IN_PROGRESS);
+
+        orderStepsToCompleteRepository.save(orderStepsToComplete);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Step accepted ", Warnings.OK));
+
+    }
+
+
+    // complete step
+
+    @GetMapping("/completeStep/{stepId}")
+    public ResponseEntity<ErrorResponse> completeStep(@PathVariable Long stepId){
+
+
+
+
+        OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
+
+        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.FINISHED);
+
+        orderStepsToCompleteRepository.save(orderStepsToComplete);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Step accepted ", Warnings.OK));
+
+    }
+
+    // update step
+
+    @GetMapping("/updateStep/{stepId}/{newAmountCompleted}")
+    public ResponseEntity<ErrorResponse> updateStep(@PathVariable Long stepId, @PathVariable Long newAmountCompleted){
+
+
+
+
+        OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
+
+
+        orderStepsToComplete.setStepsCompleted(newAmountCompleted);
+
+        orderStepsToCompleteRepository.save(orderStepsToComplete);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Step updated ", Warnings.OK));
+
+    }
 
 
 
