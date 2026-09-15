@@ -558,8 +558,7 @@ AND (
         o.orderStatus
 """)
     List<EmployeeOrderProjection> findOrdersForEmployee(
-            @Param("employeeId") Long employeeId,
-            Pageable pageable
+            @Param("employeeId") Long employeeId
     );
 
     @Query("""
@@ -598,5 +597,64 @@ AND (
 
 
 
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection(
+        o.id,
+        o.created,
+        o.estimatedDueDate,
+        o.orderStatus,
+        COUNT(DISTINCT op.product.id),
+
+        FUNCTION('GROUP_CONCAT', i.imageUrl),
+        FUNCTION('GROUP_CONCAT', allE.fullName),
+        FUNCTION('GROUP_CONCAT', allE.profileImage)
+    )
+    FROM Orders o
+    JOIN o.employees currentEmployee
+    JOIN o.employees allEmployees
+    JOIN o.productsData op
+
+    JOIN allEmployees.employee allE
+    JOIN op.product p
+    LEFT JOIN p.images i
+
+    WHERE currentEmployee.employee.id = :employeeId
+      AND o.orderStatus = 'Pending'
+
+      AND NOT EXISTS (
+          SELECT 1
+          FROM EmployeeActiveOrders activeOrder
+          WHERE activeOrder.order.id = o.id
+            AND activeOrder.employee.id = :employeeId
+      )
+
+    GROUP BY
+        o.id,
+        o.created,
+        o.estimatedDueDate,
+        o.orderStatus
+""")
+    List<EmployeeOrderProjection> findOrdersForEmployeeLimited(
+            @Param("employeeId") Long employeeId,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT
+       
+       o
+       
+        FROM EmployeeActiveOrders o
+   
+ 
+        
+    WHERE o.employee.id = :employeeId
+    
+""")
+    List<EmployeeActiveOrders> findEmployeeActiveOrdersLimited(
+            @Param("employeeId") Long employeeId,
+            Pageable pageable
+
+    );
 
 }

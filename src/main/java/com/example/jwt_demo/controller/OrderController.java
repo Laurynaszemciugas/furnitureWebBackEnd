@@ -347,6 +347,8 @@ public class OrderController {
         if(order.getEmployees().isEmpty() || order.getEmployees() == null){
             throw  new ValidationException("Existing order cannot be without employees ", Warnings.ERROR);
         }
+
+        sameExistingOrder.getEmployees().clear();
         for(var s : order.getEmployees()){
             Long employeeId = s.getEmployee().getId();
 
@@ -768,7 +770,7 @@ public class OrderController {
        Long employee = employeeRepository.employeeId(user.getId());
 
 
-        return ResponseEntity.ok(orderRepository.findOrdersForEmployee(employee,PageRequest.of(0,100)));
+        return ResponseEntity.ok(orderRepository.findOrdersForEmployeeLimited(employee, PageRequest.of(0,2)));
 
     }
 
@@ -824,7 +826,7 @@ public class OrderController {
 
 
 
-        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrders(employeeId));
+        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimited(employeeId,PageRequest.of(0,2)));
 
     }
     
