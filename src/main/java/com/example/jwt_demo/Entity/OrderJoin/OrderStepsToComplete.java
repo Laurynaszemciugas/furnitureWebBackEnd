@@ -1,11 +1,14 @@
 package com.example.jwt_demo.Entity.OrderJoin;
 
+import com.example.jwt_demo.Common.Annotations.RequiredField;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
+import com.example.jwt_demo.Entity.OrderStepsJoin.OrderStepCompletionLogs;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.ProductFinishStepStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -48,6 +51,11 @@ public class OrderStepsToComplete {
     @ManyToOne
     @JsonBackReference("orderSteps")
     private OrderProducts orderProducts;
+
+    @OneToMany(mappedBy = "orderStepsToComplete",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference("orderStepCompletionLogs")
+    @RequiredField
+    private List<OrderStepCompletionLogs> orderStepCompletionLogs;
 
     @CreationTimestamp
     private LocalDateTime created;

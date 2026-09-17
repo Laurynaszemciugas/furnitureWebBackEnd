@@ -13,6 +13,7 @@ import com.example.jwt_demo.Entity.EmployeeJoin.EmployeeActiveOrders;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
+import com.example.jwt_demo.Entity.OrderStepsJoin.OrderStepCompletionLogs;
 import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
@@ -72,6 +73,9 @@ public class OrderController {
 
     @Autowired
     ActionTrackerRepository actionTrackerRepository;
+
+    @Autowired
+    OrderStepCompletionLogsRepository orderStepCompletionLogsRepository;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
@@ -789,6 +793,20 @@ public class OrderController {
 
     }
 
+    @GetMapping("/findHowManyItemsAreActive")
+    public ResponseEntity<Long> findHowManyItemsAreActive(){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        Long employee = employeeRepository.employeeId(user.getId());
+
+
+        return ResponseEntity.ok(orderRepository.findHowManyItemsAreActive(employee));
+
+    }
+
+
 
     @GetMapping("/acceptOrderEmployee/{orderId}")
     public ResponseEntity<ErrorResponse> acceptOrderEmployee(@PathVariable Long orderId){
@@ -828,7 +846,7 @@ public class OrderController {
 
 
 
-        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimited(employeeId,PageRequest.of(0,2)));
+        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimited(employeeId,PageRequest.of(0,100)));
 
     }
     
@@ -845,13 +863,18 @@ public class OrderController {
 
         OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
 
+        if(orderStepsToComplete.getEmployee() !=null){
+            return ResponseEntity.ok(new ErrorResponse("Step is already taken you can help to complete it ", Warnings.OK));
+        }
+
         orderStepsToComplete.setEmployee(actualUser);
         orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.IN_PROGRESS);
+        orderStepsToComplete.setCreated(LocalDateTime.now());
 
         orderStepsToCompleteRepository.save(orderStepsToComplete);
 
 
-        return ResponseEntity.ok(new ErrorResponse("Step accepted ", Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse(String.format("%d %s %s",orderStepsToComplete.getStepId(),orderStepsToComplete.getStepName(),"was accepted"), Warnings.OK));
 
     }
 
@@ -862,13 +885,46 @@ public class OrderController {
     public ResponseEntity<ErrorResponse> completeStep(@PathVariable Long stepId){
 
 
+        CustomUserDetails user = common.getUserData();
 
+        User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
         OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
 
         orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.FINISHED);
+        orderStepsToComplete.setEmployee(actualUser);
+        orderStepsToComplete.setCreated(LocalDateTime.now());
+
+        Long orderId = orderStepsToComplete.getOrderProducts().getOrder().getId();
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
 
         orderStepsToCompleteRepository.save(orderStepsToComplete);
+
+        boolean canBeSetAsFinished = true;
+        for(var s : order.getProductsData()){
+
+
+
+            for(var steps : s.getOrderSteps()){
+
+                if (!steps.getProductFinishStepStatus().equals(ProductFinishStepStatus.FINISHED)){
+                    canBeSetAsFinished = false;
+                    break;
+                }
+
+            }
+        }
+
+        if(canBeSetAsFinished){
+            order.setOrderStatus(OrderStatus.Finished);
+        }
+        else {
+            order.setOrderStatus(OrderStatus.Pending);
+        }
+
+        orderRepository.save(order);
 
 
         return ResponseEntity.ok(new ErrorResponse("Step accepted ", Warnings.OK));
@@ -880,18 +936,62 @@ public class OrderController {
     @GetMapping("/updateStep/{stepId}/{newAmountCompleted}")
     public ResponseEntity<ErrorResponse> updateStep(@PathVariable Long stepId, @PathVariable Long newAmountCompleted){
 
+        CustomUserDetails user = common.getUserData();
+
+        User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
 
 
         OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
 
 
+
+
+
+        Long orderId = orderStepsToComplete.getOrderProducts().getOrder().getId();
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
+
+        OrderStepCompletionLogs orderStepCompletionLogs = new OrderStepCompletionLogs();
+        orderStepCompletionLogs.setEmployee(actualUser);
+        orderStepCompletionLogs.setOrderStepsToComplete(orderStepsToComplete);
+        orderStepCompletionLogs.setThingThatWasDone(String.format("%s %s [%d] %s [%d]", orderStepsToComplete.getStepName(),"was modified completed steps was ",orderStepsToComplete.getStepsCompleted(),"new value", newAmountCompleted));
+
+        orderStepCompletionLogsRepository.save(orderStepCompletionLogs);
+
+// set value after its saved
         orderStepsToComplete.setStepsCompleted(newAmountCompleted);
 
         orderStepsToCompleteRepository.save(orderStepsToComplete);
 
 
-        return ResponseEntity.ok(new ErrorResponse("Step updated ", Warnings.OK));
+        boolean canBeSetAsFinished = true;
+        for(var s : order.getProductsData()){
+
+
+
+            for(var steps : s.getOrderSteps()){
+
+                if (!steps.getProductFinishStepStatus().equals(ProductFinishStepStatus.FINISHED)){
+                    canBeSetAsFinished = false;
+                    break;
+                }
+
+            }
+        }
+
+        if(canBeSetAsFinished){
+            order.setOrderStatus(OrderStatus.Finished);
+        }
+        else {
+            order.setOrderStatus(OrderStatus.Pending);
+        }
+
+        orderRepository.save(order);
+
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("%d %s",orderStepsToComplete.getStepId(),"was modified successfully"), Warnings.OK));
 
     }
 

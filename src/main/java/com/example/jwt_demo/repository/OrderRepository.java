@@ -581,6 +581,24 @@ AND (
     @Query("""
     SELECT
        
+       count(o.id)
+       
+        FROM EmployeeActiveOrders o
+   
+    Join o.order ord 
+ 
+        
+    WHERE o.employee.id = :employeeId and ord.orderStatus != 'Finished'
+    
+""")
+    Long findHowManyItemsAreActive(
+            @Param("employeeId") Long employeeId
+    );
+
+
+    @Query("""
+    SELECT
+       
        o
        
         FROM EmployeeActiveOrders o
@@ -646,9 +664,10 @@ AND (
        
         FROM EmployeeActiveOrders o
    
+   Join o.order ord 
  
         
-    WHERE o.employee.id = :employeeId
+    WHERE o.employee.id = :employeeId and ord.orderStatus != 'Finished'
     
 """)
     List<EmployeeActiveOrders> findEmployeeActiveOrdersLimited(
