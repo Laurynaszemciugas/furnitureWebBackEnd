@@ -4,10 +4,7 @@ import com.example.jwt_demo.Common.Annotations.RequiredField;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
-import com.example.jwt_demo.Enums.ActiveInactive;
-import com.example.jwt_demo.Enums.OrderStatus;
-import com.example.jwt_demo.Enums.PayMethod;
-import com.example.jwt_demo.Enums.PayStatus;
+import com.example.jwt_demo.Enums.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -76,10 +73,19 @@ public class Orders {
     @RequiredField
     private String billingAddress;
 
+    @Enumerated(EnumType.STRING)
+    private Priority priority;
+
     @CreationTimestamp
     private LocalDateTime created;
     @CreationTimestamp
     private LocalDate createdDate;
+
+
+    private LocalDateTime Finished;
+
+    private Long estimatedFinishTimeMinutes;
+
     @Enumerated(EnumType.STRING)
     private ActiveInactive activeInactive;
     @RequiredField

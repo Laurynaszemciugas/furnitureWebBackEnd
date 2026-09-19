@@ -28,6 +28,20 @@ public class EmailSenderContoller {
 
    }
 
+    public void stockWarning(String setTo, String messageToClient){
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("laurynaszemciugas@gmail.com");
+
+        message.setTo(setTo);
+        message.setText(messageToClient);
+        message.setSubject("Order priority");
+
+
+        javaMailSender.send(message);
+
+    }
+
 
 
     public void verificationGmail(String setTo , String code){

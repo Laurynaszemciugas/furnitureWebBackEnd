@@ -113,6 +113,8 @@ public class OrderController {
         orderFilterHolder.setOrderStatusChoice(OrderStatus.NEW);
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
+        databaseChecks.checkPriority(user,false);
+        
 
         return ResponseEntity.ok(
                 orderRepository.getNewOrders(
@@ -770,11 +772,11 @@ public class OrderController {
     @GetMapping("/getEmployeeOrderProjection")
     public ResponseEntity<List<EmployeeOrderProjection>> getEmployeeOrderProjection(){
 
-
         CustomUserDetails user = common.getUserData();
 
-       Long employee = employeeRepository.employeeId(user.getId());
+        Long employee = employeeRepository.employeeId(user.getId());
 
+        databaseChecks.checkPriority(user,false);
 
         return ResponseEntity.ok(orderRepository.findOrdersForEmployeeLimited(employee, PageRequest.of(0,2)));
 
@@ -788,6 +790,7 @@ public class OrderController {
 
         Long employee = employeeRepository.employeeId(user.getId());
 
+        databaseChecks.checkPriority(user,false);
 
         return ResponseEntity.ok(orderRepository.findHowManyItemsAreAvailable(employee));
 
@@ -800,6 +803,8 @@ public class OrderController {
         CustomUserDetails user = common.getUserData();
 
         Long employee = employeeRepository.employeeId(user.getId());
+
+        databaseChecks.checkPriority(user,false);
 
 
         return ResponseEntity.ok(orderRepository.findHowManyItemsAreActive(employee));
@@ -828,7 +833,6 @@ public class OrderController {
         employeeActiveOrdersRepository.save(employeeActiveOrders);
 
 
-
         return ResponseEntity.ok(new ErrorResponse("Order accepted ", Warnings.OK));
 
     }
@@ -843,7 +847,7 @@ public class OrderController {
         Long employeeId = employeeRepository.employeeId(user.getId());
 
 
-
+        databaseChecks.checkPriority(user,false);
 
 
         return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimited(employeeId,PageRequest.of(0,100)));

@@ -516,6 +516,34 @@ AND (
     void incrementProductsFinished(@Param("orderId") Long orderId);
 
 
+    @Modifying
+    @Transactional
+    @Query(value = """
+
+    UPDATE orders
+    SET priority = Case
+    When datediff(estimated_due_date,NOW()) > 16 then 'LOW_PRIORITY'
+    When datediff(estimated_due_date,NOW()) between 10 and 15 then 'MEDIUM_PRIORITY'
+    When datediff(estimated_due_date,NOW()) between 1 and 5 then 'HIGH_PRIORITY'
+    Else 'OVERDUE'
+    
+    END
+    
+    WHERE user_id = :userId;
+    """, nativeQuery = true)
+    void checkThePriority(@Param("userId") Long userId);
+
+    @Query(value = """
+    SELECT *
+    FROM orders
+    WHERE (priority = 'OVERDUE'
+       OR priority = 'HIGH_PRIORITY') and user_id = :userId
+        
+        
+    """, nativeQuery = true)
+    List<Orders> findOrdersThatNeedToBeDone(@Param("userId") Long userId);
+
+
 
     // employee dashboard
 
@@ -527,6 +555,9 @@ AND (
         o.estimatedDueDate,
         o.orderStatus,
         COUNT(DISTINCT op.product.id),
+        
+          o.estimatedFinishTimeMinutes,
+        o.priority,
 
         FUNCTION('GROUP_CONCAT', i.imageUrl),
         FUNCTION('GROUP_CONCAT', allE.fullName),
@@ -622,6 +653,9 @@ AND (
         o.estimatedDueDate,
         o.orderStatus,
         COUNT(DISTINCT op.product.id),
+        
+        o.estimatedFinishTimeMinutes,
+        o.priority,
 
         FUNCTION('GROUP_CONCAT', i.imageUrl),
         FUNCTION('GROUP_CONCAT', allE.fullName),

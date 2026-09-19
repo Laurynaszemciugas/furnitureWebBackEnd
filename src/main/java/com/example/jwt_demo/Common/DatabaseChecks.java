@@ -1,17 +1,13 @@
 package com.example.jwt_demo.Common;
 
-import com.example.jwt_demo.Entity.Materials;
+import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
-import com.example.jwt_demo.Entity.Orders;
-import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
-import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
-import com.example.jwt_demo.repository.MaterialRepository;
-import com.example.jwt_demo.repository.OrderRepository;
-import com.example.jwt_demo.repository.ProductRepository;
-import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.controller.EmailSenderContoller;
+import com.example.jwt_demo.repository.*;
+import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
@@ -20,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static com.fasterxml.jackson.databind.type.LogicalType.Map;
 
@@ -42,6 +39,14 @@ public class DatabaseChecks {
 
     @Autowired
     ActionMaker actionMaker;
+
+    @Autowired
+    EmployeeRepository employeeRepository;
+
+    @Autowired
+    EmailSenderContoller emailSenderContoller;
+
+    String message = "";
 
     public void calculateProductsStock(Long userId, boolean changeMaterialSupply) {
 
@@ -639,6 +644,74 @@ public class DatabaseChecks {
 
 
 
+
+
+        }
+
+        public void checkPriority(CustomUserDetails user, boolean checkAll){
+
+
+
+
+            if(!checkAll) {
+                Long id = 0L;
+
+                System.out.println("starting the priority check");
+
+
+                Long employee = employeeRepository.employeeId(user.getId());
+
+                if (user.getRole().equals(Role.EMPLOYEE)) {
+
+
+                    Employee employeee = employeeRepository.findById(employee).orElseThrow();
+
+                    id = employeee.getUser().getId();
+
+                } else {
+                    id = user.getId();
+                }
+
+                orderRepository.checkThePriority(id);
+
+                System.out.println("finished the priority check");
+            }
+
+            else{
+
+                List<User> users = userRepository.findAll();
+
+                for(var s : users) {
+                    orderRepository.checkThePriority(s.getId());
+                }
+
+
+                for(var userStuff : users) {
+                    List<Orders> highPriorityOverdueOrders = orderRepository.findOrdersThatNeedToBeDone(userStuff.getId());
+
+                    System.out.println(userStuff.getFullName());
+
+                     message = "";
+
+                    for(var priorityOrders : highPriorityOverdueOrders){
+                        message = message + priorityOrders.getId() + " " + priorityOrders.getPriority() + " ";
+                    }
+
+
+                    if(!highPriorityOverdueOrders.isEmpty()){
+                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                            emailSenderContoller.stockWarning(userStuff.getGmail(), message);
+                        });
+                    }
+
+
+                }
+
+
+
+
+
+            }
 
         }
 

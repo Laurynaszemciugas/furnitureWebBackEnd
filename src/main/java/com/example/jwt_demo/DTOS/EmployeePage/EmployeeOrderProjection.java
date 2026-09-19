@@ -1,6 +1,7 @@
 package com.example.jwt_demo.DTOS.EmployeePage;
 
 import com.example.jwt_demo.Enums.OrderStatus;
+import com.example.jwt_demo.Enums.Priority;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,10 @@ public class EmployeeOrderProjection {
     private LocalDateTime dueDate;
     private OrderStatus orderStatus;
     private Long amountOfItems;
+
+    private Long estimatedFinishTimeMinutes;
+    private Priority priority;
+
     private Object images;
 
     private Object employeeNames;
