@@ -612,7 +612,13 @@ AND (
     WHERE currentEmployee.employee.id = :employeeId
       AND o.orderStatus = 'Pending'
       
-  and (:prompt IS NULL OR o.phoneNumber = :prompt)
+AND (
+    :prompt IS NULL
+    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(allE.fullName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+)
   AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
   AND (:priority IS NULL OR o.priority = :priority)
       
@@ -641,27 +647,33 @@ AND (
 
     @Query("""
     SELECT
-    CASE
-        WHEN COUNT(o.id) = 0 THEN 1
-        ELSE CEIL(COUNT(o.id) / :pageCount)
-    END
-    
+        CASE
+            WHEN COUNT(DISTINCT o.id) = 0 THEN 1
+            ELSE CEIL(
+                COUNT(DISTINCT o.id) * 1.0 / :pageCount
+            )
+        END
     FROM Orders o
     JOIN o.employees currentEmployee
     JOIN o.employees allEmployees
     JOIN o.productsData op
-
     JOIN allEmployees.employee allE
     JOIN op.product p
     LEFT JOIN p.images i
 
     WHERE currentEmployee.employee.id = :employeeId
       AND o.orderStatus = 'Pending'
-      
-  and (:prompt IS NULL OR o.phoneNumber = :prompt)
-  AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
-  AND (:priority IS NULL OR o.priority = :priority)
-      
+
+      AND (
+          :prompt IS NULL
+          OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+          OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+          OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :prompt, '%'))
+          OR LOWER(allE.fullName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+      )
+
+      AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
+      AND (:priority IS NULL OR o.priority = :priority)
 
       AND NOT EXISTS (
           SELECT 1
@@ -669,20 +681,13 @@ AND (
           WHERE activeOrder.order.id = o.id
             AND activeOrder.employee.id = :employeeId
       )
-
-    GROUP BY
-        o.id,
-        o.created,
-        o.estimatedDueDate,
-        o.orderStatus
 """)
     Long getAmountOfPagesOnAvailableOrders(
             @Param("employeeId") Long employeeId,
             @Param("prompt") String prompt,
             @Param("orderStatus") OrderStatus orderStatus,
             @Param("priority") Priority priority,
-            double pageCount
-
+            @Param("pageCount") double pageCount
     );
 
 
