@@ -11,8 +11,7 @@ import com.example.jwt_demo.Entity.ActionTracker;
 import com.example.jwt_demo.Entity.EmployeeJoin.EmployeeActiveOrders;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.User;
-import com.example.jwt_demo.Enums.ActiveInactive;
-import com.example.jwt_demo.Enums.OrderStatus;
+import com.example.jwt_demo.Enums.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -548,49 +547,7 @@ AND (
     // employee dashboard
 
 
-    @Query("""
-    SELECT new com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection(
-        o.id,
-        o.created,
-        o.estimatedDueDate,
-        o.orderStatus,
-        COUNT(DISTINCT op.product.id),
-        
-          o.estimatedFinishTimeMinutes,
-        o.priority,
 
-        FUNCTION('GROUP_CONCAT', i.imageUrl),
-        FUNCTION('GROUP_CONCAT', allE.fullName),
-        FUNCTION('GROUP_CONCAT', allE.profileImage)
-    )
-    FROM Orders o
-    JOIN o.employees currentEmployee
-    JOIN o.employees allEmployees
-    JOIN o.productsData op
-
-    JOIN allEmployees.employee allE
-    JOIN op.product p
-    LEFT JOIN p.images i
-
-    WHERE currentEmployee.employee.id = :employeeId
-      AND o.orderStatus = 'Pending'
-
-      AND NOT EXISTS (
-          SELECT 1
-          FROM EmployeeActiveOrders activeOrder
-          WHERE activeOrder.order.id = o.id
-            AND activeOrder.employee.id = :employeeId
-      )
-
-    GROUP BY
-        o.id,
-        o.created,
-        o.estimatedDueDate,
-        o.orderStatus
-""")
-    List<EmployeeOrderProjection> findOrdersForEmployee(
-            @Param("employeeId") Long employeeId
-    );
 
     @Query("""
     SELECT
@@ -627,24 +584,6 @@ AND (
     );
 
 
-    @Query("""
-    SELECT
-       
-       o
-       
-        FROM EmployeeActiveOrders o
-   
- 
-        
-    WHERE o.employee.id = :employeeId
-    
-""")
-    List<EmployeeActiveOrders> findEmployeeActiveOrders(
-            @Param("employeeId") Long employeeId
-
-    );
-
-
 
     @Query("""
     SELECT new com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection(
@@ -672,6 +611,11 @@ AND (
 
     WHERE currentEmployee.employee.id = :employeeId
       AND o.orderStatus = 'Pending'
+      
+  and (:prompt IS NULL OR o.phoneNumber = :prompt)
+  AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
+  AND (:priority IS NULL OR o.priority = :priority)
+      
 
       AND NOT EXISTS (
           SELECT 1
@@ -688,8 +632,59 @@ AND (
 """)
     List<EmployeeOrderProjection> findOrdersForEmployeeLimited(
             @Param("employeeId") Long employeeId,
+            @Param("prompt") String prompt,
+            @Param("orderStatus") OrderStatus orderStatus,
+            @Param("priority") Priority priority,
             Pageable pageable
     );
+
+
+    @Query("""
+    SELECT
+    CASE
+        WHEN COUNT(o.id) = 0 THEN 1
+        ELSE CEIL(COUNT(o.id) / :pageCount)
+    END
+    
+    FROM Orders o
+    JOIN o.employees currentEmployee
+    JOIN o.employees allEmployees
+    JOIN o.productsData op
+
+    JOIN allEmployees.employee allE
+    JOIN op.product p
+    LEFT JOIN p.images i
+
+    WHERE currentEmployee.employee.id = :employeeId
+      AND o.orderStatus = 'Pending'
+      
+  and (:prompt IS NULL OR o.phoneNumber = :prompt)
+  AND (:orderStatus IS NULL OR o.orderStatus = :orderStatus)
+  AND (:priority IS NULL OR o.priority = :priority)
+      
+
+      AND NOT EXISTS (
+          SELECT 1
+          FROM EmployeeActiveOrders activeOrder
+          WHERE activeOrder.order.id = o.id
+            AND activeOrder.employee.id = :employeeId
+      )
+
+    GROUP BY
+        o.id,
+        o.created,
+        o.estimatedDueDate,
+        o.orderStatus
+""")
+    Long getAmountOfPagesOnAvailableOrders(
+            @Param("employeeId") Long employeeId,
+            @Param("prompt") String prompt,
+            @Param("orderStatus") OrderStatus orderStatus,
+            @Param("priority") Priority priority,
+            double pageCount
+
+    );
+
 
     @Query("""
     SELECT
