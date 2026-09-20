@@ -4,6 +4,7 @@ import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Entity.WorkDay;
+import com.example.jwt_demo.Entity.WorkDone;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.UserRepository;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/WorkDay")
@@ -104,6 +106,23 @@ public class WorkDayController {
         Long employeeId = employeeRepository.employeeId(user.getId());
 
         WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
+
+        List<WorkDone> workDoneList = List.of(
+                new WorkDone(
+                        1L,
+                        workDay,
+                        null,
+                        LocalDateTime.of(2026, 9, 21, 9, 15),
+                        null,
+                        null,
+                        "Cut material for sofa",
+                        "Finished the first batch"
+                )
+
+
+        );
+
+        workDay.setWorkDone(workDoneList);
 
         return ResponseEntity.ok(workDay == null ? new WorkDay() : workDay);
 

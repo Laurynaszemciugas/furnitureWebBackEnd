@@ -1,5 +1,6 @@
 package com.example.jwt_demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -35,6 +37,9 @@ public class WorkDay {
 
     private Long workedForMinutes;
 
+    @OneToMany(mappedBy = "workDay",cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonManagedReference(value = "workDone")
+    private List<WorkDone> workDone;
 
 
     @ManyToOne

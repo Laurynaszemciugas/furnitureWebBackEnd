@@ -1,5 +1,7 @@
 package com.example.jwt_demo.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,6 +25,7 @@ public class WorkDone {
 
     @ManyToOne
     @JoinColumn(name = "work_day_id")
+    @JsonBackReference(value = "workDone")
     private WorkDay workDay;
 
 
