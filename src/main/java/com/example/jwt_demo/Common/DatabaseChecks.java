@@ -46,7 +46,9 @@ public class DatabaseChecks {
     @Autowired
     EmailSenderContoller emailSenderContoller;
 
-    String message = "";
+    StringBuilder message = new StringBuilder();
+
+    Long itemCount = 0L;
 
     public void calculateProductsStock(Long userId, boolean changeMaterialSupply) {
 
@@ -54,6 +56,9 @@ public class DatabaseChecks {
 
         Long stockWas = 0L;
         Long stockNew = 0L;
+
+
+
 
         if (userId == null) {
             user = userRepository.findAll();
@@ -648,70 +653,519 @@ public class DatabaseChecks {
 
         }
 
-        public void checkPriority(CustomUserDetails user, boolean checkAll){
 
 
+        // ===================================== CHECK PRIORITY =======================================================================
+    public void checkPriority(CustomUserDetails user, boolean checkAll) {
 
+        // ============================================================
+        // CHECK ONLY THE CURRENT USER
+        // ============================================================
 
-            if(!checkAll) {
-                Long id = 0L;
+        if (!checkAll) {
 
-                System.out.println("starting the priority check");
+            Long id;
 
+            if (user.getRole().equals(Role.EMPLOYEE)) {
 
-                Long employee = employeeRepository.employeeId(user.getId());
+                Long employeeId = employeeRepository.employeeId(user.getId());
 
-                if (user.getRole().equals(Role.EMPLOYEE)) {
+                Employee employee = employeeRepository
+                        .findById(employeeId)
+                        .orElseThrow();
 
+                id = employee.getUser().getId();
 
-                    Employee employeee = employeeRepository.findById(employee).orElseThrow();
+            } else {
 
-                    id = employeee.getUser().getId();
-
-                } else {
-                    id = user.getId();
-                }
-
-                orderRepository.checkThePriority(id);
-
-                System.out.println("finished the priority check");
+                id = user.getId();
             }
 
-            else{
+            System.out.println("Starting the priority check");
 
-                List<User> users = userRepository.findAll();
+            orderRepository.checkThePriority(id);
 
-                for(var s : users) {
-                    orderRepository.checkThePriority(s.getId());
-                }
+            System.out.println("Finished the priority check");
 
-
-                for(var userStuff : users) {
-                    List<Orders> highPriorityOverdueOrders = orderRepository.findOrdersThatNeedToBeDone(userStuff.getId());
-
-                    System.out.println(userStuff.getFullName());
-
-                     message = "";
-
-                    for(var priorityOrders : highPriorityOverdueOrders){
-                        message = message + priorityOrders.getId() + " " + priorityOrders.getPriority() + " ";
-                    }
+            return;
+        }
 
 
-                    if(!highPriorityOverdueOrders.isEmpty()){
-                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                            emailSenderContoller.stockWarning(userStuff.getGmail(), message);
-                        });
-                    }
+        // ============================================================
+        // CHECK ALL USERS
+        // ============================================================
+
+        List<User> users = userRepository.findAll();
 
 
-                }
+        // First update priorities for every user
+        for (User currentUser : users) {
+
+            orderRepository.checkThePriority(
+                    currentUser.getId()
+            );
+        }
 
 
+        // ============================================================
+        // FIND ORDERS AND SEND EMAILS
+        // ============================================================
+
+        for (User currentUser : users) {
+
+            List<Orders> orders =
+                    orderRepository.findOrdersThatNeedToBeDone(
+                            currentUser.getId()
+                    );
 
 
-
+            // Nothing to notify about
+            if (orders.isEmpty()) {
+                continue;
             }
+
+
+            String emailContent =
+                    buildPriorityEmail(orders);
+
+            String userEmail =
+                    currentUser.getGmail();
+
+            long orderCount =
+                    orders.size();
+
+
+            // Copy values before async execution
+            CompletableFuture.runAsync(() ->
+                    emailSenderContoller.stockWarning(
+                            userEmail,
+                            emailContent,
+                            orderCount
+                    )
+            );
+        }
+    }
+
+    private String buildPriorityEmail(List<Orders> orders) {
+
+        StringBuilder message = new StringBuilder();
+
+
+        // ============================================================
+        // HEADER
+        // ============================================================
+
+        message.append("""
+            <!DOCTYPE html>
+            <html>
+
+            <head>
+                <meta charset="UTF-8">
+                <title>Orders Requiring Attention</title>
+            </head>
+
+            <body style="
+                margin: 0;
+                padding: 0;
+                background-color: #f4f6f8;
+                font-family: Arial, Helvetica, sans-serif;
+                color: #202124;
+            ">
+
+            <div style="
+                max-width: 850px;
+                margin: 30px auto;
+                background-color: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            ">
+
+                <!-- HEADER -->
+
+                <div style="
+                    background-color: #2275F3;
+                    color: #ffffff;
+                    padding: 25px 30px;
+                ">
+
+                    <h1 style="
+                        margin: 0;
+                        font-size: 24px;
+                    ">
+                        Furniture Management System
+                    </h1>
+
+                    <p style="
+                        margin: 8px 0 0;
+                        font-size: 14px;
+                        opacity: 0.9;
+                    ">
+                        Order attention notification
+                    </p>
+
+                </div>
+
+
+                <!-- CONTENT -->
+
+                <div style="padding: 30px;">
+
+                    <!-- WARNING -->
+
+                    <div style="
+                        background-color: #fff7e6;
+                        border-left: 5px solid #f59e0b;
+                        border-radius: 6px;
+                        padding: 16px 18px;
+                        margin-bottom: 28px;
+                    ">
+
+                        <div style="
+                            font-size: 18px;
+                            font-weight: bold;
+                            color: #92400e;
+                        ">
+                            ⚠ Orders require attention
+                        </div>
+
+                        <p style="
+                            margin: 7px 0 0;
+                            color: #78350f;
+                            font-size: 14px;
+                        ">
+                            The system found
+                            <strong>%d</strong>
+                            orders with high priority or overdue status.
+                        </p>
+
+                    </div>
+            """.formatted(orders.size()));
+
+
+        // ============================================================
+        // ORDERS
+        // ============================================================
+
+        for (Orders order : orders) {
+
+            message.append("""
+        
+        <!-- ORDER -->
+
+        <div style="
+            border: 1px solid #e1e5ea;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        ">
+
+            <!-- ORDER HEADER -->
+
+            <div style="
+                background-color: #f8fafc;
+                padding: 18px 20px;
+                border-bottom: 1px solid #e1e5ea;
+            ">
+
+                <div style="
+                    font-size: 20px;
+                    font-weight: bold;
+                    color: #1f2937;
+                ">
+                    Order #%d
+                </div>
+
+
+                <div style="
+                    margin-top: 10px;
+                    font-size: 14px;
+                    color: #6b7280;
+                ">
+
+                    Customer:
+
+                    <strong style="color: #374151;">
+                        %s
+                    </strong>
+
+                    <br>
+
+                    Email:
+
+                    <span style="color: #374151;">
+                        %s
+                    </span>
+
+                    <br>
+
+                    Priority:
+
+                    <strong style="
+                        color: #dc2626;
+                    ">
+                        %s
+                    </strong>
+
+                    <br>
+
+                    Estimated due date:
+
+                    <strong style="
+                        color: #374151;
+                    ">
+                        %s
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER BODY -->
+
+            <div style="padding: 20px;">
+
+                <h3 style="
+                    margin: 0 0 12px 0;
+                    font-size: 16px;
+                    color: #1f2937;
+                ">
+                    Products
+                </h3>
+
+
+                <table style="
+                    width: 100%%;
+                    border-collapse: collapse;
+                    font-size: 14px;
+                ">
+
+                    <thead>
+
+                        <tr style="
+                            background-color: #f1f5f9;
+                            color: #475569;
+                        ">
+
+                            <th style="
+                                padding: 11px;
+                                text-align: left;
+                                border-bottom: 1px solid #e2e8f0;
+                            ">
+                                Product
+                            </th>
+
+                            <th style="
+                                padding: 11px;
+                                text-align: center;
+                                border-bottom: 1px solid #e2e8f0;
+                            ">
+                                Amount
+                            </th>
+
+                            <th style="
+                                padding: 11px;
+                                text-align: right;
+                                border-bottom: 1px solid #e2e8f0;
+                            ">
+                                Material cost
+                            </th>
+
+                            <th style="
+                                padding: 11px;
+                                text-align: right;
+                                border-bottom: 1px solid #e2e8f0;
+                            ">
+                                Total
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+""".formatted(
+                    order.getId(),
+                    order.getOrderCreatedByName(),
+                    order.getOrderCreatedByGmail(),
+                    order.getPriority(),
+                    order.getEstimatedDueDate()
+            ));
+
+
+            // ========================================================
+            // PRODUCTS
+            // ========================================================
+
+            for (var product : order.getProductsData()) {
+
+                message.append("""
+                            
+                            <tr>
+
+                                <td style="
+                                    padding: 11px;
+                                    border-bottom: 1px solid #e5e7eb;
+                                    color: #1f2937;
+                                ">
+                                    <strong>%s</strong>
+                                </td>
+
+                                <td style="
+                                    padding: 11px;
+                                    text-align: center;
+                                    border-bottom: 1px solid #e5e7eb;
+                                    color: #374151;
+                                ">
+                                    %d
+                                </td>
+
+                                <td style="
+                                    padding: 11px;
+                                    text-align: right;
+                                    border-bottom: 1px solid #e5e7eb;
+                                    color: #374151;
+                                ">
+                                    %.2f €
+                                </td>
+
+                                <td style="
+                                    padding: 11px;
+                                    text-align: right;
+                                    border-bottom: 1px solid #e5e7eb;
+                                    color: #374151;
+                                ">
+                                    %.2f €
+                                </td>
+
+                            </tr>
+                    """.formatted(
+                        product.getProduct().getProductName(),
+                        product.getAmountOfProduct(),
+                        product.getProduct().getMaterialCost(),
+                        product.getCost()
+                ));
+            }
+
+
+            // ========================================================
+            // EMPLOYEES
+            // ========================================================
+
+            message.append("""
+                        
+                        </tbody>
+
+                    </table>
+
+
+                    <!-- EMPLOYEES -->
+
+                    <h3 style="
+                        margin: 25px 0 12px 0;
+                        font-size: 16px;
+                        color: #1f2937;
+                    ">
+                        Assigned employees
+                    </h3>
+
+
+                    <div style="
+                        background-color: #f8fafc;
+                        border-radius: 7px;
+                        padding: 12px 15px;
+                    ">
+                """);
+
+
+            if (order.getEmployees() != null &&
+                    !order.getEmployees().isEmpty()) {
+
+                for (var employee : order.getEmployees()) {
+
+                    message.append("""
+                            
+                            <div style="
+                                padding: 5px 0;
+                                font-size: 14px;
+                                color: #374151;
+                            ">
+                                👤 %s
+                            </div>
+                    """.formatted(
+                            employee.getEmployee().getFullName()
+                    ));
+                }
+
+            } else {
+
+                message.append("""
+                            
+                            <div style="
+                                font-size: 14px;
+                                color: #6b7280;
+                            ">
+                                No employees assigned
+                            </div>
+                    """);
+            }
+
+
+            // ========================================================
+            // CLOSE ORDER
+            // ========================================================
+
+            message.append("""
+                        
+                    </div>
+
+                </div>
+            """);
+        }
+
+
+        // ============================================================
+        // FOOTER
+        // ============================================================
+
+        message.append("""
+            
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div style="
+                    background-color: #f8fafc;
+                    border-top: 1px solid #e5e7eb;
+                    padding: 20px 30px;
+                    text-align: center;
+                    color: #6b7280;
+                    font-size: 12px;
+                ">
+
+                    This is an automated message from the
+                    <strong>Furniture Management System</strong>.
+
+                    <br><br>
+
+                    Please review the listed orders in the system.
+
+                </div>
+
+            </div>
+
+            </body>
+            </html>
+            """);
+
+
+        return message.toString();
+    }
+
+
+
 
         }
 
@@ -874,7 +1328,7 @@ public class DatabaseChecks {
 //
 //            }
 //        }
-    }
+
 
 
 

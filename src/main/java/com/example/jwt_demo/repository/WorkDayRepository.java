@@ -28,10 +28,10 @@ public interface WorkDayRepository extends JpaRepository<WorkDay,Long> {
     @Query("""
       SELECT wd
       FROM WorkDay wd
-      where wd.employee.id = :id and wd.workDayEnd IS NULL
+      where wd.employee.id = :empid and wd.workDayEnd IS NULL
     """)
     WorkDay getWorkDayInfo(
-            @Param("id") Long id
+            @Param("empid") Long empid
     );
 
     @Query(value = """

@@ -31,10 +31,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalTime;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/order")
@@ -78,6 +76,12 @@ public class OrderController {
 
     @Autowired
     OrderStepCompletionLogsRepository orderStepCompletionLogsRepository;
+
+    @Autowired
+    WorkDayRepository workDayRepository;
+
+    @Autowired
+    WorkDoneRepository workDoneRepository;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
@@ -800,7 +804,6 @@ public class OrderController {
 
         Long employee = employeeRepository.employeeId(user.getId());
 
-        databaseChecks.checkPriority(user,false);
 
         return ResponseEntity.ok(orderRepository.findHowManyItemsAreAvailable(employee));
 
@@ -814,7 +817,6 @@ public class OrderController {
 
         Long employee = employeeRepository.employeeId(user.getId());
 
-        databaseChecks.checkPriority(user,false);
 
 
         return ResponseEntity.ok(orderRepository.findHowManyItemsAreActive(employee));
@@ -827,9 +829,22 @@ public class OrderController {
     public ResponseEntity<ErrorResponse> acceptOrderEmployee(@PathVariable Long orderId){
 
 
+
+
+
         CustomUserDetails user = common.getUserData();
 
         Long employeeId = employeeRepository.employeeId(user.getId());
+
+
+        // check if employee has work day
+
+
+        if(workDayRepository.doesEmployeeAlreadyStartedWork(employeeId) == 0){
+            return ResponseEntity.ok(new ErrorResponse("Please start the work day before accepting new orders or continuing", Warnings.WARNING));
+        }
+
+
 
         Orders orders = orderRepository.findById(orderId).orElseThrow();
 
@@ -841,6 +856,22 @@ public class OrderController {
 
 
         employeeActiveOrdersRepository.save(employeeActiveOrders);
+
+        WorkDone workDone = new WorkDone();
+        workDone.setEmployee(employee);
+        workDone.setOrder(orders);
+
+
+        //workDone.setWorkDay();
+
+
+
+        if(orders.getOrderStatus().equals(OrderStatus.Pending)) {
+
+            orders.setOrderStatus(OrderStatus.In_Progress);
+
+            orderRepository.save(orders);
+        }
 
 
         return ResponseEntity.ok(new ErrorResponse("Order accepted ", Warnings.OK));
@@ -869,6 +900,7 @@ public class OrderController {
     @PostMapping("/findEmployeeActiveOrdersNonLimited")
     public ResponseEntity<List<EmployeeOrderProjection>> findEmployeeActiveOrdersNonLimited(@RequestBody EmployeeAvailableOrderFilter employeeAvailableOrderFilter){
 
+        SortOrder sorting = employeeAvailableOrderFilter.getSortOrder();
 
         CustomUserDetails user = common.getUserData();
         Long employeeId = employeeRepository.employeeId(user.getId());
@@ -877,12 +909,27 @@ public class OrderController {
         databaseChecks.checkPriority(user,false);
 
 
-
-        return ResponseEntity.ok(orderRepository.findOrdersForEmployeeLimited(employeeId,
+        List<EmployeeOrderProjection> answer = orderRepository.findOrdersForEmployeeLimited(employeeId,
                 employeeAvailableOrderFilter.getPromt(),
                 employeeAvailableOrderFilter.getOrderStatus(),
                 employeeAvailableOrderFilter.getPriority(),
-                PageRequest.of(employeeAvailableOrderFilter.getPage(),employeeAvailableOrderFilter.getPageCount())));
+                PageRequest.of(employeeAvailableOrderFilter.getPage(),employeeAvailableOrderFilter.getPageCount()));
+
+
+        // sorting
+        if(sorting.equals(SortOrder.OLDEST)){
+            answer.sort(
+                    Comparator.comparing(EmployeeOrderProjection::getCreated)
+            );
+        }
+        else if(sorting.equals(SortOrder.NEWEST)){
+            answer.sort(
+                    Comparator.comparing(EmployeeOrderProjection::getCreated).reversed()
+            );
+        }
+
+
+        return ResponseEntity.ok(answer);
 
     }
 
@@ -923,6 +970,16 @@ public class OrderController {
 
         CustomUserDetails user = common.getUserData();
 
+
+        // check if employee has work day
+
+        Long employeeId = employeeRepository.employeeId(user.getId());
+
+        if(workDayRepository.doesEmployeeAlreadyStartedWork(employeeId) == 0){
+            return ResponseEntity.ok(new ErrorResponse("Please start the work day before accepting new orders or continuing", Warnings.WARNING));
+        }
+
+
         User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
         OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
@@ -938,6 +995,10 @@ public class OrderController {
         orderStepsToCompleteRepository.save(orderStepsToComplete);
 
 
+
+
+
+
         return ResponseEntity.ok(new ErrorResponse(String.format("%d %s %s",orderStepsToComplete.getStepId(),orderStepsToComplete.getStepName(),"was accepted"), Warnings.OK));
 
     }
@@ -950,6 +1011,16 @@ public class OrderController {
 
 
         CustomUserDetails user = common.getUserData();
+
+
+        // check if employee has work day
+
+        Long employeeId = employeeRepository.employeeId(user.getId());
+
+        if(workDayRepository.doesEmployeeAlreadyStartedWork(employeeId) == 0){
+            return ResponseEntity.ok(new ErrorResponse("Please start the work day before accepting new orders or continuing", Warnings.WARNING));
+        }
+
 
         User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
@@ -1001,6 +1072,18 @@ public class OrderController {
     public ResponseEntity<ErrorResponse> updateStep(@PathVariable Long stepId, @PathVariable Long newAmountCompleted){
 
         CustomUserDetails user = common.getUserData();
+
+
+
+        // check if employee has work day
+
+        Long employeeId = employeeRepository.employeeId(user.getId());
+
+
+        if(workDayRepository.doesEmployeeAlreadyStartedWork(employeeId) == 0){
+            return ResponseEntity.ok(new ErrorResponse("Please start the work day before accepting new orders or continuing", Warnings.WARNING));
+        }
+
 
         User actualUser = userRepository.findById(user.getId()).orElseThrow();
 

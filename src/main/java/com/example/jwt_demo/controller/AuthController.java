@@ -80,9 +80,7 @@ public class AuthController {
 
 
 
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            emailSenderContoller.welcomeMessage(email);
-        });
+
 
         System.out.println("7");
 
@@ -111,6 +109,8 @@ public class AuthController {
                 userDetails.setRole(user.getRole());
 
 
+                //someone log in
+
                 return ResponseEntity.ok(new ErrorResponse(jwtUtils.generateToken(userDetails),Warnings.OK));
 
             }
@@ -118,6 +118,12 @@ public class AuthController {
 
         }
         else{
+
+
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                emailSenderContoller.welcomeMessage(email);
+            });
+
             UserSettings userSettings = new UserSettings();
 
 
@@ -324,7 +330,7 @@ public class AuthController {
                 null,
                 null,
                 null,
-                null,
+                user.getVerification(),
                 null,
                 null,
                 user.getName() + " " + user.getLastName(),

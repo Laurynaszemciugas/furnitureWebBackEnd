@@ -93,7 +93,7 @@ public class AiController {
 
         }catch (Exception e){
 
-            fillDataUsingAi(aiQuestion);
+           // fillDataUsingAi(aiQuestion);
             System.out.println("AI RESPONSE FAILED RETRYING");
 //           throw  new ValidationException("Something went wrong with your Ai request RETRYING ", Warnings.ERROR);
             System.out.println(e);

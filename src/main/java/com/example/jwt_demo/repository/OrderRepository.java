@@ -523,7 +523,7 @@ AND (
     SET priority = Case
     When datediff(estimated_due_date,NOW()) > 16 then 'LOW_PRIORITY'
     When datediff(estimated_due_date,NOW()) between 10 and 15 then 'MEDIUM_PRIORITY'
-    When datediff(estimated_due_date,NOW()) between 1 and 5 then 'HIGH_PRIORITY'
+    When datediff(estimated_due_date,NOW()) between 1 and 9 then 'HIGH_PRIORITY'
     Else 'OVERDUE'
     
     END
@@ -610,7 +610,7 @@ AND (
     LEFT JOIN p.images i
 
     WHERE currentEmployee.employee.id = :employeeId
-      AND o.orderStatus = 'Pending'
+      and (o.orderStatus = 'Pending' or o.orderStatus = 'In_Progress')  AND o.activeInactive != 'INACTIVE'
       
 AND (
     :prompt IS NULL

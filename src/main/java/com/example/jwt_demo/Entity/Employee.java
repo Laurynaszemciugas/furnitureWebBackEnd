@@ -70,9 +70,9 @@ public class Employee {
     @CreationTimestamp
     private LocalDateTime created;
 
-    @OneToMany(mappedBy = "employee",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "employee",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EmployeeActiveOrders> employeeActiveOrders;
 
 
