@@ -9,6 +9,7 @@ import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.repository.WorkDayRepository;
+import com.example.jwt_demo.repository.WorkDoneRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -38,6 +40,9 @@ public class WorkDayController {
 
     @Autowired
     WorkDayRepository workDayRepository;
+
+    @Autowired
+    WorkDoneRepository workDoneRepository;
 
     @GetMapping("/addWorkDay")
     public ResponseEntity<ErrorResponse> addWorkDay(){
@@ -107,25 +112,33 @@ public class WorkDayController {
 
         WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
 
-//        List<WorkDone> workDoneList = List.of(
-//                new WorkDone(
-//                        1L,
-//                        workDay,
-//                        null,
-//                        LocalDateTime.of(2026, 9, 21, 9, 15),
-//                        null,
-//                        null,
-//                        "Cut material for sofa",
-//                        "Finished the first batch"
-//                )
-//
-//
-//        );
-//
-//        workDay.setWorkDone(workDoneList);
-
         return ResponseEntity.ok(workDay == null ? new WorkDay() : workDay);
 
     }
+
+    @GetMapping("/allInfoAboutSpecificWorkDay")
+    public ResponseEntity<List<WorkDone>> allInfoAboutSpecificWorkDay(){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        Long employeeId = employeeRepository.employeeId(user.getId());
+
+        WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
+
+        List<WorkDone> workDones;
+
+        if(workDay != null) {
+
+             workDones = workDoneRepository.allInfoAboutSpecificWorkDay(workDay.getId());
+
+        }
+        else{
+            workDones = new ArrayList<>();
+        }
+        return ResponseEntity.ok(workDones);
+
+    }
+
 
 }

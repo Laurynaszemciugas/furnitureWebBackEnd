@@ -1,5 +1,6 @@
 package com.example.jwt_demo.Entity;
 
+import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -31,16 +32,21 @@ public class WorkDone {
 
     @ManyToOne
     @JoinColumn(name = "employee_id")
+    @JsonBackReference(value = "workDoneEmp")
     private Employee employee;
 
     @CreationTimestamp
     private LocalDateTime started;
 
 
-    private LocalDateTime workDayEnd;
+    @ManyToOne
+    @JoinColumn(name = "order_steps_to_complete_id")
+    private OrderStepsToComplete orderStepsToComplete;
+
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+
     private Orders order;
 
 

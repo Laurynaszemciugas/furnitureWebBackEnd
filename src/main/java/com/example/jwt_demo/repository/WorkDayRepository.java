@@ -5,6 +5,7 @@ import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.WorkDay;
 import com.example.jwt_demo.Enums.ActiveInactive;
 import com.example.jwt_demo.Enums.OrderStatus;
+import org.hibernate.query.NativeQuery;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -44,6 +45,10 @@ public interface WorkDayRepository extends JpaRepository<WorkDay,Long> {
             LocalDateTime dateFrom,
             LocalDateTime dateTo
     );
+
+
+
+
 
 
 

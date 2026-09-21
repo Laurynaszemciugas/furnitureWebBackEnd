@@ -457,6 +457,8 @@ public class OrderController {
             List<OrderProducts> products = new ArrayList<>();
             for(var s : order.getProductsData()){
 
+
+
                 if(s.getProduct().getId() == null){
                     throw new ValidationException("Product doesnt have an id", Warnings.FATAL_ERROR);
                 }
@@ -480,25 +482,70 @@ public class OrderController {
 
                 List<OrderStepsToComplete> orderSteps = new ArrayList<>();
 
+                Long sizeOfTheSteps = Long.valueOf(product.getSteps().size());
+                Long i = 0L;
+
                 for (var step : product.getSteps()) {
 
                     OrderStepsToComplete orderStep = new OrderStepsToComplete();
 
-                    orderStep.setProductFinishStepStatus(
-                            ProductFinishStepStatus.NOT_STARTED
-                    );
 
-                    orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
-                    orderStep.setStepsCompleted(0L);
+                    if(s.getProduct().isStockCalculatedManually()){
+                        orderStep.setProductFinishStepStatus(
+                                ProductFinishStepStatus.NOT_STARTED
+                        );
 
-                    orderStep.setStepRealId(step.getId());
-                    orderStep.setStepId(step.getStepId());
-                    orderStep.setStepName(step.getStepName());
-                    orderStep.setStepDescription(step.getStepDescription());
+                        orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                        orderStep.setStepsCompleted(0L);
 
-                    orderStep.setOrderProducts(orderProducts);
+                        orderStep.setStepId(1L);
+                        orderStep.setStepName("Package the product");
+                        orderStep.setStepDescription("Package the product using the styro foam bubble rap");
 
-                    orderSteps.add(orderStep);
+                        orderStep.setOrderProducts(orderProducts);
+
+                        orderSteps.add(orderStep);
+                        break;
+                    }
+                    else {
+
+
+                        orderStep.setProductFinishStepStatus(
+                                ProductFinishStepStatus.NOT_STARTED
+                        );
+
+                        orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                        orderStep.setStepsCompleted(0L);
+
+                        orderStep.setStepRealId(step.getId());
+                        orderStep.setStepId(step.getStepId());
+                        orderStep.setStepName(step.getStepName());
+                        orderStep.setStepDescription(step.getStepDescription());
+
+                        orderStep.setOrderProducts(orderProducts);
+
+                        orderSteps.add(orderStep);
+                    }
+
+                    i++;
+
+                    if(i.equals(sizeOfTheSteps)){
+                        orderStep.setProductFinishStepStatus(
+                                ProductFinishStepStatus.NOT_STARTED
+                        );
+
+                        orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                        orderStep.setStepsCompleted(0L);
+
+                        orderStep.setStepId(step.getStepId()+1);
+                        orderStep.setStepName("Package the product");
+                        orderStep.setStepDescription("Package the product using the styro foam bubble rap");
+
+                        orderStep.setOrderProducts(orderProducts);
+
+                        orderSteps.add(orderStep);
+                    }
+
                 }
 
                 orderProducts.setOrderSteps(orderSteps);
@@ -508,6 +555,8 @@ public class OrderController {
 
                     products.add(orderProducts);
                 }
+
+
             newOrder.setProductsData(products);
         }
 
@@ -869,12 +918,22 @@ public class OrderController {
 
         employeeActiveOrdersRepository.save(employeeActiveOrders);
 
+
+        // save the work done
+
+        WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
+
+
+        User admin = userRepository.findById(employee.getUser().getId()).orElseThrow();
+
         WorkDone workDone = new WorkDone();
-        workDone.setEmployee(employee);
+        workDone.setWorkDay(workDay);
+        workDone.setWhatWasDone(String.format(" order - #%d %s",orderId,"was accepted"));
         workDone.setOrder(orders);
+        workDone.setEmployee(employeeRepository.findById(employeeId).orElseThrow());
+        workDay.setUser(admin);
 
-
-        //workDone.setWorkDay();
+        workDoneRepository.save(workDone);
 
 
 
@@ -886,7 +945,7 @@ public class OrderController {
         }
 
 
-        return ResponseEntity.ok(new ErrorResponse("Order accepted ", Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse(String.format(" order - #%d %s",orderId,"was accepted"), Warnings.OK));
 
     }
 
@@ -1007,6 +1066,10 @@ public class OrderController {
         orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.IN_PROGRESS);
         orderStepsToComplete.setCreated(LocalDateTime.now());
 
+        Long orderId = orderStepsToComplete.getOrderProducts().getOrder().getId();
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
         orderStepsToCompleteRepository.save(orderStepsToComplete);
 
 
@@ -1016,6 +1079,25 @@ public class OrderController {
         orderStepCompletionLogs.setThingThatWasDone(String.format("%d %s %s",orderStepsToComplete.getStepId(),orderStepsToComplete.getStepName(),"was accepted"));
 
         orderStepCompletionLogsRepository.save(orderStepCompletionLogs);
+
+
+        // save the work done
+
+        WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
+
+
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow();
+        User admin = userRepository.findById(employee.getUser().getId()).orElseThrow();
+
+        WorkDone workDone = new WorkDone();
+        workDone.setWorkDay(workDay);
+        workDone.setWhatWasDone(String.format("%d %s %s",orderStepsToComplete.getStepId(),orderStepsToComplete.getStepName(),"was accepted"));
+        workDone.setOrder(order);
+        workDone.setOrderStepsToComplete(orderStepsToComplete);
+        workDone.setEmployee(employeeRepository.findById(employeeId).orElseThrow());
+        workDay.setUser(admin);
+
+        workDoneRepository.save(workDone);
 
 
 
@@ -1067,6 +1149,25 @@ public class OrderController {
         orderStepCompletionLogs.setThingThatWasDone(String.format("order - #%d  step -  %s %s",order.getId(),orderStepsToComplete.getStepName(),"Was completed"));
 
         orderStepCompletionLogsRepository.save(orderStepCompletionLogs);
+
+
+        // save the work done
+
+        WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
+
+
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow();
+        User admin = userRepository.findById(employee.getUser().getId()).orElseThrow();
+
+        WorkDone workDone = new WorkDone();
+        workDone.setWorkDay(workDay);
+        workDone.setWhatWasDone(String.format("order - #%d  step -  %s %s",order.getId(),orderStepsToComplete.getStepName(),"Was completed"));
+        workDone.setOrder(order);
+        workDone.setOrderStepsToComplete(orderStepsToComplete);
+        workDone.setEmployee(employeeRepository.findById(employeeId).orElseThrow());
+        workDay.setUser(admin);
+
+        workDoneRepository.save(workDone);
 
 
         boolean canBeSetAsFinished = true;
@@ -1136,6 +1237,26 @@ public class OrderController {
         orderStepCompletionLogs.setThingThatWasDone(String.format("%s %s [%d] %s [%d]", orderStepsToComplete.getStepName(),"was modified completed steps was ",orderStepsToComplete.getStepsCompleted(),"new value", newAmountCompleted));
 
         orderStepCompletionLogsRepository.save(orderStepCompletionLogs);
+
+        // save the work done
+
+        WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
+
+
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow();
+        User admin = userRepository.findById(employee.getUser().getId()).orElseThrow();
+
+        WorkDone workDone = new WorkDone();
+        workDone.setWorkDay(workDay);
+        workDone.setWhatWasDone(String.format("%s %s [%d] %s [%d]", orderStepsToComplete.getStepName(),"was modified completed steps was ",orderStepsToComplete.getStepsCompleted(),"new value", newAmountCompleted));
+        workDone.setOrder(order);
+        workDone.setOrderStepsToComplete(orderStepsToComplete);
+        workDone.setEmployee(employeeRepository.findById(employeeId).orElseThrow());
+        workDay.setUser(admin);
+
+        workDoneRepository.save(workDone);
+
+
 
 // set value after its saved
         orderStepsToComplete.setStepsCompleted(newAmountCompleted);
