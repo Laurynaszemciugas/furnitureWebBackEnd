@@ -28,6 +28,10 @@ public class Materials {
     private String materialName;
     @RequiredField
     private Long inStock;
+
+    private Long reserved;
+
+
     @RequiredField
     private Long minThresHold;
     @Enumerated(EnumType.STRING)

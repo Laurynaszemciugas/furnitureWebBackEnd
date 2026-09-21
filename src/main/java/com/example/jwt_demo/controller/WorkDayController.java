@@ -107,22 +107,22 @@ public class WorkDayController {
 
         WorkDay workDay = workDayRepository.getWorkDayInfo(employeeId);
 
-        List<WorkDone> workDoneList = List.of(
-                new WorkDone(
-                        1L,
-                        workDay,
-                        null,
-                        LocalDateTime.of(2026, 9, 21, 9, 15),
-                        null,
-                        null,
-                        "Cut material for sofa",
-                        "Finished the first batch"
-                )
-
-
-        );
-
-        workDay.setWorkDone(workDoneList);
+//        List<WorkDone> workDoneList = List.of(
+//                new WorkDone(
+//                        1L,
+//                        workDay,
+//                        null,
+//                        LocalDateTime.of(2026, 9, 21, 9, 15),
+//                        null,
+//                        null,
+//                        "Cut material for sofa",
+//                        "Finished the first batch"
+//                )
+//
+//
+//        );
+//
+//        workDay.setWorkDone(workDoneList);
 
         return ResponseEntity.ok(workDay == null ? new WorkDay() : workDay);
 

@@ -81,6 +81,9 @@ public class OrderController {
     WorkDayRepository workDayRepository;
 
     @Autowired
+    MaterialRepository materialRepository;
+
+    @Autowired
     WorkDoneRepository workDoneRepository;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
@@ -558,6 +561,8 @@ public class OrderController {
 
                     orderRepository.save(newOrder);
 
+                    databaseChecks.addReserveFromCreatedOrder(newOrder.getId());
+
                     databaseChecks.checkNewAddedOrder(newOrder.getId(),false);
 
                     return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully", newOrder.getId()), Warnings.OK));
@@ -640,36 +645,43 @@ public class OrderController {
 
         Orders newOrder = orderRepository.findById(id).orElseThrow();
 
-        for (var ord : newOrder.getProductsData()) {
+//        for (var ord : newOrder.getProductsData()) {
+//
+//            Long amountTaken = ord.getAmountOfProduct();
+//            Long amountAvailable = ord.getProduct().getStockQuantity();
+//
+//            if (amountTaken > amountAvailable) {
+//                newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+//                newOrder.setServerNote(
+//                        "Order not possible will be automatically changed to Pending when supply exists"
+//                );
+//
+//                orderRepository.save(newOrder);
+//                return ResponseEntity.ok(
+//                        new ErrorResponse(
+//                                "Changed successfully to Lack of supply",
+//                                Warnings.OK
+//                        )
+//                );
+//            }
+//        }
 
-            Long amountTaken = ord.getAmountOfProduct();
-            Long amountAvailable = ord.getProduct().getStockQuantity();
+        if(newOrder.getOrderStatus().equals(OrderStatus.NEW)){
+            newOrder.setOrderStatus(OrderStatus.Pending);
 
-            if (amountTaken > amountAvailable) {
-                newOrder.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
-                newOrder.setServerNote(
-                        "Order not possible will be automatically changed to Pending when supply exists"
-                );
+            databaseChecks.checkNewAddedOrder(newOrder.getId(), true);
+            databaseChecks.calculateProductsStock(null, false);
+            databaseChecks.calculateMaterialsStock(newOrder.getId());
 
-                orderRepository.save(newOrder);
-                return ResponseEntity.ok(
-                        new ErrorResponse(
-                                "Changed successfully to Lack of supply",
-                                Warnings.OK
-                        )
-                );
-            }
+            orderRepository.save(newOrder);
+
+            actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Status_Change);
+        }
+        else{
+            return ResponseEntity.ok(new ErrorResponse("Order cannot be accepted due to lack of supply", Warnings.ERROR));
         }
 
-        newOrder.setOrderStatus(OrderStatus.Pending);
 
-        databaseChecks.checkNewAddedOrder(newOrder.getId(), true);
-        databaseChecks.calculateProductsStock(null, false);
-        databaseChecks.calculateMaterialsStock(newOrder.getId());
-
-        orderRepository.save(newOrder);
-
-        actionMaker.makeAction(String.format("Order [ORD-%d] Changed successfully to Pending",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Status_Change);
 
 
 
@@ -973,6 +985,8 @@ public class OrderController {
 
         // check if employee has work day
 
+
+
         Long employeeId = employeeRepository.employeeId(user.getId());
 
         if(workDayRepository.doesEmployeeAlreadyStartedWork(employeeId) == 0){
@@ -984,6 +998,7 @@ public class OrderController {
 
         OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
 
+
         if(orderStepsToComplete.getEmployee() !=null){
             return ResponseEntity.ok(new ErrorResponse("Step is already taken you can help to complete it ", Warnings.OK));
         }
@@ -993,6 +1008,14 @@ public class OrderController {
         orderStepsToComplete.setCreated(LocalDateTime.now());
 
         orderStepsToCompleteRepository.save(orderStepsToComplete);
+
+
+        OrderStepCompletionLogs orderStepCompletionLogs = new OrderStepCompletionLogs();
+        orderStepCompletionLogs.setEmployee(actualUser);
+        orderStepCompletionLogs.setOrderStepsToComplete(orderStepsToComplete);
+        orderStepCompletionLogs.setThingThatWasDone(String.format("%d %s %s",orderStepsToComplete.getStepId(),orderStepsToComplete.getStepName(),"was accepted"));
+
+        orderStepCompletionLogsRepository.save(orderStepCompletionLogs);
 
 
 
@@ -1037,6 +1060,15 @@ public class OrderController {
 
         orderStepsToCompleteRepository.save(orderStepsToComplete);
 
+
+        OrderStepCompletionLogs orderStepCompletionLogs = new OrderStepCompletionLogs();
+        orderStepCompletionLogs.setEmployee(actualUser);
+        orderStepCompletionLogs.setOrderStepsToComplete(orderStepsToComplete);
+        orderStepCompletionLogs.setThingThatWasDone(String.format("order - #%d  step -  %s %s",order.getId(),orderStepsToComplete.getStepName(),"Was completed"));
+
+        orderStepCompletionLogsRepository.save(orderStepCompletionLogs);
+
+
         boolean canBeSetAsFinished = true;
         for(var s : order.getProductsData()){
 
@@ -1054,12 +1086,16 @@ public class OrderController {
 
         if(canBeSetAsFinished){
             order.setOrderStatus(OrderStatus.Finished);
+            databaseChecks.orderFinishedDeductReserve(order.getId());
         }
         else {
             order.setOrderStatus(OrderStatus.Pending);
         }
 
         orderRepository.save(order);
+
+
+
 
 
         return ResponseEntity.ok(new ErrorResponse("Step accepted ", Warnings.OK));
@@ -1087,13 +1123,7 @@ public class OrderController {
 
         User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
-
-
         OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(stepId).orElseThrow();
-
-
-
-
 
         Long orderId = orderStepsToComplete.getOrderProducts().getOrder().getId();
 
@@ -1130,6 +1160,7 @@ public class OrderController {
 
         if(canBeSetAsFinished){
             order.setOrderStatus(OrderStatus.Finished);
+            databaseChecks.orderFinishedDeductReserve(order.getId());
         }
         else {
             order.setOrderStatus(OrderStatus.Pending);

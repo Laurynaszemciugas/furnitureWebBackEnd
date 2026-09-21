@@ -50,6 +50,86 @@ public class DatabaseChecks {
 
     Long itemCount = 0L;
 
+
+    public void addReserveFromCreatedOrder(Long orderId){
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
+        for(var productData : order.getProductsData()){
+
+
+            Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
+            Long amountOfProductTaken = productData.getAmountOfProduct();
+            for(var materials : product.getMaterials()){
+
+                Long materialNeededForOne = materials.getAmountUsed();
+
+                Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
+                Long materialStock = material.getInStock();
+
+                if(materialStock - (materialNeededForOne * amountOfProductTaken) < 0){
+                    order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                    orderRepository.save(order);
+                    throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY",Warnings.ERROR);
+                }
+
+                material.setInStock(materialStock - (materialNeededForOne * amountOfProductTaken));
+                material.setReserved(materialStock - (materialStock - (materialNeededForOne * amountOfProductTaken)));
+
+                materialRepository.save(material);
+
+
+
+            }
+
+
+        }
+
+
+    }
+
+    public void orderFinishedDeductReserve(Long orderId){
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
+        for(var orderProducts : order.getProductsData()){
+            Product product = productRepository.findById(orderProducts.getProduct().getId()).orElseThrow();
+            for(var mats : product.getMaterials()){
+
+                Materials material = mats.getMaterials();
+
+                Long reserved = material.getReserved();
+
+                Long totalAmountOfMaterials = orderProducts.getAmountOfProduct() * mats.getAmountUsed();
+
+                material.setReserved(reserved - totalAmountOfMaterials);
+
+                materialRepository.save(material);
+
+            }
+        }
+
+
+    }
+
+
+//    for(var productData : order.getProductsData()){
+//
+//        Long amountOfProductTaken = productData.getAmountOfProduct();
+//
+//
+//        Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
+//
+//        Long productInStock = product.getStockQuantity();
+//
+//        product.setStockQuantity(productInStock - amountOfProductTaken);
+//
+//
+//
+
+//    }
+
+
     public void calculateProductsStock(Long userId, boolean changeMaterialSupply) {
 
         List<User> user = userRepository.findAll();
@@ -497,6 +577,25 @@ public class DatabaseChecks {
 
                     Long stock = materialStock - (takenProductCount * amountMaterialNeededForOneProduct);
 
+                    // add material reserve increase it
+
+                    Long reserved = newlyAddedProductsMaterial.getReserved();
+
+//                    System.out.println("Reserved " +  reserved);
+//
+//                    System.out.println("material stock was " + materialStock);
+//                    System.out.println("material stock new " + stock);
+//
+//
+//                    System.out.println("Diff " + (materialStock - stock));
+//
+//
+//                    System.out.println("New reserve " + reserved + (materialStock - stock));
+
+
+                    newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
+
                     newlyAddedProductsMaterial.setInStock(stock);
 
                     materialRepository.save(newlyAddedProductsMaterial);
@@ -553,6 +652,14 @@ public class DatabaseChecks {
 
                         Long stock = materialStock + (takenProductCount * amountMaterialNeededForOneProduct);
 
+
+                        // remove material reserve decrease it
+
+                        Long reserved = newlyAddedProductsMaterial.getReserved();
+
+                        newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
+
                         newlyAddedProductsMaterial.setInStock(stock);
 
                         materialRepository.save(newlyAddedProductsMaterial);
@@ -607,6 +714,8 @@ public class DatabaseChecks {
 
                         Long stock = productStock + (oldAmountTaken - newAmountTaken);
 
+
+
                         manuallySetProduct.setStockQuantity(stock);
 
                         productRepository.save(manuallySetProduct);
@@ -629,6 +738,13 @@ public class DatabaseChecks {
                         Long amountTakenDifference = oldAmountTaken - newAmountTaken;
 
                         Long stock = materialStock + (amountTakenDifference * amountMaterialNeededForOneProduct);
+
+                        // remove or add  material reserve
+
+                        Long reserved = newlyAddedProductsMaterial.getReserved();
+
+                        newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
 
                         newlyAddedProductsMaterial.setInStock(stock);
 
