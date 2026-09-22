@@ -1,6 +1,7 @@
 package com.example.jwt_demo.DTOS.Material;
 
 import com.example.jwt_demo.Enums.ActiveInactive;
+import com.example.jwt_demo.Enums.MaterialTextures;
 import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
 import lombok.*;
@@ -23,6 +24,14 @@ public class MaterialBriefDto {
     private Stock stock;
     private Long amountLeft;
     private Long minThresh;
+    private Long reserved;
+
+
+    private String unit;
+    private MaterialType type;
+    private MaterialTextures materialTexture;
+
+
     private Double unitPrice;
     private LocalDateTime created;
 }

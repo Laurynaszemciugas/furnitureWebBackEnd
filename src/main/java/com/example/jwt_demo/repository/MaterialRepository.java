@@ -54,6 +54,12 @@ SELECT new com.example.jwt_demo.DTOS.Material.MaterialBriefDto(
     m.stock,
     m.inStock,
     m.minThresHold,
+    m.reserved,
+    
+    m.unit,
+    m.materialFinishType,
+    m.materialTextures,
+    
     m.unitPrice,
     m.created
 )
