@@ -43,7 +43,7 @@ SELECT o
  FROM Orders o
  
 
-   WHERE o.user.id = :userId and o.orderStatus = 'NEW'
+   WHERE o.user.id = :userId and o.orderStatus = 'NEW' or o.orderStatus = 'LACK_OF_SUPPLY'
 
 """)
     List<Orders> getAllNewOrder(Long userId);
@@ -53,11 +53,20 @@ SELECT o
 SELECT  count(o)
  FROM Orders o
   WHERE o.user.id = :id
-   AND o.orderStatus = 'NEW' or o.orderStatus = 'AWAITING_CONFIRMATION' 
+   AND o.orderStatus = 'NEW' or o.orderStatus = 'AWAITING_CONFIRMATION'  or o.orderStatus = 'LACK_OF_SUPPLY'
 
 """)
     Long findNewOrdersCount(Long id);
 
+
+
+
+
+    // ===========================================================
+
+    // ORDER MAIN LIST
+
+    // ======================================================
     @Query("""
 SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
     o.id,
@@ -91,7 +100,7 @@ AND (
     OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
     OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
 )
-and o.orderStatus != 'NEW' and o.orderStatus != 'AWAITING_CONFIRMATION' 
+and o.orderStatus != 'NEW' and o.orderStatus != 'AWAITING_CONFIRMATION' and o.orderStatus != 'LACK_OF_SUPPLY' 
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
 HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)
 """)
@@ -110,6 +119,90 @@ HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amou
             Long id
     );
 
+    // ===========================================================
+
+    // ORDER MAIN LIST PAGE COUNTER
+
+    // ======================================================
+
+    @Query("""
+SELECT
+    CASE
+        WHEN COUNT(DISTINCT o.id) = 0 THEN 1
+        ELSE CEIL(COUNT(DISTINCT o.id) / :pageCount)
+    END
+FROM Orders o
+JOIN o.employees oe
+LEFT JOIN o.productsData pd
+WHERE o.user.id = :id  
+AND (:active IS NULL OR o.activeInactive = :active)
+AND (:matId IS NULL OR pd.product.id = :matId)
+AND (:empId IS NULL OR oe.employee.id = :empId)
+AND (:status IS NULL OR o.orderStatus = :status)
+AND (:dateFrom IS NULL OR o.created >= :dateFrom)
+AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
+AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
+AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
+AND (
+    :prompt IS NULL
+    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
+    OR LOWER(o.billingAddress) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+    OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
+  
+    
+)
+
+and o.orderStatus != 'NEW' and o.orderStatus != 'AWAITING_CONFIRMATION' and o.orderStatus != 'LACK_OF_SUPPLY' 
+
+""")
+    Long getNumberOfOrderPages(
+            @Param("status") OrderStatus status,
+            @Param("priceFrom") Double priceFrom,
+            @Param("priceTo") Double priceTo,
+            @Param("dateFrom") LocalDateTime dateFrom,
+            @Param("dateTo") LocalDateTime dateTo,
+            @Param("prompt") String prompt,
+            @Param("empId") Long empId,
+            @Param("matId") Long matId,
+            @Param("active") ActiveInactive active,
+            @Param("pageCount") int pageCount,
+            @Param("id") Long id
+    );
+
+
+
+
+
+
+
+
+    // ===========================================================
+
+    // NEW ORDER MAIN LIST PAGE COUNTER
+
+    // ======================================================
+
+    @Query("""
+    SELECT CASE
+        WHEN COUNT(DISTINCT o.id) = 0 THEN 1
+        ELSE CEIL(COUNT(DISTINCT o.id) / 5.0)
+    END
+    FROM Orders o
+    WHERE o.user.id = :id
+    AND o.orderStatus IN ('AWAITING_CONFIRMATION', 'NEW','LACK_OF_SUPPLY')
+""")
+    Long getNewOrderTotalPages(
+            @Param("id") Long id
+    );
+
+
+    // ===========================================================
+
+    // NEW ORDERS LIST
+
+    // ======================================================
 
     @Query("""
 SELECT new com.example.jwt_demo.DTOS.Order.OrdersFeedData(
@@ -127,59 +220,24 @@ FROM Orders o
 JOIN o.employees oe
 LEFT JOIN o.productsData op
 LEFT JOIN o.productsData pd
-WHERE o.user.id = :id and o.orderStatus = 'AWAITING_CONFIRMATION' or o.orderStatus = 'NEW'
+WHERE o.user.id = :id and o.orderStatus = 'AWAITING_CONFIRMATION' or o.orderStatus = 'NEW' or o.orderStatus = 'LACK_OF_SUPPLY'
 
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
 
 """)
     List<OrdersFeedData> getNewOrders(
-            Long id
+            Long id,
+            Pageable pageable
     );
 
 
-    @Query("""
-SELECT
-    CASE
-        WHEN COUNT(DISTINCT o.id) = 0 THEN 1
-        ELSE CEIL(COUNT(DISTINCT o.id) / :pageCount)
-    END
-FROM Orders o
-JOIN o.employees oe
-LEFT JOIN o.productsData pd
-WHERE o.user.id = :id
-AND (:active IS NULL OR o.activeInactive = :active)
-AND (:matId IS NULL OR pd.product.id = :matId)
-AND (:empId IS NULL OR oe.employee.id = :empId)
-AND (:status IS NULL OR o.orderStatus = :status)
-AND (:dateFrom IS NULL OR o.created >= :dateFrom)
-AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
-AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
-AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
-AND (
-    :prompt IS NULL
-    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
-    OR LOWER(o.billingAddress) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    
-    
-)
 
-""")
-    Long getNumberOfOrderPages(
-            @Param("status") OrderStatus status,
-            @Param("priceFrom") Double priceFrom,
-            @Param("priceTo") Double priceTo,
-            @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo,
-            @Param("prompt") String prompt,
-            @Param("empId") Long empId,
-            @Param("matId") Long matId,
-            @Param("active") ActiveInactive active,
-            @Param("pageCount") int pageCount,
-            @Param("id") Long id
-    );
+
+
+
+
+
+
 
 
 

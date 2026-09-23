@@ -1,13 +1,12 @@
 package com.example.jwt_demo.repository;
 
-import com.example.jwt_demo.DTOS.Material.MaterialInfo;
 import com.example.jwt_demo.DTOS.User.AccountOverview;
 import com.example.jwt_demo.DTOS.User.Appearance;
 import com.example.jwt_demo.DTOS.User.PersonalPrefrences;
 import com.example.jwt_demo.DTOS.User.ProfileInformation;
-import com.example.jwt_demo.Entity.ActionTracker;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Entity.UserSettings;
+import com.example.jwt_demo.Enums.OrderProcessing;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -21,6 +20,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
 
+    @Query(value = """
+
+            SELECT u.id
+            FROM bpfurniture.users u
+            
+            Join bpfurniture.user_settings us ON us.user_id = u.id
+
+            Where us.order_processing = :orderProcessing
+
+
+""" ,  nativeQuery = true)
+    List<Long> getIdsOfTheOrderProcessing(String orderProcessing);
 
 
 

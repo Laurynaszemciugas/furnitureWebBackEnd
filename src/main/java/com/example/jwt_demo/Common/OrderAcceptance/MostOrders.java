@@ -1,4 +1,4 @@
-package com.example.jwt_demo.Common;
+package com.example.jwt_demo.Common.OrderAcceptance;
 
 import com.example.jwt_demo.Entity.Orders;
 import lombok.AllArgsConstructor;
