@@ -33,6 +33,13 @@ public interface MaterialRepository extends JpaRepository<Materials,Long> {
             "WHERE m.user.id = :id")
     List<ComboBoxMaterial> getAllMaterialNames(@Param("id") Long id);
 
+
+    @Query(""" 
+    SELECT  m
+            FROM Materials m 
+            WHERE m.user.id = :employeeId  """)
+    List<Materials> getAllMaterials(Long employeeId);
+
     @Query("""
 
     SELECT m FROM Materials m where m.id = :materialID and m.user.id = :id

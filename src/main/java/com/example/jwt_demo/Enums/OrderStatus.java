@@ -8,6 +8,7 @@ public enum OrderStatus {
     CANCELLED,
     NEW,
     LACK_OF_SUPPLY,
+    AWAITING_CONFIRMATION,
     ALL
 
 }

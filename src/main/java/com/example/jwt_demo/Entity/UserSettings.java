@@ -1,9 +1,6 @@
 package com.example.jwt_demo.Entity;
 
-import com.example.jwt_demo.Enums.DateFormat;
-import com.example.jwt_demo.Enums.Language;
-import com.example.jwt_demo.Enums.TimeZone;
-import com.example.jwt_demo.Enums.Verification;
+import com.example.jwt_demo.Enums.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,6 +35,9 @@ public class UserSettings {
     private String accent = "Blue";
 
     private String sidebarSize = "Large";
+
+    @Enumerated(EnumType.STRING)
+    private OrderProcessing orderProcessing;
 
     @OneToOne
     @JoinColumn(name = "user_id")

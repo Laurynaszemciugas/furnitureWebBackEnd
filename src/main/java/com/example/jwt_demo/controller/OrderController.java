@@ -123,21 +123,11 @@ public class OrderController {
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
 
         databaseChecks.checkPriority(user,false);
-        
+
 
         return ResponseEntity.ok(
                 orderRepository.getNewOrders(
-                        orderFilterHolder.getOrderStatusChoice(),
-                        orderFilterHolder.getPriceFromChoice(),
-                        orderFilterHolder.getPriceToChoice(),
-                        logic.dateConverter(orderFilterHolder.getDateFromChoice()),
-                        logic.dateConverter(orderFilterHolder.getDateToChoice()),
-                        orderFilterHolder.getAmountOfProductsChoice(),
-                        orderFilterHolder.getPromptChoice(),
-                        orderFilterHolder.getEmployee(),
-                        orderFilterHolder.getProducts(),
-                        orderFilterHolder.getOrderActiveInactive(),
-                        PageRequest.of(orderFilterHolder.getPage(), orderFilterHolder.getPageCount()),
+
                         user.getId()
                 )
         );
@@ -148,7 +138,6 @@ public class OrderController {
     public ResponseEntity<Long> getAmountOfPages(@RequestBody OrderFilterHolder orderFilterHolder) {
 
         CustomUserDetails user = common.getUserData();
-
 
 
         orderFilterHolder = providedDataChecker.defaultValueChecker(orderFilterHolder, OrderFilterHolder.class);
@@ -413,13 +402,71 @@ public class OrderController {
 
     }
 
+
     @PostMapping("/saveNewOrder")
-    public ResponseEntity<ErrorResponse> saveNewOrder(@RequestBody Orders order){
+    @Transactional
+    public ResponseEntity<ErrorResponse> saveOrder(@RequestBody Orders order){
 
 
-        System.out.println("adddddddddddddddddddddddddddddddddddddd");
+        System.out.println("saving new way");
 
-        CustomUserDetails user = common.getUserData();
+        CustomUserDetails userData = common.getUserData();
+
+        User user = userRepository.findById(userData.getId()).orElseThrow();
+
+        User actualUser = userRepository.findById(user.getId()).orElseThrow();
+
+        if(actualUser.getRole().equals(Role.ANONYMOUS)){
+
+        }
+        else if (actualUser.getRole().equals(Role.USER)){
+
+            OrderProcessing orderProcessing = actualUser.getUserSettingsList().getOrderProcessing();
+
+
+            switch (orderProcessing){
+                case FIRST_COME_FIRST_SERVE -> {
+
+                    saveNewOrder(order,user);
+                }
+                case MAXIMIZE_ORDER -> {
+                    Orders saveOrder = saveOrderForManualOrMaximaze(order,user,false);
+                    orderRepository.save(saveOrder);
+                    acceptOrdersAsManyAsPossible();
+                }
+
+                case MANUAL -> {
+                    Orders saveOrder = saveOrderForManualOrMaximaze(order,user,true);
+                    orderRepository.save(saveOrder);
+
+                    databaseChecks.checkNewAddedOrder(saveOrder.getId(),false);
+                    databaseChecks.addReserveFromCreatedOrder(saveOrder.getId());
+                    databaseChecks.calculateProductsStock(null, false);
+                    databaseChecks.calculateMaterialsStock(saveOrder.getId());
+
+                }
+
+
+
+
+            }
+
+
+        }
+
+
+
+
+
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Order created",order.getId()),Warnings.OK));
+
+    }
+
+
+
+    public Orders saveOrderForManualOrMaximaze(Orders order, User whoMakesThisOrder, boolean isItManuel){
+
 
         // checks if there is any null or is empty values
         providedDataChecker.checkEmptyValue(order, Orders.class);
@@ -427,6 +474,10 @@ public class OrderController {
         Orders newOrder = new Orders();
 
         newOrder.setOrderNote(order.getOrderNote());
+        if(isItManuel){
+            newOrder.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+
+        }
         newOrder.setOrderStatus(OrderStatus.NEW);
         newOrder.setActiveInactive(ActiveInactive.ACTIVE);
         newOrder.setPayMethod(order.getPayMethod());
@@ -437,7 +488,7 @@ public class OrderController {
         newOrder.setOrderCreatedByGmail(order.getOrderCreatedByGmail());
         newOrder.setOrderCreatedByName(order.getOrderCreatedByName());
         newOrder.setCreatedDate(LocalDate.now());
-        newOrder.setUser(userRepository.findById(user.getId()).orElseThrow());
+        newOrder.setUser(userRepository.findById(whoMakesThisOrder.getId()).orElseThrow());
 
 
 
@@ -454,110 +505,7 @@ public class OrderController {
             }
             newOrder.setTotalPrice(totalPrice);
 
-            List<OrderProducts> products = new ArrayList<>();
-            for(var s : order.getProductsData()){
 
-
-
-                if(s.getProduct().getId() == null){
-                    throw new ValidationException("Product doesnt have an id", Warnings.FATAL_ERROR);
-                }
-                    Product product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
-
-                if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
-                    throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
-                }
-//                if(product.getStockQuantity() < s.getAmountOfProduct()){
-//                    throw new ValidationException(String.format("Order is not possible due to [%s] having less stock that is needed to fill the order | AVAILABLE STOCK %d | NEEDED STOCK %d",product.getProductName(),product.getStockQuantity(),s.getAmountOfProduct()), Warnings.ERROR);
-//                }
-
-
-                    OrderProducts orderProducts = new OrderProducts();
-                    orderProducts.setProduct(product);
-                    orderProducts.setOrder(newOrder);
-                    orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct()));
-                    orderProducts.setAmountOfProduct(s.getAmountOfProduct());
-
-
-
-                List<OrderStepsToComplete> orderSteps = new ArrayList<>();
-
-                Long sizeOfTheSteps = Long.valueOf(product.getSteps().size());
-                Long i = 0L;
-
-                for (var step : product.getSteps()) {
-
-                    OrderStepsToComplete orderStep = new OrderStepsToComplete();
-
-
-                    if(s.getProduct().isStockCalculatedManually()){
-                        orderStep.setProductFinishStepStatus(
-                                ProductFinishStepStatus.NOT_STARTED
-                        );
-
-                        orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
-                        orderStep.setStepsCompleted(0L);
-
-                        orderStep.setStepId(1L);
-                        orderStep.setStepName("Package the product");
-                        orderStep.setStepDescription("Package the product using the styro foam bubble rap");
-
-                        orderStep.setOrderProducts(orderProducts);
-
-                        orderSteps.add(orderStep);
-                        break;
-                    }
-                    else {
-
-
-                        orderStep.setProductFinishStepStatus(
-                                ProductFinishStepStatus.NOT_STARTED
-                        );
-
-                        orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
-                        orderStep.setStepsCompleted(0L);
-
-                        orderStep.setStepRealId(step.getId());
-                        orderStep.setStepId(step.getStepId());
-                        orderStep.setStepName(step.getStepName());
-                        orderStep.setStepDescription(step.getStepDescription());
-
-                        orderStep.setOrderProducts(orderProducts);
-
-                        orderSteps.add(orderStep);
-                    }
-
-                    i++;
-
-                    if(i.equals(sizeOfTheSteps)){
-                        orderStep.setProductFinishStepStatus(
-                                ProductFinishStepStatus.NOT_STARTED
-                        );
-
-                        orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
-                        orderStep.setStepsCompleted(0L);
-
-                        orderStep.setStepId(step.getStepId()+1);
-                        orderStep.setStepName("Package the product");
-                        orderStep.setStepDescription("Package the product using the styro foam bubble rap");
-
-                        orderStep.setOrderProducts(orderProducts);
-
-                        orderSteps.add(orderStep);
-                    }
-
-                }
-
-                orderProducts.setOrderSteps(orderSteps);
-
-
-
-
-                    products.add(orderProducts);
-                }
-
-
-            newOrder.setProductsData(products);
         }
 
 
@@ -592,13 +540,29 @@ public class OrderController {
 
 
 
+        newOrder.setProductsData(stepCreator(order,newOrder));
+
+
+        return newOrder;
+
+    }
+
+    public ResponseEntity<ErrorResponse> saveNewOrder(Orders order, User whoMakesThisOrder){
+
+
+
+
+
+
+        Orders newOrder = saveOrderForManualOrMaximaze(order,whoMakesThisOrder,false);
+
 
 
 
 
 
         // get creator which is admin in this case
-        User creator = userRepository.findById(user.getId()).orElseThrow();
+        User creator = userRepository.findById(whoMakesThisOrder.getId()).orElseThrow();
         // if buyer not found then system cant pinpoint to whom it is needed not big deal it will be null
         User buyer = userRepository.findByGmail(order.getOrderCreatedByGmail());
         newOrder.setUser(creator);
@@ -609,10 +573,10 @@ public class OrderController {
                     countTheTimesAccordingToUser.remove(newOrder.getId());
 
                     orderRepository.save(newOrder);
-
-                    databaseChecks.addReserveFromCreatedOrder(newOrder.getId());
-
                     databaseChecks.checkNewAddedOrder(newOrder.getId(),false);
+                    databaseChecks.addReserveFromCreatedOrder(newOrder.getId());
+                    databaseChecks.calculateProductsStock(null, false);
+                    databaseChecks.calculateMaterialsStock(newOrder.getId());
 
                     return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully", newOrder.getId()), Warnings.OK));
             }
@@ -631,9 +595,314 @@ public class OrderController {
 
 
 
-        actionMaker.makeAction(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Created);
+        actionMaker.makeAction(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),whoMakesThisOrder.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Created);
 
-        return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully",newOrder.getId()),Warnings.OK));
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully and awaiting further actions",newOrder.getId()),Warnings.OK));
+    }
+
+
+    public void acceptOrdersAsManyAsPossible() {
+
+
+        List<Long> acceptedOrders = new ArrayList<>();
+        List<Long> bannedOrders = new ArrayList<>();
+
+        List<Orders> newOrders = orderRepository.getAllNewOrder(1L);
+
+        List<Materials> allMaterials = materialRepository.getAllMaterials(1L);
+
+        boolean stillPossible = true;
+
+        while (stillPossible) {
+
+
+            System.out.println("");
+            System.out.println("");
+            System.out.println("");
+
+
+            List<MostOrders> orderCalculation = new ArrayList<>();
+
+
+            for (var orders : newOrders) {
+
+                Long orderId = orders.getId();
+                Double percentageNeeded = 0.0;
+
+
+                //skip banned orders
+                boolean skip = bannedOrders.contains(orderId);
+
+                if (skip) {
+                    continue;
+                }
+
+
+                for (var productData : orders.getProductsData()) {
+
+                    Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
+
+                    Long productAmountNeeded = productData.getAmountOfProduct();
+
+                    for (var materials : product.getMaterials()) {
+
+                        Long materialId = materials.getMaterials().getId();
+
+                        Long materialNeeded = materials.getAmountUsed();
+
+                        Long totalMaterialNeeded = productAmountNeeded * materialNeeded;
+
+                        for (var s : allMaterials) {
+                            if (s.getId().equals(materialId)) {
+
+                                Long availableMaterial = s.getInStock();
+
+                                // remove the order if its taking more or equal items
+                                if (totalMaterialNeeded >= availableMaterial) {
+                                    bannedOrders.add(orderId);
+                                    break;
+                                } else {
+
+                                    System.out.println(orderId);
+                                    System.out.println("Material " + materials.getMaterials().getMaterialName());
+                                    System.out.println("Total material neeeded " + totalMaterialNeeded);
+                                    System.out.println("Total material exists " + availableMaterial);
+                                    System.out.println("Percentage taken " + ((double) totalMaterialNeeded / (double) availableMaterial) * 100);
+                                    System.out.println("---------------------------------------------");
+
+                                    percentageNeeded += ((double) totalMaterialNeeded / (double) availableMaterial) * 100;
+                                }
+
+                            }
+                        }
+
+
+                    }
+
+                    orderCalculation.add(new MostOrders(orders, percentageNeeded));
+                }
+
+            }
+
+
+            System.out.println("===========Totals================================");
+            System.out.println("===========Totals================================");
+            System.out.println("===========Totals================================");
+
+            orderCalculation.sort(Comparator.comparing(MostOrders::getPercentage));
+
+
+            for (var s : orderCalculation) {
+                System.out.println(s.getOrders().getId());
+                System.out.println(s.getPercentage());
+            }
+
+
+            MostOrders acceptedOrder;
+
+            try {
+                acceptedOrder = orderCalculation.get(0);
+            } catch (Exception e) {
+
+                System.out.println("No more orders present");
+
+                break;
+            }
+
+            boolean canOrderBeAccepted = true;
+
+            for (var productData : acceptedOrder.getOrders().getProductsData()) {
+
+
+                Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
+
+                Long productAmountNeeded = productData.getAmountOfProduct();
+
+                for (var material : product.getMaterials()) {
+
+
+                    Materials inTheDb = new Materials();
+
+                    for (var materialInDb : allMaterials) {
+                        if (material.getMaterials().getId().equals(materialInDb.getId())) {
+                            inTheDb = materialInDb;
+                        }
+                    }
+
+                    Long materialNeeded = material.getAmountUsed();
+
+                    Long totalMaterialNeeded = productAmountNeeded * materialNeeded;
+
+
+                    Long materialStock = inTheDb.getInStock();
+
+                    Long newStock = materialStock - totalMaterialNeeded;
+
+                    if (newStock < 0) {
+
+                        canOrderBeAccepted = false;
+
+                    }
+
+                }
+
+
+            }
+
+            if (canOrderBeAccepted) {
+                acceptedOrders.add(acceptedOrder.getOrders().getId());
+                bannedOrders.add(acceptedOrder.getOrders().getId());
+            } else {
+                Orders order = orderRepository.findById(acceptedOrder.getOrders().getId()).orElseThrow();
+                order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                orderRepository.save(order);
+                bannedOrders.add(acceptedOrder.getOrders().getId());
+            }
+
+
+
+
+        }
+
+        System.out.println("===========Acepting order one smalest and recount================================");
+        for (var accepted : acceptedOrders) {
+            System.out.println(accepted);
+
+            Orders order = orderRepository.findById(accepted).orElseThrow();
+            order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+
+
+
+            order.setProductsData(stepCreator(order, order));
+
+            orderRepository.save(order);
+
+
+            databaseChecks.checkNewAddedOrder(order.getId(),false);
+            databaseChecks.addReserveFromCreatedOrder(order.getId());
+            databaseChecks.calculateProductsStock(null, false);
+            databaseChecks.calculateMaterialsStock(order.getId());
+
+
+        }
+
+    }
+
+
+    public List<OrderProducts> stepCreator(Orders order, Orders newOrder){
+
+
+        List<OrderProducts> products = new ArrayList<>();
+        for(var s : order.getProductsData()){
+
+
+
+            if(s.getProduct().getId() == null){
+                throw new ValidationException("Product doesnt have an id", Warnings.FATAL_ERROR);
+            }
+            Product product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
+
+            if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
+                throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
+            }
+//                if(product.getStockQuantity() < s.getAmountOfProduct()){
+//                    throw new ValidationException(String.format("Order is not possible due to [%s] having less stock that is needed to fill the order | AVAILABLE STOCK %d | NEEDED STOCK %d",product.getProductName(),product.getStockQuantity(),s.getAmountOfProduct()), Warnings.ERROR);
+//                }
+
+
+            OrderProducts orderProducts = new OrderProducts();
+            orderProducts.setProduct(product);
+            orderProducts.setOrder(newOrder);
+            orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct()));
+            orderProducts.setAmountOfProduct(s.getAmountOfProduct());
+
+
+
+            List<OrderStepsToComplete> orderSteps = new ArrayList<>();
+
+            Long sizeOfTheSteps = Long.valueOf(product.getSteps().size());
+            Long i = 0L;
+
+            for (var step : product.getSteps()) {
+
+
+
+                OrderStepsToComplete orderStep = new OrderStepsToComplete();
+
+
+                if(product.isStockCalculatedManually()){
+                    orderStep.setProductFinishStepStatus(
+                            ProductFinishStepStatus.NOT_STARTED
+                    );
+
+                    orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                    orderStep.setStepsCompleted(0L);
+
+                    orderStep.setStepId(1L);
+                    orderStep.setStepName("Package the product");
+                    orderStep.setStepDescription("Package the product using the styro foam bubble rap");
+
+                    orderStep.setOrderProducts(orderProducts);
+
+                    orderSteps.add(orderStep);
+                    break;
+                }
+                else {
+
+
+                    orderStep.setProductFinishStepStatus(
+                            ProductFinishStepStatus.NOT_STARTED
+                    );
+
+                    orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                    orderStep.setStepsCompleted(0L);
+
+                    orderStep.setStepRealId(step.getId());
+                    orderStep.setStepId(step.getStepId());
+                    orderStep.setStepName(step.getStepName());
+                    orderStep.setStepDescription(step.getStepDescription());
+
+                    orderStep.setOrderProducts(orderProducts);
+
+                    orderSteps.add(orderStep);
+                }
+
+                i++;
+
+                if(i.equals(sizeOfTheSteps)){
+
+                    OrderStepsToComplete packageStep = new OrderStepsToComplete();
+
+                    packageStep.setProductFinishStepStatus(
+                            ProductFinishStepStatus.NOT_STARTED
+                    );
+
+                    packageStep.setStepsNeeded(orderProducts.getAmountOfProduct());
+                    packageStep.setStepsCompleted(0L);
+
+                    packageStep.setStepId(step.getStepId()+1);
+                    packageStep.setStepName("Package the product");
+                    packageStep.setStepDescription("Package the product using the styro foam bubble rap");
+
+                    packageStep.setOrderProducts(orderProducts);
+
+                    orderSteps.add(packageStep);
+                }
+
+            }
+
+            orderProducts.setOrderSteps(orderSteps);
+
+
+
+
+            products.add(orderProducts);
+        }
+
+
+
+        return products;
 
     }
 
@@ -715,7 +984,7 @@ public class OrderController {
 //            }
 //        }
 
-        if(newOrder.getOrderStatus().equals(OrderStatus.NEW)){
+        if(newOrder.getOrderStatus().equals(OrderStatus.AWAITING_CONFIRMATION)){
             newOrder.setOrderStatus(OrderStatus.Pending);
 
             databaseChecks.checkNewAddedOrder(newOrder.getId(), true);

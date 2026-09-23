@@ -39,10 +39,21 @@ LEFT JOIN FETCH o.user
     List<Orders> findAllFull(Long id);
 
     @Query("""
+SELECT o
+ FROM Orders o
+ 
+
+   WHERE o.user.id = :userId and o.orderStatus = 'NEW'
+
+""")
+    List<Orders> getAllNewOrder(Long userId);
+
+
+    @Query("""
 SELECT  count(o)
  FROM Orders o
   WHERE o.user.id = :id
-   AND orderStatus = 'NEW' 
+   AND o.orderStatus = 'NEW' or o.orderStatus = 'AWAITING_CONFIRMATION' 
 
 """)
     Long findNewOrdersCount(Long id);
@@ -80,7 +91,7 @@ AND (
     OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
     OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
 )
-and o.orderStatus != 'NEW'
+and o.orderStatus != 'NEW' and o.orderStatus != 'AWAITING_CONFIRMATION' 
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
 HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)
 """)
@@ -116,39 +127,12 @@ FROM Orders o
 JOIN o.employees oe
 LEFT JOIN o.productsData op
 LEFT JOIN o.productsData pd
-WHERE o.user.id = :id
-AND(:active IS NULL OR o.activeInactive = :active)
-AND(:matId IS NULL OR pd.product.id = :matId)
-AND(:empId IS NULL OR oe.employee.id = :empId)
-AND (:status IS NULL OR o.orderStatus = :status)
-AND (:dateFrom IS NULL OR o.created >= :dateFrom)
-AND (:dateTo IS NULL OR o.estimatedDueDate <= :dateTo)
-AND (:priceFrom IS NULL OR o.totalPrice >= :priceFrom)
-AND (:priceTo IS NULL OR o.totalPrice <= :priceTo)
-AND (
-    :prompt IS NULL
-    OR CAST(o.id AS string) LIKE CONCAT('%', :prompt, '%')
-    OR LOWER(o.billingAddress) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    OR LOWER(o.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    OR LOWER(o.orderCreatedByName) LIKE LOWER(CONCAT('%', :prompt, '%'))
-    OR LOWER(o.orderCreatedByGmail) LIKE LOWER(CONCAT('%', :prompt, '%'))
-)
+WHERE o.user.id = :id and o.orderStatus = 'AWAITING_CONFIRMATION' or o.orderStatus = 'NEW'
 
 GROUP BY o.id, o.orderStatus, o.created, o.estimatedDueDate, o.totalPrice
-HAVING (:amountOfProduct IS NULL OR COALESCE(SUM(op.amountOfProduct), 0) = :amountOfProduct)
+
 """)
     List<OrdersFeedData> getNewOrders(
-            @Param("status") OrderStatus status,
-            @Param("priceFrom") Double priceFrom,
-            @Param("priceTo") Double priceTo,
-            @Param("dateFrom") LocalDateTime dateFrom,
-            @Param("dateTo") LocalDateTime dateTo,
-            @Param("amountOfProduct") Long amountOfProduct,
-            @Param("prompt") String prompt,
-            @Param("empId") Long empId,
-            @Param("matId") Long matId,
-            @Param("active") ActiveInactive active,
-            Pageable pageable,
             Long id
     );
 

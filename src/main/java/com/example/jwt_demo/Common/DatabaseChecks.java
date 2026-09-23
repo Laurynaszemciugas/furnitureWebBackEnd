@@ -4,18 +4,18 @@ import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
+import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.controller.EmailSenderContoller;
+import com.example.jwt_demo.controller.OrderController;
 import com.example.jwt_demo.repository.*;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static com.fasterxml.jackson.databind.type.LogicalType.Map;
@@ -46,38 +46,47 @@ public class DatabaseChecks {
     @Autowired
     EmailSenderContoller emailSenderContoller;
 
+    @Autowired
+    ProvidedDataChecker providedDataChecker;
+
+
     StringBuilder message = new StringBuilder();
 
     Long itemCount = 0L;
 
 
-    public void addReserveFromCreatedOrder(Long orderId){
+    public void addReserveFromCreatedOrder(Long orderId) {
 
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
-        for(var productData : order.getProductsData()){
+        for (var productData : order.getProductsData()) {
 
 
             Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
             Long amountOfProductTaken = productData.getAmountOfProduct();
-            for(var materials : product.getMaterials()){
+            for (var materials : product.getMaterials()) {
 
                 Long materialNeededForOne = materials.getAmountUsed();
 
                 Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
                 Long materialStock = material.getInStock();
 
-                if(materialStock - (materialNeededForOne * amountOfProductTaken) < 0){
+                if (materialStock - (materialNeededForOne * amountOfProductTaken) < 0) {
                     order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
                     orderRepository.save(order);
-                    throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY",Warnings.ERROR);
+                    throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY", Warnings.ERROR);
+                }
+
+                else{
+
+                    order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+                    orderRepository.save(order);
                 }
 
                 material.setInStock(materialStock - (materialNeededForOne * amountOfProductTaken));
-                material.setReserved(materialStock - (materialStock - (materialNeededForOne * amountOfProductTaken)));
+                material.setReserved(material.getReserved() + (materialStock - (materialStock - (materialNeededForOne * amountOfProductTaken))));
 
                 materialRepository.save(material);
-
 
 
             }
@@ -88,13 +97,13 @@ public class DatabaseChecks {
 
     }
 
-    public void orderFinishedDeductReserve(Long orderId){
+    public void orderFinishedDeductReserve(Long orderId) {
 
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
-        for(var orderProducts : order.getProductsData()){
+        for (var orderProducts : order.getProductsData()) {
             Product product = productRepository.findById(orderProducts.getProduct().getId()).orElseThrow();
-            for(var mats : product.getMaterials()){
+            for (var mats : product.getMaterials()) {
 
                 Materials material = mats.getMaterials();
 
@@ -108,6 +117,11 @@ public class DatabaseChecks {
 
             }
         }
+
+
+
+
+
 
 
     }
