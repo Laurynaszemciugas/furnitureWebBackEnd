@@ -378,10 +378,10 @@ public class OrderController {
             sameExistingOrder.setPayMethod(order.getPayMethod());
             sameExistingOrder.setPayStatus(order.getPayStatus());
 
-
+        databaseChecks.calculateMaterialsStock(order.getId());
         databaseChecks.checkModifiedOrders(sameExistingOrder.getId(),nonModified);
         databaseChecks.calculateProductsStock(null,false);
-        databaseChecks.calculateMaterialsStock(order.getId());
+
         orderRepository.save(sameExistingOrder);
 
         actionMaker.makeAction(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),user.getId(),null,ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Updated);
@@ -439,10 +439,11 @@ public class OrderController {
                     Orders saveOrder = saveOrderForManualOrMaximaze(order,user,true);
                     orderRepository.save(saveOrder);
 
+                    databaseChecks.calculateMaterialsStock(saveOrder.getId());
                     databaseChecks.checkNewAddedOrder(saveOrder.getId(),false);
                     databaseChecks.addReserveFromCreatedOrder(saveOrder.getId());
                     databaseChecks.calculateProductsStock(null, false);
-                    databaseChecks.calculateMaterialsStock(saveOrder.getId());
+
 
                 }
 
@@ -573,10 +574,11 @@ public class OrderController {
                     countTheTimesAccordingToUser.remove(newOrder.getId());
 
                     orderRepository.save(newOrder);
+                    databaseChecks.calculateMaterialsStock(newOrder.getId());
                     databaseChecks.checkNewAddedOrder(newOrder.getId(),false);
                     databaseChecks.addReserveFromCreatedOrder(newOrder.getId());
                     databaseChecks.calculateProductsStock(null, false);
-                    databaseChecks.calculateMaterialsStock(newOrder.getId());
+
 
                     return ResponseEntity.ok(new ErrorResponse(String.format("Order [ORD-%d] was created successfully", newOrder.getId()), Warnings.OK));
             }
@@ -778,11 +780,11 @@ public class OrderController {
 
             orderRepository.save(order);
 
-
+            databaseChecks.calculateMaterialsStock(order.getId());
             databaseChecks.checkNewAddedOrder(order.getId(),false);
             databaseChecks.addReserveFromCreatedOrder(order.getId());
             databaseChecks.calculateProductsStock(null, false);
-            databaseChecks.calculateMaterialsStock(order.getId());
+
 
 
         }
@@ -987,9 +989,9 @@ public class OrderController {
         if(newOrder.getOrderStatus().equals(OrderStatus.AWAITING_CONFIRMATION)){
             newOrder.setOrderStatus(OrderStatus.Pending);
 
-            databaseChecks.checkNewAddedOrder(newOrder.getId(), true);
-            databaseChecks.calculateProductsStock(null, false);
-            databaseChecks.calculateMaterialsStock(newOrder.getId());
+//            databaseChecks.checkNewAddedOrder(newOrder.getId(), true);
+//            databaseChecks.calculateProductsStock(null, false);
+//            databaseChecks.calculateMaterialsStock(newOrder.getId());
 
             orderRepository.save(newOrder);
 

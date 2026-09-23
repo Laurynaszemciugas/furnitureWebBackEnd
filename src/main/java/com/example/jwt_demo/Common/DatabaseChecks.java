@@ -74,7 +74,8 @@ public class DatabaseChecks {
                 if (materialStock - (materialNeededForOne * amountOfProductTaken) < 0) {
                     order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
                     orderRepository.save(order);
-                    throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY", Warnings.ERROR);
+                    //throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY", Warnings.WARNING);
+                    return;
                 }
 
                 else{
@@ -304,13 +305,13 @@ public class DatabaseChecks {
 
                 Long lowThreshold = mat.getMinThresHold();
 
-                if (newStock > lowThreshold) {
+                if (getStock > lowThreshold) {
                     mat.setStock(Stock.In_Stock);
                 }
-                if (newStock <= lowThreshold) {
+                if (getStock <= lowThreshold) {
                     mat.setStock(Stock.Low_Stock);
                 }
-                if (newStock == 0) {
+                if (getStock == 0) {
                     mat.setStock(Stock.No_Stock);
                 }
 
