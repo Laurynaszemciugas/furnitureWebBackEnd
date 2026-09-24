@@ -19,13 +19,40 @@ import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface MaterialRepository extends JpaRepository<Materials,Long> {
+
+
+
+
+
+
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+
+     UPDATE `bpfurniture`.`materials` m
+    SET `stock` = Case
+                                                          
+    When m.in_stock = 0 then 'No_Stock'
+    When m.in_stock > m.min_thres_hold then 'In_Stock'
+    When m.in_stock <= m.min_thres_hold then 'Low_Stock'
+                                                          
+                                                          
+     End
+                                                          
+    WHERE `user_id` = :userId;
+    """, nativeQuery = true)
+    void recalculteStockJustAccordingToLowThreAndStock(@Param("userId") Long userId);
+
 
 
     @Query("SELECT new com.example.jwt_demo.DTOS.Product.ComboBoxMaterial(m.id, m.materialName) " +
