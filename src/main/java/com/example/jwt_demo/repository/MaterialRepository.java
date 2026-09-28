@@ -530,4 +530,40 @@ GROUP BY
             Pageable pageable
     );
 
+
+
+
+    // ======================================================
+    // related prodcuts for the material main page quick action product view
+    //==========================================================
+    @Query("""
+    SELECT
+       CASE
+        WHEN COUNT(DISTINCT m.id) = 0
+        THEN 1
+        ELSE CEIL(COUNT(DISTINCT m.id) / :pageCount)
+    END
+    FROM Materials m
+    JOIN ProductMaterials pm ON pm.materials.id = m.id
+    JOIN pm.product p
+    LEFT JOIN ProductImageData pim ON pim.product.id = p.id
+        and pim.imageLogic = 'Main'
+    WHERE m.id = :materialId
+      AND (
+          :prompt IS NULL
+          OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+      )
+      AND (
+          :productCategory IS NULL
+          OR p.category = :productCategory
+      )
+    """)
+    Long getRelatedProductsPages(
+            @Param("materialId") Long materialId,
+            @Param("prompt") String prompt,
+            @Param("productCategory") Category productCategory,
+            int pageCount
+    );
+
+
 }

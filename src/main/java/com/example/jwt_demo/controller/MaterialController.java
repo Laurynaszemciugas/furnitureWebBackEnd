@@ -596,6 +596,19 @@ public class MaterialController {
         return ResponseEntity.ok(materialRepository.getRelatedProductsAccordingToMaterial(filterData.getId(), filterData.getPrompt(), filterData.getProductCategory(), PageRequest.of(filterData.getPage(),filterData.getPageCount())));
     }
 
+    // ======================================================
+    // related prodcuts for the material main page quick action product view
+    //==========================================================
+    @PostMapping("/getRelatedProductsPages")
+    public ResponseEntity<Long> getRelatedProductsPages(@RequestBody MaterialViewOnProductUsageFilter filterData ){
+        CustomUserDetails user = common.getUserData();
+
+        filterData = providedDataChecker.defaultValueChecker(filterData, MaterialViewOnProductUsageFilter.class);
+
+        return ResponseEntity.ok(materialRepository.getRelatedProductsPages(filterData.getId(), filterData.getPrompt(), filterData.getProductCategory(), filterData.getPageCount()));
+    }
+
+
 
     // dashBoard
 
