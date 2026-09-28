@@ -7,16 +7,11 @@ import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.DashBoard.MaterialLowNo;
-import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
-import com.example.jwt_demo.DTOS.Material.MaterialInfo;
-import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
-import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
+import com.example.jwt_demo.DTOS.Material.*;
 import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.Entity.Materials;
-import com.example.jwt_demo.Enums.ActiveInactive;
-import com.example.jwt_demo.Enums.MaterialType;
-import com.example.jwt_demo.Enums.Stock;
+import com.example.jwt_demo.Enums.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -89,6 +84,8 @@ SELECT new com.example.jwt_demo.DTOS.Material.MaterialBriefDto(
     m.inStock,
     m.minThresHold,
     m.reserved,
+    
+    m.deliveryDate,
     
     m.unit,
     m.materialFinishType,
@@ -500,7 +497,37 @@ GROUP BY
     List<MaterialLowNo> getMaterialLowNoStock(Long userId);
 
 
-
-
+    // ======================================================
+    // related prodcuts for the material main page quick action product view
+    //==========================================================
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Material.RelatedProducts(
+        p.id,
+        p.productName,
+        p.category,
+        pm.amountUsed,
+        pim.imageUrl
+    )
+    FROM Materials m
+    JOIN ProductMaterials pm ON pm.materials.id = m.id
+    JOIN pm.product p
+    LEFT JOIN ProductImageData pim ON pim.product.id = p.id
+        and pim.imageLogic = 'Main'
+    WHERE m.id = :materialId
+      AND (
+          :prompt IS NULL
+          OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+      )
+      AND (
+          :productCategory IS NULL
+          OR p.category = :productCategory
+      )
+    """)
+    List<RelatedProducts> getRelatedProductsAccordingToMaterial(
+            @Param("materialId") Long materialId,
+            @Param("prompt") String prompt,
+            @Param("productCategory") Category productCategory,
+            Pageable pageable
+    );
 
 }

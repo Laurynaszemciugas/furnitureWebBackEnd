@@ -89,6 +89,7 @@ SELECT new com.example.jwt_demo.DTOS.User.PersonalPrefrences(
     s.dateFormat,
     s.timeZone,
     s.language,
+    s.pageStart,
     s.receiveGmail
 )
 FROM UserSettings s

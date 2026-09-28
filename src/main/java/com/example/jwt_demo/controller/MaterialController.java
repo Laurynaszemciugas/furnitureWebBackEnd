@@ -7,10 +7,7 @@ import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialStock;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardMaterialUsageInfo;
 import com.example.jwt_demo.DTOS.DashBoard.MaterialLowNo;
-import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
-import com.example.jwt_demo.DTOS.Material.MaterialInfo;
-import com.example.jwt_demo.DTOS.Material.MaterialLowStockGrid;
-import com.example.jwt_demo.DTOS.Material.MaterialReportPieChart;
+import com.example.jwt_demo.DTOS.Material.*;
 import com.example.jwt_demo.DTOS.Product.ComboBoxMaterial;
 import com.example.jwt_demo.DTOS.StockMovement.StockMovementGrid;
 import com.example.jwt_demo.Entity.Materials;
@@ -19,6 +16,7 @@ import com.example.jwt_demo.Entity.StockMovement;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
+import com.example.jwt_demo.FilterDTO.Material.MaterialViewOnProductUsageFilter;
 import com.example.jwt_demo.repository.MaterialRepository;
 import com.example.jwt_demo.repository.StockMovementRepository;
 import com.example.jwt_demo.repository.UserRepository;
@@ -581,6 +579,21 @@ public class MaterialController {
 
 
         return ResponseEntity.ok(materialInfo);
+    }
+
+
+
+
+    // ======================================================
+    // related prodcuts for the material main page quick action product view
+    //==========================================================
+    @PostMapping("/getRelatedProductsAccordingToMaterial")
+    public ResponseEntity<List<RelatedProducts>> getRelatedProductsAccordingToMaterial(@RequestBody MaterialViewOnProductUsageFilter filterData ){
+        CustomUserDetails user = common.getUserData();
+
+        filterData = providedDataChecker.defaultValueChecker(filterData, MaterialViewOnProductUsageFilter.class);
+
+        return ResponseEntity.ok(materialRepository.getRelatedProductsAccordingToMaterial(filterData.getId(), filterData.getPrompt(), filterData.getProductCategory(), PageRequest.of(filterData.getPage(),filterData.getPageCount())));
     }
 
 

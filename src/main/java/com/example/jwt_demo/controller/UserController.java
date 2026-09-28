@@ -121,6 +121,7 @@ public class UserController {
         userSettings.setDateFormat(userData.getUserSettingsList().getDateFormat());
         userSettings.setReceiveGmail(userData.getUserSettingsList().isReceiveGmail());
         userSettings.setTimeZone(userData.getUserSettingsList().getTimeZone());
+        userSettings.setPageStart(userData.getUserSettingsList().getPageStart());
 
         userRepository.save(existingUser);
 

@@ -6,6 +6,7 @@ import com.example.jwt_demo.Enums.MaterialType;
 import com.example.jwt_demo.Enums.Stock;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -25,6 +26,8 @@ public class MaterialBriefDto {
     private Long amountLeft;
     private Long minThresh;
     private Long reserved;
+
+    private LocalDate deliveryDate;
 
 
     private String unit;

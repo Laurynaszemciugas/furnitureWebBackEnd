@@ -39,6 +39,9 @@ public class UserSettings {
     @Enumerated(EnumType.STRING)
     private OrderProcessing orderProcessing;
 
+    @Enumerated(EnumType.STRING)
+    private PageStart pageStart = PageStart.DASHBOARD;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore

@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/quickMaterialActions")
 public class MaterialQuickActions {
@@ -53,6 +55,32 @@ public class MaterialQuickActions {
 
         return ResponseEntity.ok(new ErrorResponse("Material updated", Warnings.OK));
 
+    }
+
+
+    @GetMapping("/updateMaterialDeliveryDate/{materialId}/{newDeliveryDate}")
+    public ResponseEntity<ErrorResponse> updateMaterialDeliveryDate(@PathVariable Long materialId,@PathVariable LocalDate newDeliveryDate){
+
+        CustomUserDetails user = common.getUserData();
+
+        Materials materials = materialRepository.findById(materialId).orElseThrow();
+
+        if(materials.getUser().getId() != user.getId()){
+            throw new ValidationException("Something went wrong",Warnings.ERROR);
+        }
+
+        LocalDate oldDeliveryDate = materials.getDeliveryDate();
+
+        if(oldDeliveryDate.isBefore(LocalDate.now())){
+            throw new ValidationException("Date cannot be before today",Warnings.ERROR);
+        }
+
+        materials.setDeliveryDate(newDeliveryDate);
+
+        materialRepository.save(materials);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Material updated", Warnings.OK));
     }
 
 }
