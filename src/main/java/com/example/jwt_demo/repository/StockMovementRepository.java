@@ -35,4 +35,26 @@ List<StockMovementGrid> stockMovementHistory(@Param("dateFrom") LocalDateTime da
                                              Long id);
 
 
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.StockMovement.StockMovementGrid(
+    
+     st.created, m.materialName, st.type, st.amountTakeAdd,st.balance,st.user)
+     
+     
+    FROM StockMovement st
+    
+    Join Materials m ON m.id = st.materials.id
+    WHERE st.materials.id = :id
+
+
+""")
+
+    List<StockMovementGrid> stockMovementHistoryAll(Long id);
+
+
+
+
+
+
 }

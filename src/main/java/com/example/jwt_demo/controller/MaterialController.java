@@ -551,7 +551,7 @@ public class MaterialController {
 
         CustomUserDetails user = common.getUserData();
 
-        return ResponseEntity.ok(stockMovementRepository.stockMovementHistory(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,5), user.getId()));
+        return ResponseEntity.ok(stockMovementRepository.stockMovementHistory(logic.dateConverter(fromDate),logic.dateConverter(toDate),PageRequest.of(0,20), user.getId()));
 
     }
 
