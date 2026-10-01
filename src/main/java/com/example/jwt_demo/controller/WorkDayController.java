@@ -1,11 +1,13 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
+import com.example.jwt_demo.DTOS.WorkDay.WorkDayMiniStats;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Entity.WorkDay;
 import com.example.jwt_demo.Entity.WorkDone;
 import com.example.jwt_demo.Enums.Warnings;
+import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.EmployeeRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.repository.WorkDayRepository;
@@ -14,6 +16,7 @@ import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -139,6 +142,9 @@ public class WorkDayController {
         return ResponseEntity.ok(workDones);
 
     }
+
+
+
 
 
 }
