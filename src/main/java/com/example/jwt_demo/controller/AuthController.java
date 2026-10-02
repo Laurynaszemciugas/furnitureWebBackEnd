@@ -278,7 +278,7 @@ public class AuthController {
                 user.getLastName(),
                 encoder.encode(user.getPassword()),
                 "",
-                Role.USER,
+                Role.ADMIN,
                 AccountStatus.ALLOWED,
                 null,
                 LocalDateTime.now(),

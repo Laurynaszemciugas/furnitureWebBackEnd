@@ -734,22 +734,77 @@ AND (
 
 
     @Query("""
-    SELECT
-       
-       o
-       
-        FROM EmployeeActiveOrders o
-   
-   Join o.order ord 
- 
-        
-    WHERE o.employee.id = :employeeId and ord.orderStatus != 'Finished'
-    
+    SELECT o
+    FROM EmployeeActiveOrders o
+    JOIN o.order ord
+    WHERE o.employee.id = :employeeId
+      AND ord.orderStatus != 'Finished'
+
+      AND (
+          :prompt IS NULL
+          OR :prompt = ''
+          OR LOWER(ord.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+          OR EXISTS (
+              SELECT 1
+              FROM OrderProducts op
+              JOIN op.product p
+              WHERE op.order.id = ord.id
+                AND (
+                    LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                    OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                )
+          )
+      )
+
+      AND (:orderStatus IS NULL OR ord.orderStatus = :orderStatus)
+      AND (:priority IS NULL OR ord.priority = :priority)
 """)
     List<EmployeeActiveOrders> findEmployeeActiveOrdersLimited(
             @Param("employeeId") Long employeeId,
+            @Param("prompt") String prompt,
+            @Param("orderStatus") OrderStatus orderStatus,
+            @Param("priority") Priority priority,
             Pageable pageable
+    );
 
+    @Query("""
+    Select
+    CASE
+            WHEN COUNT(DISTINCT o.id) = 0 THEN 1
+            ELSE CEIL(
+                COUNT(DISTINCT o.id) * 1.0 / :pageCount
+            )
+        END
+    FROM EmployeeActiveOrders o
+    JOIN o.order ord
+    WHERE o.employee.id = :employeeId
+      AND ord.orderStatus != 'Finished'
+
+      AND (
+          :prompt IS NULL
+          OR :prompt = ''
+          OR LOWER(ord.phoneNumber) LIKE LOWER(CONCAT('%', :prompt, '%'))
+          OR EXISTS (
+              SELECT 1
+              FROM OrderProducts op
+              JOIN op.product p
+              WHERE op.order.id = ord.id
+                AND (
+                    LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                    OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                )
+          )
+      )
+
+      AND (:orderStatus IS NULL OR ord.orderStatus = :orderStatus)
+      AND (:priority IS NULL OR ord.priority = :priority)
+""")
+    Long findEmployeeActiveOrdersLimitedPages(
+            @Param("employeeId") Long employeeId,
+            @Param("prompt") String prompt,
+            @Param("orderStatus") OrderStatus orderStatus,
+            @Param("priority") Priority priority,
+            int pageCount
     );
 
 }

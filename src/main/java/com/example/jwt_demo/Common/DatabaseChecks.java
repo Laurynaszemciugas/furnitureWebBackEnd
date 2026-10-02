@@ -59,7 +59,7 @@ public class DatabaseChecks {
 
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
-        for (var productData : order.getProductsData()) {
+        for (var productData : new ArrayList<>(order.getProductsData())) {
 
 
             Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();

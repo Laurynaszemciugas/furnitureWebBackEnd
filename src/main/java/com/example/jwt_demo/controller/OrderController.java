@@ -18,6 +18,7 @@ import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
 import com.example.jwt_demo.Entity.OrderStepsJoin.OrderStepCompletionLogs;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
+import com.example.jwt_demo.FilterDTO.EmployeeActiveOrderFilter.EmployeeActiveOrderFilter;
 import com.example.jwt_demo.FilterDTO.EmployeeAvailableOrderFilter.EmployeeAvailableOrderFilter;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
@@ -429,10 +430,14 @@ public class OrderController {
 
         User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
+
+        System.out.println(actualUser.getRole().equals(Role.ADMIN));
+
         if(actualUser.getRole().equals(Role.ANONYMOUS)){
 
         }
-        else if (actualUser.getRole().equals(Role.USER)){
+        else if (actualUser.getRole().equals(Role.ADMIN)){
+
 
             OrderProcessing orderProcessing = actualUser.getUserSettingsList().getOrderProcessing();
 
@@ -755,21 +760,68 @@ public class OrderController {
     }
 
 
-    @GetMapping("/findEmployeeActiveOrders")
-    public ResponseEntity<List<EmployeeActiveOrders>> findEmployeeActiveOrders(){
+    @PostMapping("/findEmployeeActiveOrders")
+    public ResponseEntity<List<EmployeeActiveOrders>> findEmployeeActiveOrders(@RequestBody EmployeeActiveOrderFilter filter){
 
 
         CustomUserDetails user = common.getUserData();
 
+        filter = providedDataChecker.defaultValueChecker(filter, EmployeeActiveOrderFilter.class);
 
-        Long employeeId = employeeRepository.employeeId(user.getId());
+
+        Long employeeId = 0L;
+
+        if(filter.getEmpId() == null){
+            employeeId = employeeRepository.employeeId(user.getId());
+
+        }
+        else{
+            employeeId = filter.getEmpId();
+
+        }
 
         databaseChecks.checkPriority(user,false);
 
 
-        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimited(employeeId,PageRequest.of(0,5)));
+        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimited(employeeId,
+                filter.getPromt(),
+                filter.getOrderStatus(),
+                filter.getPriority(),
+                PageRequest.of(filter.getPage(), filter.getPageCount())));
 
     }
+
+    @PostMapping("/findEmployeeActiveOrdersPages")
+    public ResponseEntity<Long> findEmployeeActiveOrdersPages(@RequestBody EmployeeActiveOrderFilter filter){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        filter = providedDataChecker.defaultValueChecker(filter, EmployeeActiveOrderFilter.class);
+
+
+        Long employeeId = 0L;
+
+        if(filter.getEmpId() == null){
+            employeeId = employeeRepository.employeeId(user.getId());
+
+        }
+        else{
+            employeeId = filter.getEmpId();
+
+        }
+
+        databaseChecks.checkPriority(user,false);
+
+
+        return ResponseEntity.ok(orderRepository.findEmployeeActiveOrdersLimitedPages(employeeId,
+                filter.getPromt(),
+                filter.getOrderStatus(),
+                filter.getPriority(),
+                filter.getPageCount()));
+
+    }
+
 
 
     // employee available order

@@ -8,6 +8,7 @@ import com.example.jwt_demo.DTOS.User.PersonalPrefrences;
 import com.example.jwt_demo.DTOS.User.ProfileInformation;
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Entity.UserSettings;
+import com.example.jwt_demo.Enums.Role;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.UserRepository;
@@ -16,6 +17,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/user")
@@ -105,6 +107,17 @@ public class UserController {
 
 
         return ResponseEntity.ok(userSettings);
+
+    }
+
+
+    @GetMapping("/getUserRole")
+    public ResponseEntity<Role> getUserRole(){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(user.getRole());
 
     }
 

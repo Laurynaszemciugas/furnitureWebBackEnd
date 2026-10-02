@@ -272,6 +272,8 @@ public class MaterialController {
 
         newMat.setMaterialColor(mat.getMaterialColor());
 
+        newMat.setReserved(0L);
+
 
         if (mat.getImages() != null) {
             for (var img : mat.getImages()) {

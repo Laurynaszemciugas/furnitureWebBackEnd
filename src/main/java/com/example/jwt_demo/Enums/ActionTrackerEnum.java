@@ -4,6 +4,7 @@ public enum ActionTrackerEnum {
 
     SYSTEM,
     USER,
+    ADMIN,
     EMPLOYEE,
     CLIENT,
     MANAGER,
