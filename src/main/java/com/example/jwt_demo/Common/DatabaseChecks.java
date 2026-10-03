@@ -2,6 +2,8 @@ package com.example.jwt_demo.Common;
 
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
+import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
+import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
@@ -540,6 +542,88 @@ public class DatabaseChecks {
     }
 
 
+    public void checkOrderSteps(Long orderId, Orders oldOrder){
+
+        Orders newOrder = orderRepository.findById(orderId).orElseThrow();
+
+
+        for(var prod : newOrder.getProductsData()){
+
+            OrderProducts productOld = oldOrder.getProductsData()
+                    .stream()
+                    .filter(p -> p.getProduct().getId().equals(prod.getProduct().getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (productOld == null) {
+
+                System.out.println("found added product");
+
+                // find product and its stepp and copy them
+                List<OrderStepsToComplete> steps = new ArrayList<>();
+
+                for(var step : prod.getProduct().getSteps()){
+
+                    OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+
+                    orderStepsToComplete.setStepId(step.getStepId());
+                    orderStepsToComplete.setStepName(step.getStepName());
+                    orderStepsToComplete.setStepDescription(step.getStepDescription());
+                    orderStepsToComplete.setEmployee(null);
+                    orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
+                    orderStepsToComplete.setOrderProducts(prod);
+
+                    orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
+                    orderStepsToComplete.setStepsCompleted(0L);
+
+
+
+                    steps.add(orderStepsToComplete);
+
+                }
+
+
+                if(prod.getOrderSteps() == null){
+                   prod.setOrderSteps(steps);
+                }
+                else {
+                    prod.getOrderSteps().addAll(steps);
+                }
+
+                orderRepository.save(newOrder);
+
+
+
+
+            }
+
+            for(var s : newOrder.getProductsData()){
+
+                for(var ss : s.getProduct().getSteps()){
+
+                }
+
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
 
     public void checkModifiedOrders(Long orderId, Orders oldOrder) {
 
@@ -561,7 +645,7 @@ public class DatabaseChecks {
                     .orElse(null);
 
             if (productOld == null) {
-                System.out.println("found added material");
+                System.out.println("found added product");
 
                 if (productNew.getProduct().isStockCalculatedManually()) {
 

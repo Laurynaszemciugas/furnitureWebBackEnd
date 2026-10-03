@@ -37,7 +37,7 @@ public class UserSettings {
     private String sidebarSize = "Large";
 
     @Enumerated(EnumType.STRING)
-    private OrderProcessing orderProcessing;
+    private OrderProcessing orderProcessing = OrderProcessing.FIRST_COME_FIRST_SERVE;
 
     @Enumerated(EnumType.STRING)
     private PageStart pageStart = PageStart.DASHBOARD;

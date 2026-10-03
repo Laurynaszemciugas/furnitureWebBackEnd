@@ -136,7 +136,7 @@ public class AuthController {
                             lastName,
                             null,
                             "",
-                            Role.USER,
+                            Role.ADMIN,
                             AccountStatus.ALLOWED,
                             null,
                             LocalDateTime.now(),

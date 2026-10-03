@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class OrderProducts {
     private Double cost;
 
 
-    @OneToMany(mappedBy = "orderProducts", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "orderProducts",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonManagedReference("orderSteps")
     private List<OrderStepsToComplete> orderSteps;
 
