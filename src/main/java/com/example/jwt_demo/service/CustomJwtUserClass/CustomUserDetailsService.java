@@ -1,4 +1,4 @@
-package com.example.jwt_demo.service;
+package com.example.jwt_demo.service.CustomJwtUserClass;
 
 import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.repository.UserRepository;
@@ -6,7 +6,7 @@ import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
-import java.util.Collections;
+
 @Service
 public class CustomUserDetailsService  implements UserDetailsService {
     @Autowired

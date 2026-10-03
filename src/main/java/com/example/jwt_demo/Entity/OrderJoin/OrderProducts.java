@@ -36,7 +36,7 @@ public class OrderProducts {
     private Double cost;
 
 
-    @OneToMany(mappedBy = "orderProducts",cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "orderProducts", fetch = FetchType.EAGER)
     @JsonManagedReference("orderSteps")
     private List<OrderStepsToComplete> orderSteps;
 

@@ -1,6 +1,6 @@
 package com.example.jwt_demo.security;
 
-import com.example.jwt_demo.service.CustomUserDetailsService;
+import com.example.jwt_demo.service.CustomJwtUserClass.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

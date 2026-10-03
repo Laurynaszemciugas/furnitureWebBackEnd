@@ -1,6 +1,6 @@
 package com.example.jwt_demo.security;
 
-import com.example.jwt_demo.service.CustomUserDetailsService;
+import com.example.jwt_demo.service.CustomJwtUserClass.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

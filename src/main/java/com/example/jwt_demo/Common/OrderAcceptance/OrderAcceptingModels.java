@@ -370,7 +370,6 @@ public class OrderAcceptingModels {
 
             Double totalPrice = 0.0;
             for(var s : order.getProductsData()){
-                totalPrice = 0.0;
                 Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
                 totalPrice+= s.getAmountOfProduct()* product.getPrice();
             }
