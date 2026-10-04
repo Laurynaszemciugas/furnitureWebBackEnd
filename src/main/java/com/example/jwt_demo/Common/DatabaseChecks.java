@@ -597,14 +597,7 @@ public class DatabaseChecks {
 
             }
 
-            for(var s : newOrder.getProductsData()){
 
-                for(var ss : s.getProduct().getSteps()){
-
-                }
-
-
-            }
 
 
 

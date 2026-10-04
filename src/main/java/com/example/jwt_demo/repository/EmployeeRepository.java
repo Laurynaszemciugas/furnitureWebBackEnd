@@ -1,6 +1,7 @@
 package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
 import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
@@ -195,6 +196,138 @@ WHERE  e.user.id = :id
 
     // updating stuff
 
+
+
+    // graphs
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder(
+
+        /* =====================================================
+           1. TOTAL EMPLOYEES - CURRENT
+           ===================================================== */
+
+        COUNT(DISTINCT e.id),
+
+        /* =====================================================
+           2. TOTAL EMPLOYEES - PREVIOUS
+           ===================================================== */
+
+        COUNT(DISTINCT e.id),
+
+        /* =====================================================
+           3. AVERAGE HOURS WORKED - CURRENT
+           ===================================================== */
+
+        COALESCE(
+            (
+                SELECT AVG(wd2.workedForMinutes) / 60.0
+                FROM WorkDay wd2
+                WHERE wd2.employee.user.id = :id
+                  AND wd2.workDayCreated >= :currentFrom
+                  AND wd2.workDayCreated <= :currentTo
+            ),
+            0.0
+        ),
+
+        /* =====================================================
+           4. AVERAGE HOURS WORKED - PREVIOUS
+           ===================================================== */
+
+        COALESCE(
+            (
+                SELECT AVG(wd3.workedForMinutes) / 60.0
+                FROM WorkDay wd3
+                WHERE wd3.employee.user.id = :id
+                  AND wd3.workDayCreated >= :previousFrom
+                  AND wd3.workDayCreated <= :previousTo
+            ),
+            0.0
+        ),
+
+        /* =====================================================
+           5. LABOR COST - CURRENT
+           ===================================================== */
+
+        COALESCE(
+            (
+                SELECT SUM(
+                    (wd4.workedForMinutes / 60.0)
+                    * wd4.employee.hourlyRate
+                )
+                FROM WorkDay wd4
+                WHERE wd4.employee.user.id = :id
+                  AND wd4.workDayCreated >= :currentFrom
+                  AND wd4.workDayCreated <= :currentTo
+            ),
+            0.0
+        ),
+
+        /* =====================================================
+           6. LABOR COST - PREVIOUS
+           ===================================================== */
+
+        COALESCE(
+            (
+                SELECT SUM(
+                    (wd5.workedForMinutes / 60.0)
+                    * wd5.employee.hourlyRate
+                )
+                FROM WorkDay wd5
+                WHERE wd5.employee.user.id = :id
+                  AND wd5.workDayCreated >= :previousFrom
+                  AND wd5.workDayCreated <= :previousTo
+            ),
+            0.0
+        ),
+
+        /* =====================================================
+           7. TOP EMPLOYEE - CURRENT
+           ===================================================== */
+
+        (
+            SELECT e2.fullName
+            FROM WorkDone wd6
+            JOIN wd6.employee e2
+            JOIN wd6.order o2
+            WHERE e2.user.id = :id
+              AND wd6.started >= :currentFrom
+              AND wd6.started <= :currentTo
+              AND o2.orderStatus = 'Finished'
+            GROUP BY e2.id, e2.fullName
+            ORDER BY COUNT(DISTINCT o2.id) DESC
+            LIMIT 1
+        ),
+
+        /* =====================================================
+           8. TOP EMPLOYEE - PREVIOUS
+           ===================================================== */
+
+        (
+            SELECT e3.fullName
+            FROM WorkDone wd7
+            JOIN wd7.employee e3
+            JOIN wd7.order o3
+            WHERE e3.user.id = :id
+              AND wd7.started >= :previousFrom
+              AND wd7.started <= :previousTo
+              AND o3.orderStatus = 'Finished'
+            GROUP BY e3.id, e3.fullName
+            ORDER BY COUNT(DISTINCT o3.id) DESC
+            LIMIT 1
+        )
+
+    )
+    FROM Employee e
+    WHERE e.user.id = :id
+""")
+    ReportMiniStatHolder getEmployeeReportMiniStats(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("previousFrom") LocalDateTime previousFrom,
+            @Param("previousTo") LocalDateTime previousTo,
+            @Param("id") Long id
+    );
 
 
 }

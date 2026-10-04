@@ -2,6 +2,7 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
+import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
 import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
@@ -290,6 +291,43 @@ public class EmployeeController {
         CustomUserDetails user = common.getUserData();
 
         return ResponseEntity.ok(employeeRepository.getTopEmployeesModel(user.getId(),PageRequest.of(0,5)));
+    }
+
+
+    @GetMapping("/getReportEmployeeMiNIStats/{fromDate}/{toDate}")
+    public ResponseEntity<ReportMiniStatHolder> getReportEmployeeMiNIStats(@PathVariable LocalDate fromDate, @PathVariable LocalDate toDate){
+
+        CustomUserDetails user = common.getUserData();
+
+        LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
+
+        LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
+
+
+        Object[] data = employeeRepository.getEmployeeReportMiniStats(
+                logic.dateConverter(fromDate),
+                logic.dateConverter(toDate),
+                logic.dateConverter(preFrom),
+                logic.dateConverter(preTo),
+                user.getId()
+        ).get(0);
+
+
+        ReportMiniStatHolder holder = new ReportMiniStatHolder(
+                data[0],
+                data[1],
+                data[2],
+                data[3],
+                data[4],
+                data[5],
+                data[6],
+                data[7]
+        );
+
+
+
+        return ResponseEntity.ok(holder);
+
     }
 
 
