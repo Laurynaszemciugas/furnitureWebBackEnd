@@ -138,6 +138,36 @@ public class OrderAcceptingModels {
         }
     }
 
+
+
+    // ===============================================================
+    // Timed recheck if possible to make orders that were marked as lack of supply
+    // ===============================================================
+    @Scheduled(cron = "0 */30 * * * MON-FRI")
+    @Transactional
+    public void startLackOfSupply(){
+
+        List<Long> users = userRepository.getIdsOfAdmins();
+
+
+
+        if(users.isEmpty()){
+            return;
+        }
+
+        for(var us : users){
+
+            List<Orders> newOrders = orderRepository.getAllLackOfSupplyOrders(us);
+
+            List<Materials> allMaterials = materialRepository.getAllMaterials(us);
+
+            acceptOrdersAsManyAsPossible(newOrders,allMaterials);
+
+        }
+    }
+
+
+
     // ===============================================================
     // accept as many orders algorithm
     // ===============================================================

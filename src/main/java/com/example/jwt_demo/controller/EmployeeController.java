@@ -1,6 +1,7 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.*;
+import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
@@ -299,6 +300,8 @@ public class EmployeeController {
 
         CustomUserDetails user = common.getUserData();
 
+        System.out.println(user.getId());
+
         LocalDate preFrom = fromDate.withDayOfMonth(1).minusMonths(1);
 
         LocalDate preTo = preFrom.plusMonths(1).minusDays(1);
@@ -328,6 +331,30 @@ public class EmployeeController {
 
         return ResponseEntity.ok(holder);
 
+    }
+
+
+    @GetMapping("/getEmployeeReportBarChart/{fromDate}/{toDate}")
+    public ResponseEntity<List<GraphDataLongValue>> getEmployeeReportBarChart(
+            @PathVariable LocalDate fromDate,
+            @PathVariable LocalDate toDate) {
+
+        CustomUserDetails user = common.getUserData();
+
+        List<Object[]> data = employeeRepository.employeeEachCategoryValues(
+                logic.dateConverter(fromDate),
+                logic.dateConverter(toDate),
+                user.getId()
+        );
+
+        List<GraphDataLongValue> result = data.stream()
+                .map(row -> new GraphDataLongValue(
+                        ((Number) row[0]).longValue(),
+                        row[1].toString()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(result);
     }
 
 

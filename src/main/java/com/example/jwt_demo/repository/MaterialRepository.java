@@ -492,7 +492,7 @@ GROUP BY
     
     )
     FROM Materials s
-    WHERE s.user.id = :userId
+    WHERE s.user.id = :userId and s.stock = 'Low_Stock' or s.stock = 'No_Stock'
 """)
     List<MaterialLowNo> getMaterialLowNoStock(Long userId);
 

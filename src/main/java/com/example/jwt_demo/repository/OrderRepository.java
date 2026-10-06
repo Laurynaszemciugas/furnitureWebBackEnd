@@ -43,10 +43,20 @@ SELECT o
  FROM Orders o
  
 
-   WHERE o.user.id = :userId and o.orderStatus = 'NEW' or o.orderStatus = 'LACK_OF_SUPPLY'
+   WHERE o.user.id = :userId and o.orderStatus = 'NEW'
 
 """)
     List<Orders> getAllNewOrder(Long userId);
+
+    @Query("""
+SELECT o
+ FROM Orders o
+ 
+
+   WHERE o.user.id = :userId and  o.orderStatus = 'LACK_OF_SUPPLY'
+
+""")
+    List<Orders> getAllLackOfSupplyOrders(Long userId);
 
 
     @Query("""

@@ -723,6 +723,8 @@ public class OrderSavedService {
 
         }
 
+        orderRepository.incrementProductsFinished(order.getId());
+
         return ResponseEntity.ok(new ErrorResponse(String.format("Order created",order.getId()),Warnings.OK));
 
     }

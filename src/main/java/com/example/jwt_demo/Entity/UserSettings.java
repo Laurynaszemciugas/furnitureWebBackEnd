@@ -42,6 +42,8 @@ public class UserSettings {
     @Enumerated(EnumType.STRING)
     private PageStart pageStart = PageStart.DASHBOARD;
 
+    private String employeePageStart = null;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore

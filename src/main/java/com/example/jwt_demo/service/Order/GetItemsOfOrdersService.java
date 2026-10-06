@@ -354,7 +354,7 @@ public class GetItemsOfOrdersService {
 
 
 
-
+        orderRepository.incrementProductsFinished(order.getId());
 
         return ResponseEntity.ok(new ErrorResponse("Step accepted ", Warnings.OK));
 

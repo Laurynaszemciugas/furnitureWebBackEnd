@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
@@ -200,134 +201,151 @@ WHERE  e.user.id = :id
 
     // graphs
 
-    @Query("""
-    SELECT new com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder(
+    @Query(value = """
+    SELECT
 
         /* =====================================================
-           1. TOTAL EMPLOYEES - CURRENT
+           1. TOTAL EMPLOYEES - THIS MONTH
            ===================================================== */
-
-        COUNT(DISTINCT e.id),
+        (
+            SELECT COUNT(DISTINCT e1.id)
+            FROM employee e1
+            WHERE e1.user_id = :id
+              AND e1.created <= :currentTo
+        ),
 
         /* =====================================================
-           2. TOTAL EMPLOYEES - PREVIOUS
+           2. TOTAL EMPLOYEES - LAST MONTH
            ===================================================== */
-
-        COUNT(DISTINCT e.id),
+        (
+            SELECT COUNT(DISTINCT e2.id)
+            FROM employee e2
+            WHERE e2.user_id = :id
+              AND e2.created <= :previousTo
+        ),
 
         /* =====================================================
-           3. AVERAGE HOURS WORKED - CURRENT
+           3. TOP EMPLOYEE - THIS MONTH
+           Employee with most FINISHED orders
            ===================================================== */
+        (
+        SELECT e.full_name
+        
+        FROM employee e
+        
+        order by e.products_finished desc
+        Limit 1
+        ),
 
+        /* =====================================================
+           4. TOP EMPLOYEE - LAST MONTH
+           ===================================================== */
+        (
+            SELECT e.products_finished
+                   
+                   FROM bpfurniture.employee e
+                   
+                   order by e.products_finished desc
+                   Limit 1
+        ),
+
+        /* =====================================================
+           5. AVERAGE HOURS - THIS MONTH
+           ===================================================== */
         COALESCE(
             (
-                SELECT AVG(wd2.workedForMinutes) / 60.0
-                FROM WorkDay wd2
-                WHERE wd2.employee.user.id = :id
-                  AND wd2.workDayCreated >= :currentFrom
-                  AND wd2.workDayCreated <= :currentTo
+                SELECT ROUND(avg(wd.worked_for_minutes) / 60,2) FROM work_day wd
+                WHERE wd.user_id = :id
+                 AND wd.work_day_created >= :currentFrom
+                  AND wd.work_day_created <= :currentTo
             ),
             0.0
         ),
 
         /* =====================================================
-           4. AVERAGE HOURS WORKED - PREVIOUS
+           6. AVERAGE HOURS - LAST MONTH
            ===================================================== */
+               
+                   
+           COALESCE(
+            (
+                SELECT ROUND(avg(wd.worked_for_minutes) / 60,2) FROM work_day wd
+                WHERE wd.user_id = :id
+                 AND wd.work_day_created >= :previousFrom
+                  AND wd.work_day_created <= :previousTo
+            ),
+            0.0
+        ),             
+                           
 
+        /* =====================================================
+           7. LABOR COST - THIS MONTH
+           ===================================================== */
         COALESCE(
             (
-                SELECT AVG(wd3.workedForMinutes) / 60.0
-                FROM WorkDay wd3
-                WHERE wd3.employee.user.id = :id
-                  AND wd3.workDayCreated >= :previousFrom
-                  AND wd3.workDayCreated <= :previousTo
+                SELECT ROUND(SUM(
+                    (wd3.worked_for_minutes / 60.0)
+                    * e7.hourly_rate
+                ),2)
+                FROM work_day wd3
+                JOIN employee e7
+                    ON e7.id = wd3.employee_id
+                WHERE e7.user_id = :id
+                  AND wd3.work_day_created >= :currentFrom
+                  AND wd3.work_day_created <= :currentTo
             ),
             0.0
         ),
 
         /* =====================================================
-           5. LABOR COST - CURRENT
+           8. LABOR COST - LAST MONTH
            ===================================================== */
-
         COALESCE(
             (
                 SELECT SUM(
-                    (wd4.workedForMinutes / 60.0)
-                    * wd4.employee.hourlyRate
+                    (wd4.worked_for_minutes / 60.0)
+                    * e8.hourly_rate
                 )
-                FROM WorkDay wd4
-                WHERE wd4.employee.user.id = :id
-                  AND wd4.workDayCreated >= :currentFrom
-                  AND wd4.workDayCreated <= :currentTo
+                FROM work_day wd4
+                JOIN employee e8
+                    ON e8.id = wd4.employee_id
+                WHERE e8.user_id = :id
+                  AND wd4.work_day_created >= :previousFrom
+                  AND wd4.work_day_created <= :previousTo
             ),
             0.0
-        ),
-
-        /* =====================================================
-           6. LABOR COST - PREVIOUS
-           ===================================================== */
-
-        COALESCE(
-            (
-                SELECT SUM(
-                    (wd5.workedForMinutes / 60.0)
-                    * wd5.employee.hourlyRate
-                )
-                FROM WorkDay wd5
-                WHERE wd5.employee.user.id = :id
-                  AND wd5.workDayCreated >= :previousFrom
-                  AND wd5.workDayCreated <= :previousTo
-            ),
-            0.0
-        ),
-
-        /* =====================================================
-           7. TOP EMPLOYEE - CURRENT
-           ===================================================== */
-
-        (
-            SELECT e2.fullName
-            FROM WorkDone wd6
-            JOIN wd6.employee e2
-            JOIN wd6.order o2
-            WHERE e2.user.id = :id
-              AND wd6.started >= :currentFrom
-              AND wd6.started <= :currentTo
-              AND o2.orderStatus = 'Finished'
-            GROUP BY e2.id, e2.fullName
-            ORDER BY COUNT(DISTINCT o2.id) DESC
-            LIMIT 1
-        ),
-
-        /* =====================================================
-           8. TOP EMPLOYEE - PREVIOUS
-           ===================================================== */
-
-        (
-            SELECT e3.fullName
-            FROM WorkDone wd7
-            JOIN wd7.employee e3
-            JOIN wd7.order o3
-            WHERE e3.user.id = :id
-              AND wd7.started >= :previousFrom
-              AND wd7.started <= :previousTo
-              AND o3.orderStatus = 'Finished'
-            GROUP BY e3.id, e3.fullName
-            ORDER BY COUNT(DISTINCT o3.id) DESC
-            LIMIT 1
         )
 
-    )
-    FROM Employee e
-    WHERE e.user.id = :id
-""")
-    ReportMiniStatHolder getEmployeeReportMiniStats(
+    """,
+            nativeQuery = true)
+    List<Object[]> getEmployeeReportMiniStats(
             @Param("currentFrom") LocalDateTime currentFrom,
             @Param("currentTo") LocalDateTime currentTo,
             @Param("previousFrom") LocalDateTime previousFrom,
             @Param("previousTo") LocalDateTime previousTo,
             @Param("id") Long id
     );
+
+
+
+
+    @Query("""
+    SELECT
+        SUM(e.productsFinished),
+        e.employeeCategory
+    FROM Employee e
+    WHERE e.user.id = :id
+      AND e.created >= :currentFrom
+      AND e.created <= :currentTo
+    GROUP BY e.employeeCategory
+    ORDER BY SUM(e.productsFinished) DESC
+""")
+    List<Object[]> employeeEachCategoryValues(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("id") Long id
+    );
+
 
 
 }

@@ -34,6 +34,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Long> getIdsOfTheOrderProcessing(String orderProcessing);
 
 
+    @Query(value = """
+
+            SELECT u.id
+            FROM bpfurniture.users u
+            
+            Where u.role = 'ADMIN'
+
+
+""" ,  nativeQuery = true)
+    List<Long> getIdsOfAdmins();
+
+
 
 
     @Query("""

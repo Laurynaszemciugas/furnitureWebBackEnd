@@ -314,6 +314,9 @@ public class AuthController {
         }
 
         UserSettings userSettings = new UserSettings();
+        userSettings.setEmployeePageStart("EmployeesDashBoard");
+        userSettings.setOrderProcessing(null);
+        userSettings.setPageStart(null);
 
         // Create new user's account
         User newUser = new User(
