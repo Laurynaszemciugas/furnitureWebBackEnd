@@ -20,13 +20,13 @@ public class JwtDemoApplication {
 
 		SpringApplication.run(JwtDemoApplication.class, args);
 
-		Path folder = Paths.get("uploads/products");
-
-		Files.createDirectories(folder);
-
-		Path file = Paths.get("uploads/products/tests212.png");
-
-		Files.createFile(file);
+//		Path folder = Paths.get("uploads/products");
+//
+//		Files.createDirectories(folder);
+//
+//		Path file = Paths.get("uploads/products/tests212.png");
+//
+//		Files.createFile(file);
 
 	}
 

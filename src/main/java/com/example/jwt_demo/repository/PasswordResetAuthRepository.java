@@ -18,8 +18,7 @@ public interface PasswordResetAuthRepository extends JpaRepository<PasswordReset
 """)
     void deleteAllPreviousCodes(Long userId);
 
-    @Modifying
-    @Transactional
+
     @Query("""
         
         Select pra from PasswordResetAuth pra

@@ -1,6 +1,7 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
+import com.example.jwt_demo.Common.GmailHTML;
 import com.example.jwt_demo.Common.GoogleTokenVerifier;
 import com.example.jwt_demo.DTOS.Auth.PasswordResetWithCode;
 import com.example.jwt_demo.Entity.Authenfication.GmailAuth;
@@ -60,6 +61,9 @@ public class AuthController {
 
     @Autowired
     PasswordResetAuthRepository passwordResetAuthRepository;
+
+    @Autowired
+    GmailHTML gmailHTML;
 
 
     @PostMapping("/google")
@@ -389,6 +393,10 @@ public class AuthController {
         // find user
         User actualUser = userRepository.findByGmail(email);
 
+        if(actualUser == null){
+            throw new ValidationException("Account with gmail " + email + " was not found", Warnings.ERROR);
+        }
+
         // delete all previous codes for this user
         passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
 
@@ -411,7 +419,10 @@ public class AuthController {
 
         passwordResetAuthRepository.save(passwordResetAuth);
 
-        emailSenderContoller.verificationGmail(actualUser.getGmail(),String.valueOf(number));
+        CompletableFuture.runAsync(() ->
+                emailSenderContoller.recoveryGmailCode(actualUser.getGmail(),String.valueOf(number))
+        );
+
 
         return ResponseEntity.ok(new ErrorResponse("Code was send to " + email, Warnings.OK));
 
@@ -424,13 +435,13 @@ public class AuthController {
         CustomUserDetails user = common.getUserData();
 
         // find user
-        User actualUser = userRepository.findById(user.getId()).orElseThrow();
+        User actualUser = userRepository.findByGmail(code.getGmail());
 
         PasswordResetAuth passwordResetAuth = passwordResetAuthRepository.getUserCode(actualUser.getId());
 
         LocalDateTime currentDate = LocalDateTime.now();
 
-        if(passwordResetAuth == null || passwordResetAuth.getExpiration().isAfter(currentDate)){
+        if(passwordResetAuth == null || passwordResetAuth.getExpiration().isBefore(currentDate)){
             passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
             throw new ValidationException("Code expired",Warnings.ERROR);
         }
