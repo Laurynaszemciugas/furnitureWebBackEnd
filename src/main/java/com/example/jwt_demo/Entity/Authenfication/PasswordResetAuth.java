@@ -2,18 +2,21 @@ package com.example.jwt_demo.Entity.Authenfication;
 
 import com.example.jwt_demo.Entity.User;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+@Entity
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@ToString
-public class GmailAuth {
+@AllArgsConstructor
+public class PasswordResetAuth {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +31,7 @@ public class GmailAuth {
     @CreationTimestamp
     private LocalDateTime created;
 
-    private LocalDateTime expiration;
+    private LocalDateTime expiration = LocalDateTime.now().plusMinutes(30);;
 
 
 }

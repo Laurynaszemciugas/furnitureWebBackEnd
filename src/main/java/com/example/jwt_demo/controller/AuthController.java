@@ -2,7 +2,9 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.GoogleTokenVerifier;
+import com.example.jwt_demo.DTOS.Auth.PasswordResetWithCode;
 import com.example.jwt_demo.Entity.Authenfication.GmailAuth;
+import com.example.jwt_demo.Entity.Authenfication.PasswordResetAuth;
 import com.example.jwt_demo.Entity.UserSettings;
 import com.example.jwt_demo.Enums.AccountStatus;
 import com.example.jwt_demo.Enums.Role;
@@ -11,6 +13,7 @@ import com.example.jwt_demo.Enums.Verification;
 import com.example.jwt_demo.Enums.Warnings;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.GmailVerificationRepository;
+import com.example.jwt_demo.repository.PasswordResetAuthRepository;
 import com.example.jwt_demo.repository.UserRepository;
 import com.example.jwt_demo.security.CustomUserDetails;
 import com.example.jwt_demo.security.JwtUtil;
@@ -27,6 +30,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -53,6 +57,9 @@ public class AuthController {
 
     @Autowired
     GmailVerificationRepository gmailVerificationRepository;
+
+    @Autowired
+    PasswordResetAuthRepository passwordResetAuthRepository;
 
 
     @PostMapping("/google")
@@ -374,6 +381,91 @@ public class AuthController {
 
     }
 
+    @GetMapping("/createPasswordResetGmailVerificationCode/{email}")
+    public ResponseEntity<ErrorResponse> resetPasswordUsingGmail(@PathVariable String email){
+
+
+
+        // find user
+        User actualUser = userRepository.findByGmail(email);
+
+        // delete all previous codes for this user
+        passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
+
+
+        // generate code
+        Random random = new Random();
+
+        long number = 100_000L + (long)(random.nextDouble() * 900_000L);
+
+        PasswordResetAuth passwordResetAuth = new PasswordResetAuth();
+
+
+
+        passwordResetAuth.setUser(actualUser);
+        passwordResetAuth.setOneTimeCode(String.valueOf(number));
+
+
+
+
+
+        passwordResetAuthRepository.save(passwordResetAuth);
+
+        emailSenderContoller.verificationGmail(actualUser.getGmail(),String.valueOf(number));
+
+        return ResponseEntity.ok(new ErrorResponse("Code was send to " + email, Warnings.OK));
+
+    }
+
+    @PostMapping("/resetPasswordViaGmail")
+    public ResponseEntity<ErrorResponse> resetPasswordUsingGmail(@RequestBody PasswordResetWithCode code){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        // find user
+        User actualUser = userRepository.findById(user.getId()).orElseThrow();
+
+        PasswordResetAuth passwordResetAuth = passwordResetAuthRepository.getUserCode(actualUser.getId());
+
+        LocalDateTime currentDate = LocalDateTime.now();
+
+        if(passwordResetAuth == null || passwordResetAuth.getExpiration().isAfter(currentDate)){
+            passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
+            throw new ValidationException("Code expired",Warnings.ERROR);
+        }
+
+        // compare passwords
+        if(passwordResetAuth.getOneTimeCode().equals(code.getCode())){
+
+
+            if(code.getPassword().equals(code.getReEnterPassword())){
+
+            }
+            else{
+                throw new ValidationException("Passwords doesnt match",Warnings.ERROR);
+            }
+
+
+        }
+        else{
+            throw new ValidationException("Something went wrong",Warnings.ERROR);
+        }
+
+
+        // if everything is good change password
+
+        actualUser.setPassword(encoder.encode(code.getPassword()));
+
+        userRepository.save(actualUser);
+
+        // delete all previous codes for this user
+        passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
+
+
+        return ResponseEntity.ok(new ErrorResponse("Password changed successfully",Warnings.OK));
+
+    }
 }
 
 
