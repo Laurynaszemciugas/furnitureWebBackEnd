@@ -452,6 +452,15 @@ public class AuthController {
 
             if(code.getPassword().equals(code.getReEnterPassword())){
 
+                // if everything is good change password
+
+                actualUser.setPassword(encoder.encode(code.getPassword()));
+
+                userRepository.save(actualUser);
+
+                // delete all previous codes for this user
+                passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
+
             }
             else{
                 throw new ValidationException("Passwords doesnt match",Warnings.ERROR);
@@ -464,19 +473,59 @@ public class AuthController {
         }
 
 
-        // if everything is good change password
 
-        actualUser.setPassword(encoder.encode(code.getPassword()));
-
-        userRepository.save(actualUser);
-
-        // delete all previous codes for this user
-        passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
 
 
         return ResponseEntity.ok(new ErrorResponse("Password changed successfully",Warnings.OK));
 
     }
+
+
+
+
+    @PostMapping("/resetPasswordViaRecoveryCode")
+    public ResponseEntity<ErrorResponse> resetPasswordViaRecoveryCode(@RequestBody PasswordResetWithCode code){
+
+
+        CustomUserDetails user = common.getUserData();
+
+        // find user
+        User actualUser = userRepository.findByGmail(code.getGmail());
+
+        // compare codes
+        if(actualUser.getRecoveryPin().equals(code.getCode())){
+
+
+            if(code.getPassword().equals(code.getReEnterPassword())){
+
+                actualUser.setPassword(encoder.encode(code.getPassword()));
+                userRepository.save(actualUser);
+
+                // delete all previous codes for this user
+                passwordResetAuthRepository.deleteAllPreviousCodes(actualUser.getId());
+            }
+            else{
+                throw new ValidationException("Passwords doesnt match",Warnings.ERROR);
+            }
+
+
+        }
+        else{
+            throw new ValidationException("Recovery code is incorrect",Warnings.ERROR);
+        }
+
+
+
+
+
+
+
+        return ResponseEntity.ok(new ErrorResponse("Password changed successfully",Warnings.OK));
+
+    }
+
+
+
 }
 
 
