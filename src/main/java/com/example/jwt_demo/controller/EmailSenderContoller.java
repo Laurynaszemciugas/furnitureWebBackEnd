@@ -95,15 +95,33 @@ public class EmailSenderContoller {
 
     public void verificationGmail(String setTo , String code){
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("laurynaszemciugas@gmail.com");
-
-        message.setTo(setTo);
-        message.setText("Please verify your account visit " + "http://localhost:8080/GmailVerification/" + code);
-        message.setSubject("Gmail verification");
 
 
-        javaMailSender.send(message);
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    true,
+                    "UTF-8"
+            );
+
+            helper.setFrom("laurynaszemciugas@gmail.com");
+            helper.setTo(setTo);
+            helper.setSubject(
+                    "Gmail verification"
+            );
+
+            String messageToClient = gmailHTML.buildGmailVerification(code);
+
+
+            helper.setText(messageToClient, true); // true = HTML
+
+            javaMailSender.send(message);
+
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send warning email", e);
+        }
 
     }
 

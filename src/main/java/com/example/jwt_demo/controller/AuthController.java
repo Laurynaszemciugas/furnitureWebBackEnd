@@ -261,7 +261,7 @@ public class AuthController {
 
 
     @PostMapping("/signup")
-    public String registerUser(@RequestBody User user, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> registerUser(@RequestBody User user, HttpServletRequest request) {
         if (userRepository.existsByGmail(user.getGmail())) {
             throw  new ValidationException("Gmail is already taken!", Warnings.ERROR);
         }
@@ -273,6 +273,15 @@ public class AuthController {
         long number = 100_000_000_000_000L + (long)(random.nextDouble() * 900_000_000_000_000L);
 
 
+        // bio is re enter password holder for now
+        if(user.getPassword().equals(user.getBio())){
+            user.setBio(null);
+
+        }
+        else{
+
+            throw new ValidationException("Passwords do not match",Warnings.ERROR);
+        }
 
 
 
@@ -313,9 +322,14 @@ public class AuthController {
 
         userRepository.save(newUser);
         gmailVerificationRepository.save(gmailAuth);
-        emailSenderContoller.verificationGmail(newUser.getGmail(),String.valueOf(number));
 
-        return "User registered successfully!";
+
+        CompletableFuture.runAsync(() ->
+                emailSenderContoller.verificationGmail(newUser.getGmail(),String.valueOf(number))
+        );
+
+
+        return ResponseEntity.ok(new ErrorResponse("User registered successfully!",Warnings.OK));
     }
 
 
@@ -372,7 +386,6 @@ public class AuthController {
             User user = userRepository.findByGmail(gmailAuth.getUser().getGmail());
 
             user.setVerification(Verification.VERIFIED);
-
             userRepository.save(user);
 
             gmailVerificationRepository.delete(gmailAuth);

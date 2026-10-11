@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -7,6 +8,7 @@ import com.example.jwt_demo.DTOS.DashBoard.ActivityFeedModel;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
 import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
+import com.example.jwt_demo.DTOS.Employees.EmployeeReportTopPerformers;
 import com.example.jwt_demo.DTOS.Material.MaterialBriefDto;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
@@ -345,6 +347,57 @@ WHERE  e.user.id = :id
             @Param("currentTo") LocalDateTime currentTo,
             @Param("id") Long id
     );
+
+
+
+    @Query("""
+    SELECT new com.example.jwt_demo.DTOS.Common.GraphDataDateValue(
+        CAST(wd.workDayCreated AS LocalDate),
+        ROUND(SUM(wd.workedForMinutes) / 60.0, 2)
+    )
+    FROM WorkDay wd
+    WHERE wd.user.id = :id
+      AND wd.workDayCreated >= :currentFrom
+      AND wd.workDayCreated < :currentTo
+    GROUP BY CAST(wd.workDayCreated AS LocalDate)
+    ORDER BY CAST(wd.workDayCreated AS LocalDate)
+    """)
+    List<GraphDataDateValue> hoursWorked(
+            @Param("currentFrom") LocalDateTime currentFrom,
+            @Param("currentTo") LocalDateTime currentTo,
+            @Param("id") Long id
+    );
+
+
+    @Query("""
+
+
+    SELECT new com.example.jwt_demo.DTOS.Employees.EmployeeReportTopPerformers(
+        e.id,
+        e.profileImage,
+        e.fullName,
+        e.employeeDepartment,
+        e.productsFinished,
+        ROUND(COALESCE(SUM(wd.workedForMinutes), 0) / 60.0, 2))
+    FROM Employee e
+    LEFT JOIN WorkDay wd ON wd.employee.id = e.id
+    
+     WHERE wd.user.id = :id
+      AND wd.workDayCreated >= :currentFrom
+      AND wd.workDayCreated < :currentTo
+    
+    GROUP BY
+        e.id,
+        e.employeeDepartment,
+        e.productsFinished
+        
+         Order by e.productsFinished desc
+        
+
+""")
+    List<EmployeeReportTopPerformers> allPerformers(@Param("currentFrom") LocalDateTime currentFrom,
+                                                    @Param("currentTo") LocalDateTime currentTo,
+                                                    @Param("id") Long id);
 
 
 

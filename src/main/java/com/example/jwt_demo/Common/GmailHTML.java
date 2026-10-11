@@ -12,6 +12,189 @@ public class GmailHTML {
 
 
 
+    public String buildGmailVerification(String code) {
+
+        if (code == null) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+
+        String verificationUrl =
+                "http://localhost:9999/GmailVerification/" + code;
+
+        StringBuilder message = new StringBuilder();
+
+        message.append("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Your Account</title>
+        </head>
+
+        <body style="margin:0; padding:0; background-color:#f4f7fb;
+                     font-family:Arial,Helvetica,sans-serif; color:#202124;">
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+               style="background-color:#f4f7fb; padding:40px 12px;">
+            <tr>
+                <td align="center">
+
+                    <table role="presentation" width="100%" cellspacing="0"
+                           cellpadding="0" border="0"
+                           style="max-width:560px; background-color:#ffffff;
+                                  border-radius:12px; overflow:hidden;
+                                  border:1px solid #e5eaf2;">
+
+                        <!-- Blue accent -->
+                        <tr>
+                            <td style="height:5px; background:#1a73e8; font-size:0;">
+                                &nbsp;
+                            </td>
+                        </tr>
+
+                        <!-- Header -->
+                        <tr>
+                            <td style="padding:32px 32px 16px; text-align:center;">
+
+                                <div style="font-size:28px; font-weight:bold;
+                                            color:#1a73e8; letter-spacing:-1px;">
+                                    FURNITURE
+                                </div>
+
+                                <p style="margin:8px 0 0; color:#5f6368;
+                                          font-size:11px; letter-spacing:3px;">
+                                    CRAFTED WITH PRECISION
+                                </p>
+
+                                <h1 style="margin:28px 0 12px; font-size:26px;
+                                           line-height:1.3; color:#202124;
+                                           font-weight:600;">
+                                    Verify your email
+                                </h1>
+
+                                <p style="margin:0; font-size:15px;
+                                          line-height:1.7; color:#5f6368;">
+                                    Thank you for creating an account with us.
+                                    Please verify your email address to activate
+                                    your account and get started.
+                                </p>
+
+                            </td>
+                        </tr>
+
+                        <!-- Verification button -->
+                        <tr>
+                            <td style="padding:24px 32px 32px; text-align:center;">
+
+                                <table role="presentation" cellspacing="0"
+                                       cellpadding="0" border="0"
+                                       align="center">
+                                    <tr>
+                                        <td align="center"
+                                            style="background:#1a73e8; border-radius:6px;">
+
+                                            <a href="
+        """)
+                .append(verificationUrl)
+                .append("""
+        "
+                                               target="_blank"
+                                               style="display:inline-block;
+                                                      padding:16px 32px;
+                                                      color:#ffffff;
+                                                      text-decoration:none;
+                                                      font-size:14px;
+                                                      font-weight:bold;
+                                                      letter-spacing:0.5px;">
+                                                VERIFY MY EMAIL
+                                            </a>
+
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <p style="margin:24px 0 12px; font-size:13px;
+                                          line-height:1.7; color:#5f6368;">
+                                    If the button does not work, copy and paste
+                                    this link into your browser:
+                                </p>
+
+                                <p style="margin:0; font-size:12px;
+                                          line-height:1.7; word-break:break-all;">
+                                    <a href="
+        """)
+                .append(verificationUrl)
+                .append("""
+        "
+                                       style="color:#1967d2; text-decoration:none;">
+        """)
+                .append(verificationUrl)
+                .append("""
+        </a>
+                                </p>
+
+                            </td>
+                        </tr>
+
+                        <!-- Security notice -->
+                        <tr>
+                            <td style="padding:0 32px 28px;">
+
+                                <div style="padding:16px; background:#f8fafd;
+                                            border-radius:8px;
+                                            border:1px solid #edf0f5;">
+
+                                    <p style="margin:0; font-size:13px;
+                                              line-height:1.7; color:#5f6368;">
+                                        <strong style="color:#202124;">
+                                            Didn't create this account?
+                                        </strong>
+                                        You can safely ignore this email.
+                                        Never share your verification link
+                                        with anyone.
+                                    </p>
+
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="padding:20px 24px; text-align:center;
+                                       background:#f8fafd;
+                                       border-top:1px solid #edf0f5;">
+
+                                <p style="margin:0 0 6px; color:#1a73e8;
+                                          font-size:12px; font-weight:bold;
+                                          letter-spacing:1px;">
+                                    BUILT FOR BETTER WORKSPACES
+                                </p>
+
+                                <p style="margin:0; font-size:12px;
+                                          line-height:1.6; color:#80868b;">
+                                    This is an automated message.
+                                    Please do not reply.
+                                </p>
+
+                            </td>
+                        </tr>
+
+                    </table>
+
+                </td>
+            </tr>
+        </table>
+
+        </body>
+        </html>
+        """);
+
+        return message.toString();
+    }
+
+
 
     public String buildGmailCode(String code) {
 

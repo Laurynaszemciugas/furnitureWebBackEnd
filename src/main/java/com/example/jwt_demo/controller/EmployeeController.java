@@ -1,12 +1,14 @@
 package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.*;
+import com.example.jwt_demo.DTOS.Common.GraphDataDateValue;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
 import com.example.jwt_demo.DTOS.DashBoard.DashBoardEmployeeMiniInfo;
 import com.example.jwt_demo.DTOS.DashBoard.TopEmployeesModel;
 import com.example.jwt_demo.DTOS.Employees.EmployeeBriefDto;
+import com.example.jwt_demo.DTOS.Employees.EmployeeReportTopPerformers;
 import com.example.jwt_demo.DTOS.Order.ComboBoxEmployees;
 import com.example.jwt_demo.Entity.Employee;
 import com.example.jwt_demo.Entity.User;
@@ -356,6 +358,46 @@ public class EmployeeController {
 
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/hoursWorked/{fromDate}/{toDate}")
+    public ResponseEntity<List<GraphDataDateValue>> hoursWorked(
+            @PathVariable LocalDate fromDate,
+            @PathVariable LocalDate toDate) {
+
+        CustomUserDetails user = common.getUserData();
+
+        List<GraphDataDateValue> data = employeeRepository.hoursWorked(
+                logic.dateConverter(fromDate),
+                logic.dateConverter(toDate),
+                user.getId()
+        );
+
+
+
+        return ResponseEntity.ok(data);
+    }
+
+
+    @GetMapping("/allPerformers/{fromDate}/{toDate}")
+    public ResponseEntity<List<EmployeeReportTopPerformers>> allPerformers(
+            @PathVariable LocalDate fromDate,
+            @PathVariable LocalDate toDate) {
+
+        CustomUserDetails user = common.getUserData();
+
+        List<EmployeeReportTopPerformers> data = employeeRepository.allPerformers(
+                logic.dateConverter(fromDate),
+                logic.dateConverter(toDate),
+                user.getId()
+        );
+
+
+
+        return ResponseEntity.ok(data);
+    }
+
+
+
 
 
 }
