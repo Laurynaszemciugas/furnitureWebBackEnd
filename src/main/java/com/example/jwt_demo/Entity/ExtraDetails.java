@@ -32,6 +32,11 @@ public class ExtraDetails {
     private Product product;
 
     @ManyToOne
+    @JoinColumn(name = "product_multiple_id")
+    @JsonIgnore
+    private ProductMultiple productMultiple;
+
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 

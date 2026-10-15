@@ -7,6 +7,7 @@ import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Status;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Visibility;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,6 +27,8 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String color;
 
     private boolean stockCalculatedManually;
 
@@ -64,6 +67,12 @@ public class Product {
 
     @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
     private List<ProductFinishSteps> steps = new ArrayList<>();
+
+    private Boolean multipleItems;
+
+    @OneToMany(mappedBy = "product",cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
+    @JsonManagedReference("multipleProductTypes")
+    List<ProductMultiple> productMultiples = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "user_id")

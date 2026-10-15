@@ -2,6 +2,7 @@ package com.example.jwt_demo.Entity.ProductJoin;
 
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.Entity.ProductMultiple;
 import com.example.jwt_demo.Entity.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,6 +41,12 @@ public class ProductMaterials {
     @JoinColumn(name = "product_id")
     @JsonIgnore
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "product_multiple_id")
+    @JsonIgnore
+    private ProductMultiple productMultiple;
+
 
     @ManyToOne
     @JoinColumn(name = "user_id")
