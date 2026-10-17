@@ -35,6 +35,7 @@ SELECT new com.example.jwt_demo.DTOS.Product.ProductFeedModel(
     p.price,
     p.stockQuantity,
     p.lowStockThreshold,
+    p.multipleItems,
     p.discount,
     p.price - (p.price * p.discount / 100.0),
     p.visibility

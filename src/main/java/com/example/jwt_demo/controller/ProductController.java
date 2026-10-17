@@ -183,6 +183,27 @@ public class ProductController {
     }
 
 
+    @PostMapping("/saveMultipleProducts")
+    public ResponseEntity<ErrorResponse> saveMultipleProducts(@RequestBody Product product){
+
+        CustomUserDetails user = common.getUserData();
+        User actualUser = userRepository.findById(user.getId()).orElseThrow();
+
+
+        product.setUser(actualUser);
+
+        for(var s : product.getProductMultiples()){
+            s.setUser(actualUser);
+        }
+
+        productRepository.save(product);
+
+
+
+        return ResponseEntity.ok(new ErrorResponse(String.format("Saved product with multiple product variants"), Warnings.OK));
+    }
+
+
     @PostMapping("/getProducts")
     public List<ProductFeedModel> getProducts(@RequestBody ProductFilterHolder productFilterHolder) {
 

@@ -18,6 +18,8 @@ public class ProductFeedModel {
     private Long stockQuantity;
     private Long lowStockThreshold;
 
+    private Boolean multipleProducts;
+
     private double discount;
     private double discountedPrice;
     private Visibility visibility;
