@@ -10,31 +10,28 @@ import com.example.jwt_demo.DTOS.Order.OrderAddProducts;
 import com.example.jwt_demo.DTOS.Product.ProductLowStockList;
 import com.example.jwt_demo.DTOS.Product.ProductPerformanceReport;
 import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
-import com.example.jwt_demo.Entity.ActionTracker;
-import com.example.jwt_demo.Entity.Materials;
-import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
-import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
-import com.example.jwt_demo.repository.ActionTrackerRepository;
-import com.example.jwt_demo.repository.MaterialRepository;
-import com.example.jwt_demo.repository.ProductRepository;
-import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.repository.*;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/product")
@@ -69,6 +66,9 @@ public class ProductController {
 
     @Autowired
     ConvertImages convertImages;
+
+    @Autowired
+    MultipleProductRepository multipleProductRepository;
 
     @PostMapping("/saveProduct")
     public ResponseEntity<ErrorResponse> saveProduct(@RequestBody Product product){
@@ -183,25 +183,377 @@ public class ProductController {
     }
 
 
-    @PostMapping("/saveMultipleProducts")
-    public ResponseEntity<ErrorResponse> saveMultipleProducts(@RequestBody Product product){
+
+
+
+
+
+    @PostMapping("/addNewMultipleProduct")
+    public ResponseEntity<ErrorResponse> saveMultipleProducts(@RequestBody Product product) {
+
+
+        System.out.println(product);
 
         CustomUserDetails user = common.getUserData();
-        User actualUser = userRepository.findById(user.getId()).orElseThrow();
+        User currentUser = userRepository.findById(user.getId()).orElseThrow();
+
+        Product cleanProduct = new Product();
 
 
-        product.setUser(actualUser);
 
-        for(var s : product.getProductMultiples()){
-            s.setUser(actualUser);
+        // Main product fields
+        cleanProduct.setId(null);
+        cleanProduct.setProductName(product.getProductName());
+        cleanProduct.setSku(product.getSku());
+        cleanProduct.setDescription(product.getDescription());
+        cleanProduct.setPrice(product.getPrice());
+        cleanProduct.setDiscount(product.getDiscount());
+        cleanProduct.setMaterialCost(product.getMaterialCost());
+        cleanProduct.setStockQuantity(product.getStockQuantity());
+        cleanProduct.setLowStockThreshold(product.getLowStockThreshold());
+        cleanProduct.setCategory(product.getCategory());
+        cleanProduct.setStatus(product.getStatus());
+        cleanProduct.setVisibility(product.getVisibility());
+        cleanProduct.setCreated(product.getCreated());
+        cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
+        cleanProduct.setUser(currentUser);
+
+        cleanProduct.setMultipleItems(true);
+
+        // Tags belong to the main product
+        if (product.getTags() != null) {
+            for (var tag : product.getTags()) {
+                tag.setProduct(cleanProduct);
+                tag.setUser(currentUser);
+                cleanProduct.getTags().add(tag);
+            }
         }
 
-        productRepository.save(product);
+        // Specifications belong to the main product
+        if (product.getExtraDetails() != null) {
+            for (var detail : product.getExtraDetails()) {
+                detail.setProduct(cleanProduct);
+                detail.setUser(currentUser);
+                cleanProduct.getExtraDetails().add(detail);
+            }
+        }
+
+        // Steps to finish belong to the main product
+        if (product.getSteps() != null) {
+            for (var step : product.getSteps()) {
+                step.setProduct(cleanProduct);
+                cleanProduct.getSteps().add(step);
+            }
+        }
+
+        List<ProductMultiple> multiples = new ArrayList<>();
+        for(var s : product.getProductMultiples()){
+
+            ProductMultiple prod = new ProductMultiple();
+            prod.setProduct(cleanProduct);
+            prod.setUser(currentUser);
+
+            // Main product fields
+            prod.setId(null);
+            prod.setProductName(s.getProductName());
+            prod.setSku(s.getSku());
+            prod.setDescription(s.getDescription());
+            prod.setPrice(s.getPrice());
+            prod.setDiscount(s.getDiscount());
+            prod.setMaterialCost(s.getMaterialCost());
+            prod.setStockQuantity(s.getStockQuantity());
+            prod.setLowStockThreshold(s.getLowStockThreshold());
+            prod.setCategory(s.getCategory());
+            prod.setStatus(s.getStatus());
+            prod.setVisibility(s.getVisibility());
+            prod.setCreated(s.getCreated());
+            prod.setStockCalculatedManually(s.isStockCalculatedManually());
+            prod.setUser(currentUser);
 
 
 
-        return ResponseEntity.ok(new ErrorResponse(String.format("Saved product with multiple product variants"), Warnings.OK));
+            if (s.getImages() != null) {
+                for (var img : s.getImages()) {
+                    img.setProduct(cleanProduct);
+                    try {
+                        img.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
+                        img.setImageData(null);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    prod.getImages().add(img);
+                }
+            }
+
+            if (s.getMaterials() != null) {
+                for (var incomingMaterial : s.getMaterials()) {
+
+                    // Create a NEW product-material link.
+                    ProductMaterials mats = new ProductMaterials();
+
+                    mats.setNameForRefrence(
+                            incomingMaterial.getNameForRefrence());
+                    mats.setNewMaterial(incomingMaterial.isNewMaterial());
+                    mats.setAmountUsed(incomingMaterial.getAmountUsed());
+                    mats.setUnitPrice(incomingMaterial.getUnitPrice());
+
+                    // Resolve the actual inventory material by its own ID.
+
+
+
+                        Materials usedMaterial = materialRepository.findByMaterialName(incomingMaterial.getId(), currentUser.getId());
+
+
+
+
+                        mats.setMaterials(usedMaterial);
+                        mats.setUnitPrice(usedMaterial.getUnitPrice());
+
+                    // This link belongs to the variant, not the main product.
+                    mats.setProduct(null);
+                    mats.setProductMultiple(prod);
+                    mats.setUser(currentUser);
+
+                    prod.getMaterials().add(mats);
+                }
+            }
+
+            multiples.add(
+                    prod
+            );
+
+
+        }
+
+        cleanProduct.setProductMultiples(multiples);
+
+
+
+
+        productRepository.save(cleanProduct);
+
+
+        return ResponseEntity.ok(
+                new ErrorResponse(
+                        "Saved product with multiple product variants",
+                        Warnings.OK
+                )
+        );
     }
+
+
+
+    @PostMapping("/saveEditedMultipleProduct")
+    @Transactional
+    public ResponseEntity<ErrorResponse> saveEdited(
+            @RequestBody Product product) {
+
+        CustomUserDetails user = common.getUserData();
+        User currentUser = userRepository.findById(user.getId())
+                .orElseThrow();
+
+        Product cleanProduct = productRepository.findById(product.getId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Product not found: " + product.getId()));
+
+        // Update main product fields.
+        cleanProduct.setProductName(product.getProductName());
+        cleanProduct.setSku(product.getSku());
+        cleanProduct.setDescription(product.getDescription());
+        cleanProduct.setPrice(product.getPrice());
+        cleanProduct.setDiscount(0);
+        cleanProduct.setMaterialCost(0);
+        cleanProduct.setStockQuantity(0L);
+        cleanProduct.setLowStockThreshold(0L);
+        cleanProduct.setCategory(product.getCategory());
+        cleanProduct.setStatus(product.getStatus());
+        cleanProduct.setVisibility(Visibility.Visible);
+        cleanProduct.setStockCalculatedManually(false);
+        cleanProduct.setUser(currentUser);
+
+        cleanProduct.setMultipleItems(true);
+
+
+
+        // Replace main-product tags, without replacing the collection itself.
+        if (product.getTags() != null) {
+            cleanProduct.getTags().clear();
+
+            for (var incomingTag : product.getTags()) {
+                incomingTag.setId(null);
+                incomingTag.setProduct(cleanProduct);
+                incomingTag.setUser(currentUser);
+
+                cleanProduct.getTags().add(incomingTag);
+            }
+        }
+
+        // Replace main-product specifications.
+        if (product.getExtraDetails() != null) {
+            cleanProduct.getExtraDetails().clear();
+
+            for (var incomingDetail : product.getExtraDetails()) {
+                incomingDetail.setId(null);
+                incomingDetail.setProduct(cleanProduct);
+                incomingDetail.setProductMultiple(null);
+                incomingDetail.setUser(currentUser);
+
+                cleanProduct.getExtraDetails().add(incomingDetail);
+            }
+        }
+
+        // Replace main-product finishing steps.
+        if (product.getSteps() != null) {
+            cleanProduct.getSteps().clear();
+
+            for (var incomingStep : product.getSteps()) {
+                incomingStep.setId(null);
+                incomingStep.setProduct(cleanProduct);
+
+                cleanProduct.getSteps().add(incomingStep);
+            }
+        }
+
+        // Replace main-product images if supplied.
+        if (product.getImages() != null) {
+            cleanProduct.getImages().clear();
+
+            for (var incomingImage : product.getImages()) {
+                ProductImageData image =
+                        copyImageForSave(incomingImage, currentUser);
+
+                image.setProduct(cleanProduct);
+                image.setProductMultiple(null);
+
+                cleanProduct.getImages().add(image);
+            }
+        }
+
+        // Rebuild variants using the existing managed collection.
+        if (product.getProductMultiples() != null) {
+            cleanProduct.getProductMultiples().clear();
+
+            for (var incomingVariant : product.getProductMultiples()) {
+
+                ProductMultiple variant = new ProductMultiple();
+
+                variant.setProduct(cleanProduct);
+                variant.setUser(currentUser);
+
+                variant.setColor(incomingVariant.getColor());
+                variant.setProductName(incomingVariant.getProductName());
+                variant.setSku(incomingVariant.getSku());
+                variant.setDescription(incomingVariant.getDescription());
+                variant.setPrice(incomingVariant.getPrice());
+                variant.setDiscount(incomingVariant.getDiscount());
+                variant.setMaterialCost(incomingVariant.getMaterialCost());
+                variant.setStockQuantity(incomingVariant.getStockQuantity());
+                variant.setLowStockThreshold(
+                        incomingVariant.getLowStockThreshold());
+                variant.setCategory(incomingVariant.getCategory());
+                variant.setStatus(incomingVariant.getStatus());
+                variant.setVisibility(incomingVariant.getVisibility());
+                variant.setStock(incomingVariant.getStock());
+                variant.setStockCalculatedManually(
+                        incomingVariant.isStockCalculatedManually());
+
+                // Variant images.
+                if (incomingVariant.getImages() != null) {
+                    for (var incomingImage : incomingVariant.getImages()) {
+
+                        ProductImageData image =
+                                copyImageForSave(incomingImage, currentUser);
+
+                        image.setProduct(null);
+                        image.setProductMultiple(variant);
+
+                        variant.getImages().add(image);
+                    }
+                }
+
+                // Variant material links.
+                if (incomingVariant.getMaterials() != null) {
+                    for (var incomingMaterial
+                            : incomingVariant.getMaterials()) {
+
+                        ProductMaterials materialLink =
+                                new ProductMaterials();
+
+                        materialLink.setNameForRefrence(
+                                incomingMaterial.getNameForRefrence());
+                        materialLink.setNewMaterial(
+                                incomingMaterial.isNewMaterial());
+                        materialLink.setAmountUsed(
+                                incomingMaterial.getAmountUsed());
+                        materialLink.setUnitPrice(
+                                incomingMaterial.getUnitPrice());
+
+
+                        Materials usedMaterial =
+                                materialRepository.findByMaterialName(incomingMaterial.getId(), user.getId());
+
+                            materialLink.setMaterials(usedMaterial);
+
+                        materialLink.setUnitPrice(usedMaterial.getUnitPrice());
+
+                        materialLink.setProduct(null);
+                        materialLink.setProductMultiple(variant);
+                        materialLink.setUser(currentUser);
+
+                        variant.getMaterials().add(materialLink);
+                    }
+                }
+
+
+                // Add the variant to the original managed collection.
+                cleanProduct.getProductMultiples().add(variant);
+            }
+        }
+
+        productRepository.save(cleanProduct);
+
+        return ResponseEntity.ok(
+                new ErrorResponse(
+                        "Saved product with multiple product variants",
+                        Warnings.OK
+                )
+        );
+    }
+
+    private ProductImageData copyImageForSave(
+            ProductImageData source,
+            User currentUser) {
+
+        ProductImageData image = new ProductImageData();
+
+        image.setUuId(source.getUuId());
+        image.setImageName(source.getImageName());
+        image.setImageType(source.getImageType());
+        image.setImageLogic(source.getImageLogic());
+        image.setUser(currentUser);
+
+        if (source.getImageData() != null) {
+            try {
+                image.setImageUrl(
+                        convertImages.saveImage(
+                                source.getImageData(),
+                                source.getImageUrl()
+                        )
+                );
+            } catch (IOException e) {
+                throw new RuntimeException(
+                        "Failed to save product image", e);
+            }
+        } else {
+            image.setImageUrl(source.getImageUrl());
+        }
+
+        image.setImageData(null);
+
+        return image;
+    }
+
+
 
 
     @PostMapping("/getProducts")

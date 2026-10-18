@@ -9,10 +9,7 @@ import com.example.jwt_demo.Enums.Visibility;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -24,6 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+
 public class ProductMultiple {
 
 
@@ -55,14 +53,17 @@ public class ProductMultiple {
     private Stock stock;
 
 
-    @OneToMany(mappedBy = "productMultiple")
+    @OneToMany(
+            mappedBy = "productMultiple",
+            cascade = CascadeType.ALL
+    )
     private List<ProductImageData> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "productMultiple")
+    @OneToMany(
+            mappedBy = "productMultiple",
+            cascade = CascadeType.ALL
+    )
     private List<ProductMaterials> materials = new ArrayList<>();
-
-    @OneToMany(mappedBy = "productMultiple")
-    private List<ExtraDetails> extraDetails = new ArrayList<>();
 
 
     @ManyToOne

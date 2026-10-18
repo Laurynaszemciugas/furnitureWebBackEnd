@@ -22,6 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "products")
+@ToString
 public class Product {
 
     @Id

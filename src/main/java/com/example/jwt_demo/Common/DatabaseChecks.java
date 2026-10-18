@@ -51,6 +51,9 @@ public class DatabaseChecks {
     @Autowired
     ProvidedDataChecker providedDataChecker;
 
+    @Autowired
+    MultipleProductRepository multipleProductRepository;
+
 
     @Autowired
     GmailHTML gmailHTML;
@@ -176,7 +179,92 @@ public class DatabaseChecks {
 
             List<Product> product = productRepository.getProductsAccordingToUserId(s.getId());
 
+
+
+
             for (var prods : product) {
+
+
+                if(prods.getMultipleItems() == true) {
+
+                    System.out.println("FOUND MULTIIIIIIIIIIIIIIIIII");
+
+                    String limitingMaterial = null;
+                    Long lowestAmountToMake = 0L;
+
+
+                    for(var multi : prods.getProductMultiples()) {
+                        System.out.println(multi.getMaterials());
+
+                        if (multi.isStockCalculatedManually()) {
+                            continue;
+                        }
+
+
+                        for (var matStats : multi.getMaterials()) {
+
+                            if (multi.getMaterials().isEmpty()) {
+                                continue;
+                            }
+
+
+                            Long amountUsed = matStats.getAmountUsed();
+                            Long materialStock;
+                            String materialName;
+                            Long canProduce;
+                            try {
+                                materialStock = matStats.getMaterials().getInStock();
+                                materialName = matStats.getMaterials().getMaterialName();
+                                canProduce= materialStock / amountUsed;
+
+                            } catch (Exception e) {
+
+
+                                System.out.println("EROR ON THE DATABASE CHECKS");
+
+                                continue;
+                            }
+
+                            stockWas = matStats.getMaterials().getInStock();
+                            stockNew = Math.abs(stockWas - amountUsed);
+
+
+                            if (limitingMaterial == null && lowestAmountToMake == 0) {
+                                lowestAmountToMake = canProduce;
+                                limitingMaterial = materialName;
+                            }
+
+                            if (canProduce <= lowestAmountToMake) {
+                                lowestAmountToMake = canProduce;
+                                limitingMaterial = materialName;
+                            }
+
+                        }
+
+
+                        Long lowThreshold = multi.getLowStockThreshold();
+
+                        if (lowestAmountToMake > lowThreshold) {
+                            multi.setStock(Stock.In_Stock);
+                        }
+                        if (lowestAmountToMake <= lowThreshold) {
+                            multi.setStock(Stock.Low_Stock);
+                        }
+                        if (lowestAmountToMake == 0) {
+                            multi.setStock(Stock.No_Stock);
+                        }
+
+                        multi.setStockQuantity(lowestAmountToMake);
+
+
+                        multipleProductRepository.save(multi);
+
+
+                        actionMaker.makeAction(String.format("Stock of %s was was changed", prods.getProductName()), s.getId(), null, ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.System_Check);
+
+                    }
+                }
+
 
                 String limitingMaterial = null;
                 Long lowestAmountToMake = 0L;
