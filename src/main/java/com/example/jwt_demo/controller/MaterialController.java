@@ -79,6 +79,15 @@ public class MaterialController {
 
     }
 
+    @GetMapping("/getMaterialAccordingToId/{id}")
+    public ResponseEntity<Materials> getMaterialAccordingToId(@PathVariable Long id){
+
+
+        return ResponseEntity.ok(materialRepository.findById(id).orElseThrow());
+
+
+    }
+
     // for quick price analization on textfield
     @PostMapping("/getEstimatedPriceOfMaterialUsed")
     public ResponseEntity<Double> getEstimatedMaterialCost(@RequestBody List<ProductMaterials> productMaterials){

@@ -418,11 +418,13 @@ public class ProductController {
             }
         }
 
-        // Replace main-product images if supplied.
-        if (product.getImages() != null) {
-            cleanProduct.getImages().clear();
 
+// Always replace main-product images
+        cleanProduct.getImages().clear();
+
+        if (product.getImages() != null) {
             for (var incomingImage : product.getImages()) {
+
                 ProductImageData image =
                         copyImageForSave(incomingImage, currentUser);
 
@@ -469,13 +471,16 @@ public class ProductController {
                 variant.setStockCalculatedManually(
                         incomingVariant.isStockCalculatedManually());
 
-                // Variant images.
+                // Always replace variant images
+                variant.getImages().clear();
+
                 if (incomingVariant.getImages() != null) {
                     for (var incomingImage : incomingVariant.getImages()) {
 
                         ProductImageData image =
                                 copyImageForSave(incomingImage, currentUser);
 
+                        image.setId(null);
                         image.setProduct(null);
                         image.setProductMultiple(variant);
 
