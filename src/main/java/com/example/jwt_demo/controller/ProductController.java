@@ -62,6 +62,9 @@ public class ProductController {
     ActionTrackerRepository actionTrackerRepository;
 
     @Autowired
+    ProductMaterialRepository productMaterialRepository;
+
+    @Autowired
     ActionMaker actionMaker;
 
     @Autowired
@@ -209,14 +212,15 @@ public class ProductController {
         cleanProduct.setPrice(product.getPrice());
         cleanProduct.setDiscount(product.getDiscount());
         cleanProduct.setMaterialCost(product.getMaterialCost());
-        cleanProduct.setStockQuantity(product.getStockQuantity());
-        cleanProduct.setLowStockThreshold(product.getLowStockThreshold());
+        cleanProduct.setStockQuantity(0L);
+        cleanProduct.setLowStockThreshold(0L);
         cleanProduct.setCategory(product.getCategory());
         cleanProduct.setStatus(product.getStatus());
-        cleanProduct.setVisibility(product.getVisibility());
+        cleanProduct.setVisibility(Visibility.Visible);
         cleanProduct.setCreated(product.getCreated());
         cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
         cleanProduct.setUser(currentUser);
+
 
         cleanProduct.setMultipleItems(true);
 
@@ -431,11 +435,19 @@ public class ProductController {
 
         // Rebuild variants using the existing managed collection.
         if (product.getProductMultiples() != null) {
-            cleanProduct.getProductMultiples().clear();
+
+
+            ProductMultiple variant;
+
 
             for (var incomingVariant : product.getProductMultiples()) {
 
-                ProductMultiple variant = new ProductMultiple();
+                if(incomingVariant.getId() != null){
+                    variant = multipleProductRepository.findById(incomingVariant.getId()).orElseThrow();
+                }
+                else{
+                    variant = new ProductMultiple();
+                }
 
                 variant.setProduct(cleanProduct);
                 variant.setUser(currentUser);
@@ -473,27 +485,44 @@ public class ProductController {
 
                 // Variant material links.
                 if (incomingVariant.getMaterials() != null) {
-                    for (var incomingMaterial
-                            : incomingVariant.getMaterials()) {
 
-                        ProductMaterials materialLink =
-                                new ProductMaterials();
+                    // Remove all existing material links.
+                    variant.getMaterials().clear();
+
+                    // Rebuild the collection from the incoming data.
+                    for (var incomingMaterial : incomingVariant.getMaterials()) {
+
+
+
+                        ProductMaterials materialLink = new ProductMaterials();
 
                         materialLink.setNameForRefrence(
                                 incomingMaterial.getNameForRefrence());
+
                         materialLink.setNewMaterial(
                                 incomingMaterial.isNewMaterial());
+
                         materialLink.setAmountUsed(
                                 incomingMaterial.getAmountUsed());
-                        materialLink.setUnitPrice(
-                                incomingMaterial.getUnitPrice());
+
+                        Long id = 0L;
+
+                        try {
+                            id = incomingMaterial.getMaterials().getId();
+                        } catch (Exception e) {
+
+                            ProductMaterials productMaterials = productMaterialRepository.findById(incomingMaterial.getId()).orElseThrow();
+
+                            id = productMaterials.getMaterials().getId();
+                        }
+                        Materials usedMaterial = materialRepository
+                                .findByMaterialName(
+                                        id,
+                                        user.getId());
 
 
-                        Materials usedMaterial =
-                                materialRepository.findByMaterialName(incomingMaterial.getId(), user.getId());
 
-                            materialLink.setMaterials(usedMaterial);
-
+                        materialLink.setMaterials(usedMaterial);
                         materialLink.setUnitPrice(usedMaterial.getUnitPrice());
 
                         materialLink.setProduct(null);
@@ -502,6 +531,7 @@ public class ProductController {
 
                         variant.getMaterials().add(materialLink);
                     }
+
                 }
 
 
@@ -698,11 +728,10 @@ public class ProductController {
         if (product.getMaterials() != null) {
 
             existingProduct.getMaterials().clear();
-
             for (var mat : product.getMaterials()) {
 
-                Materials usedMaterial =
-                        materialRepository.findByMaterialName(mat.getId(), user.getId());
+
+                Materials usedMaterial = materialRepository.findByMaterialName(mat.getId(), user.getId());
 
                 ProductMaterials newProductMaterial = new ProductMaterials();
 

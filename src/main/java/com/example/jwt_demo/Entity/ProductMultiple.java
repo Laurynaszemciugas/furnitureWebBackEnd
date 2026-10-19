@@ -61,7 +61,8 @@ public class ProductMultiple {
 
     @OneToMany(
             mappedBy = "productMultiple",
-            cascade = CascadeType.ALL
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
     private List<ProductMaterials> materials = new ArrayList<>();
 
