@@ -510,16 +510,23 @@ public class ProductController {
                         materialLink.setAmountUsed(
                                 incomingMaterial.getAmountUsed());
 
-                        Long id = 0L;
+                        Long  id = incomingMaterial.getMaterials().getId();
 
-                        try {
-                            id = incomingMaterial.getMaterials().getId();
-                        } catch (Exception e) {
+//                        try {
 
-                            ProductMaterials productMaterials = productMaterialRepository.findById(incomingMaterial.getId()).orElseThrow();
+//                        } catch (Exception e) {
+//
+//                            ProductMaterials productMaterials = productMaterialRepository.findById(incomingMaterial.getId()).orElseThrow();
+//
+//                            id = productMaterials.getMaterials().getId();
+//
+//                            System.out.println("Found with exseption");
+//                        }
 
-                            id = productMaterials.getMaterials().getId();
-                        }
+
+                        System.out.println("Id - " + id);
+
+
                         Materials usedMaterial = materialRepository
                                 .findByMaterialName(
                                         id,
