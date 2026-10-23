@@ -220,6 +220,7 @@ public class ProductController {
         cleanProduct.setCreated(product.getCreated());
         cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
         cleanProduct.setUser(currentUser);
+        cleanProduct.setProductName(product.getProductName());
 
 
         cleanProduct.setMultipleItems(true);
@@ -273,6 +274,7 @@ public class ProductController {
             prod.setCreated(s.getCreated());
             prod.setStockCalculatedManually(s.isStockCalculatedManually());
             prod.setUser(currentUser);
+            prod.setColor(s.getColor());
 
 
 
@@ -374,6 +376,7 @@ public class ProductController {
         cleanProduct.setVisibility(Visibility.Visible);
         cleanProduct.setStockCalculatedManually(false);
         cleanProduct.setUser(currentUser);
+        cleanProduct.setProductName(product.getProductName());
 
         cleanProduct.setMultipleItems(true);
 
@@ -470,6 +473,7 @@ public class ProductController {
                 variant.setStock(incomingVariant.getStock());
                 variant.setStockCalculatedManually(
                         incomingVariant.isStockCalculatedManually());
+                variant.setColor(incomingVariant.getColor());
 
                 // Always replace variant images
                 variant.getImages().clear();

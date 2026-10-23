@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ActionTrackerRepository extends JpaRepository<ActionTracker,Long> {
+    public interface ActionTrackerRepository extends JpaRepository<ActionTracker,Long> {
 
 
     @Query("""
