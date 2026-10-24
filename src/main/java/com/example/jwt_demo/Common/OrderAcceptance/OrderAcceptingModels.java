@@ -45,6 +45,9 @@ public class OrderAcceptingModels {
     ActionMaker actionMaker;
 
     @Autowired
+    MultipleProductRepository multipleProductRepository;
+
+    @Autowired
     ProvidedDataChecker providedDataChecker;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
@@ -398,12 +401,12 @@ public class OrderAcceptingModels {
         }
         else{
 
-            Double totalPrice = 0.0;
-            for(var s : order.getProductsData()){
-                Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
-                totalPrice+= s.getAmountOfProduct()* product.getPrice();
-            }
-            newOrder.setTotalPrice(totalPrice);
+//            Double totalPrice = 0.0;
+//            for(var s : order.getProductsData()){
+//                Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
+//                totalPrice+= s.getAmountOfProduct()* product.getPrice();
+//            }
+//            newOrder.setTotalPrice(totalPrice);
 
 
         }
@@ -455,15 +458,39 @@ public class OrderAcceptingModels {
     public List<OrderProducts> stepCreator(Orders order, Orders newOrder){
 
 
+
+
+        for(var s : order.getProductsData()){
+
+            System.out.println(s);
+
+
+        }
+
+
         List<OrderProducts> products = new ArrayList<>();
         for(var s : order.getProductsData()){
 
+            boolean test = false;
+
+            Product product = null;
+            ProductMultiple productMultiple = null;
 
 
-            if(s.getProduct().getId() == null){
-                throw new ValidationException("Product doesnt have an id", Warnings.FATAL_ERROR);
+            if(s.getProductMultiple() != null  && s.getProductMultiple().getId() != null){
+                productMultiple = multipleProductRepository.findById(s.getProductMultiple().getId()).orElseThrow();
+                product = productRepository.findById(productMultiple.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not foundsssssss", Warnings.ERROR));
+
+
             }
-            Product product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
+            else{
+                test = true;
+                product = productRepository.findById(s.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
+
+            }
+
+
+
 
             if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
                 throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
@@ -475,15 +502,29 @@ public class OrderAcceptingModels {
 
             OrderProducts orderProducts = new OrderProducts();
             orderProducts.setProduct(product);
+            orderProducts.setProductMultiple(productMultiple);
+            if(test){
+                orderProducts.setProductMultiple(null);
+            }
             orderProducts.setOrder(newOrder);
-            orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct()));
+            if(s.getProduct() != null) {
+                orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct(),false));
+            }
+            else {
+                orderProducts.setCost(materialCost(s.getProductMultiple().getId(), s.getAmountOfProduct(),true));
+            }
             orderProducts.setAmountOfProduct(s.getAmountOfProduct());
 
 
 
             List<OrderStepsToComplete> orderSteps = new ArrayList<>();
 
-            Long sizeOfTheSteps = Long.valueOf(product.getSteps().size());
+            // steps are done in main not in variants
+            Long sizeOfTheSteps = 0L;
+            if(product != null){
+                 sizeOfTheSteps = Long.valueOf(product.getSteps().size());
+            }
+
             Long i = 0L;
 
             for (var step : product.getSteps()) {
@@ -573,12 +614,20 @@ public class OrderAcceptingModels {
     // ===============================================================
     // Calculate material cost according to product
     // ===============================================================
-    public Double materialCost(Long productId, Long amountTaken){
+    public Double materialCost(Long productId, Long amountTaken, boolean multi){
 
-        Product product = productRepository.findById(productId).orElseThrow();
+        Double price = 0.0;
 
+        if(multi){
+            ProductMultiple productMultiple = multipleProductRepository.findById(productId).orElseThrow();
+            price = productMultiple.getPrice();
+        }
+        else {
+            Product product = productRepository.findById(productId).orElseThrow();
+            price = product.getPrice();
+        }
 
-        return product.getPrice() * amountTaken;
+        return price * amountTaken;
 
     }
 

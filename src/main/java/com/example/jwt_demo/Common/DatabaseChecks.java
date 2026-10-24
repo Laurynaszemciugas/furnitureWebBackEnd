@@ -545,89 +545,89 @@ public class DatabaseChecks {
     public void checkNewAddedOrder(Long orderId, boolean modifyStock){
 
 
-        System.out.println("checking new order");
-
-        Orders newOrder = orderRepository.findById(orderId).orElseThrow();
-
-
-        for(var s : newOrder.getProductsData()){
-
-
-            if (s.getProduct().isStockCalculatedManually()) {
-
-                Product manuallySetProduct = productRepository.findById(s.getProduct().getId()).orElseThrow();
-
-                Long productStock = manuallySetProduct.getStockQuantity();
-                Long takenProductCount = s.getAmountOfProduct();
-
-                Long stock = productStock - takenProductCount;
-
-
-
-
-                if(stock < 0){
-
-                    newOrder.setServerNote("Order is not possible due to materials shortage");
-                    orderRepository.save(newOrder);
-                    break;
-                }
-
-                if(modifyStock) {
-                    manuallySetProduct.setStockQuantity(stock);
-
-                    productRepository.save(manuallySetProduct);
-                }
-
-                continue;
-            }
-
-
-            for (var material : s.getProduct().getMaterials()) {
-
-
-
-
-                Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
-                Long materialStock = newlyAddedProductsMaterial.getInStock();
-                Long takenProductCount = s.getAmountOfProduct();
-                Long amountMaterialNeededForOneProduct = material.getAmountUsed();
-
-                Long stock = materialStock - (takenProductCount * amountMaterialNeededForOneProduct);
-
-
-
-                System.out.println("stock levels");
-
-
-                System.out.println(materialStock + " " + takenProductCount + "  " + amountMaterialNeededForOneProduct);
-                System.out.println(stock);
-
-                if (stock < 0) {
-
-                    newOrder.setServerNote("Order is not possible due to materials shortage");
-                    orderRepository.save(newOrder);
-                    break;
-
-                }
-
-                if(modifyStock) {
-                    newlyAddedProductsMaterial.setInStock(stock);
-                    materialRepository.save(newlyAddedProductsMaterial);
-                    logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
-                }
-
-
-
-
-
-
-
-
-
-            }
-
-
-        }
+//        System.out.println("checking new order");
+//
+//        Orders newOrder = orderRepository.findById(orderId).orElseThrow();
+//
+//
+//        for(var s : newOrder.getProductsData()){
+//
+//
+//            if (s.getProduct().isStockCalculatedManually()) {
+//
+//                Product manuallySetProduct = productRepository.findById(s.getProduct().getId()).orElseThrow();
+//
+//                Long productStock = manuallySetProduct.getStockQuantity();
+//                Long takenProductCount = s.getAmountOfProduct();
+//
+//                Long stock = productStock - takenProductCount;
+//
+//
+//
+//
+//                if(stock < 0){
+//
+//                    newOrder.setServerNote("Order is not possible due to materials shortage");
+//                    orderRepository.save(newOrder);
+//                    break;
+//                }
+//
+//                if(modifyStock) {
+//                    manuallySetProduct.setStockQuantity(stock);
+//
+//                    productRepository.save(manuallySetProduct);
+//                }
+//
+//                continue;
+//            }
+//
+//
+//            for (var material : s.getProduct().getMaterials()) {
+//
+//
+//
+//
+//                Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
+//                Long materialStock = newlyAddedProductsMaterial.getInStock();
+//                Long takenProductCount = s.getAmountOfProduct();
+//                Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+//
+//                Long stock = materialStock - (takenProductCount * amountMaterialNeededForOneProduct);
+//
+//
+//
+//                System.out.println("stock levels");
+//
+//
+//                System.out.println(materialStock + " " + takenProductCount + "  " + amountMaterialNeededForOneProduct);
+//                System.out.println(stock);
+//
+//                if (stock < 0) {
+//
+//                    newOrder.setServerNote("Order is not possible due to materials shortage");
+//                    orderRepository.save(newOrder);
+//                    break;
+//
+//                }
+//
+//                if(modifyStock) {
+//                    newlyAddedProductsMaterial.setInStock(stock);
+//                    materialRepository.save(newlyAddedProductsMaterial);
+//                    logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
+//                }
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//            }
+//
+//
+//        }
 
 
 

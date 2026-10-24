@@ -2,6 +2,7 @@ package com.example.jwt_demo.Entity.OrderJoin;
 
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.Product;
+import com.example.jwt_demo.Entity.ProductMultiple;
 import com.example.jwt_demo.Entity.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,6 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @ToString
+
 public class OrderProducts {
 
     @Id
@@ -28,6 +30,12 @@ public class OrderProducts {
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "productMultiple_id")
+    private ProductMultiple productMultiple;
+
+
     @ManyToOne
     @JoinColumn(name = "order_id")
     @JsonBackReference("orders")

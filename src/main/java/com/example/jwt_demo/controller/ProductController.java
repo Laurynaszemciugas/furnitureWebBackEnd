@@ -104,6 +104,7 @@ public class ProductController {
         cleanProduct.setCreated(product.getCreated());
         cleanProduct.setUser(currentUser);
         cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
+        cleanProduct.setMultipleItems(product.getMultipleItems());
 
         if (product.getTags() != null) {
             cleanProduct.getTags().clear();
@@ -834,6 +835,15 @@ public class ProductController {
         CustomUserDetails user = common.getUserData();
 
         return ResponseEntity.ok(productRepository.getAllProductDataForAddNewOrder(user.getId()));
+
+    }
+
+    @GetMapping("/getAllProductsAccordingToTheUser")
+    public ResponseEntity<List<Product>> getAllProductsAccordingToTheUser(){
+
+        CustomUserDetails user = common.getUserData();
+
+        return ResponseEntity.ok(productRepository.getProductsAccordingToUserId(user.getId()));
 
     }
 

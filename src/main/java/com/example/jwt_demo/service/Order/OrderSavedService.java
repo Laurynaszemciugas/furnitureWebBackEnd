@@ -621,7 +621,8 @@ public class OrderSavedService {
                 orderProducts.setCost(
                         orderAcceptingModels.materialCost(
                                 productId,
-                                s.getAmountOfProduct()
+                                s.getAmountOfProduct(),
+                                false
                         )
                 );
             }
@@ -630,7 +631,7 @@ public class OrderSavedService {
                 orderProducts = new OrderProducts();
                 orderProducts.setProduct(existingProduct);
                 orderProducts.setOrder(sameExistingOrder);
-                orderProducts.setCost(orderAcceptingModels.materialCost(s.getProduct().getId(), s.getAmountOfProduct()));
+                orderProducts.setCost(orderAcceptingModels.materialCost(s.getProduct().getId(), s.getAmountOfProduct(),true));
                 orderProducts.setAmountOfProduct(s.getAmountOfProduct());
                 products.add(orderProducts);
 
@@ -697,16 +698,15 @@ public class OrderSavedService {
 
         User user = userRepository.findById(userData.getId()).orElseThrow();
 
-        User actualUser = userRepository.findById(user.getId()).orElseThrow();
 
 
-        if(actualUser.getRole().equals(Role.ANONYMOUS)){
+
+        if(user.getRole().equals(Role.ANONYMOUS)){
 
         }
-        else if (actualUser.getRole().equals(Role.ADMIN)){
+        else if (user.getRole().equals(Role.ADMIN)){
 
-
-            OrderProcessing orderProcessing = actualUser.getUserSettingsList().getOrderProcessing();
+            OrderProcessing orderProcessing = user.getUserSettingsList().getOrderProcessing();
 
 
             switch (orderProcessing){
