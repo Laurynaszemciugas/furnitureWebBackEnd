@@ -68,38 +68,88 @@ public class DatabaseChecks {
 
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
+
+        System.out.println("CALCULTTIEON");
+        System.out.println(order.getProductsData().size());
+
+
         for (var productData : new ArrayList<>(order.getProductsData())) {
 
+            // PROBLEM THIS DOESNT SET ORDER FROM NEW TO LACK OF SUPPLY OR AWAITING SO BECAUSE IF THAT ORDER IS STUCK AS NEW AND NEW CANNOT CONTINUE
+            // DO A IS MULTI CHECK HERE
 
-            Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
-            Long amountOfProductTaken = productData.getAmountOfProduct();
-            for (var materials : product.getMaterials()) {
+            if(productData.getProduct().getMultipleItems()) {
 
-                Long materialNeededForOne = materials.getAmountUsed();
+                System.out.println("detected multi");
 
-                Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
-                Long materialStock = material.getInStock();
 
-                if (materialStock - (materialNeededForOne * amountOfProductTaken) < 0) {
-                    order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
-                    orderRepository.save(order);
-                    //throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY", Warnings.WARNING);
-                    return;
+                ProductMultiple product = multipleProductRepository.findById(productData.getProductMultiple().getId()).orElseThrow(() -> new ValidationException("No product found ", Warnings.ERROR));
+
+                Long amountOfProductTaken = productData.getAmountOfProduct();
+
+                for (var materials : product.getMaterials()) {
+                    Long materialNeededForOne = materials.getAmountUsed();
+
+                    Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
+                    Long materialStock = material.getInStock();
+
+                    System.out.println(materialStock - (materialNeededForOne * amountOfProductTaken) < 0);
+
+                    if (materialStock - (materialNeededForOne * amountOfProductTaken) < 0) {
+                        order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                        orderRepository.save(order);
+                        //throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY", Warnings.WARNING);
+                        return;
+                    } else {
+
+                        order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+                        orderRepository.save(order);
+                    }
+
+                    material.setInStock(materialStock - (materialNeededForOne * amountOfProductTaken));
+                    material.setReserved(material.getReserved() + (materialStock - (materialStock - (materialNeededForOne * amountOfProductTaken))));
+
+                    materialRepository.save(material);
+
+
                 }
-
-                else{
-
-                    order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
-                    orderRepository.save(order);
-                }
-
-                material.setInStock(materialStock - (materialNeededForOne * amountOfProductTaken));
-                material.setReserved(material.getReserved() + (materialStock - (materialStock - (materialNeededForOne * amountOfProductTaken))));
-
-                materialRepository.save(material);
-
-
             }
+
+            else {
+
+
+                Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow(() -> new ValidationException("No product found ", Warnings.ERROR));
+
+                Long amountOfProductTaken = productData.getAmountOfProduct();
+
+                for (var materials : product.getMaterials()) {
+                    Long materialNeededForOne = materials.getAmountUsed();
+
+                    Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
+                    Long materialStock = material.getInStock();
+
+                    System.out.println(materialStock - (materialNeededForOne * amountOfProductTaken) < 0);
+
+                    if (materialStock - (materialNeededForOne * amountOfProductTaken) < 0) {
+                        order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                        orderRepository.save(order);
+                        //throw new ValidationException("Order is not possible it was set to LACK OF SUPPLY", Warnings.WARNING);
+                        return;
+                    } else {
+
+                        order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+                        orderRepository.save(order);
+                    }
+
+                    material.setInStock(materialStock - (materialNeededForOne * amountOfProductTaken));
+                    material.setReserved(material.getReserved() + (materialStock - (materialStock - (materialNeededForOne * amountOfProductTaken))));
+
+                    materialRepository.save(material);
+
+
+                }
+            }
+
 
 
         }
