@@ -401,12 +401,25 @@ public class OrderAcceptingModels {
         }
         else{
 
-//            Double totalPrice = 0.0;
-//            for(var s : order.getProductsData()){
-//                Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
-//                totalPrice+= s.getAmountOfProduct()* product.getPrice();
-//            }
-//            newOrder.setTotalPrice(totalPrice);
+            Double totalPrice = 0.0;
+            for(var s : order.getProductsData()){
+
+
+
+                // calculate total so if the multi is null means normal product else not normal multi product
+                if(s.getProductMultiple() == null){
+                    Product product = productRepository.findById(s.getProduct().getId()).orElseThrow();
+                    totalPrice+= s.getAmountOfProduct()* product.getPrice();
+                }
+                else{
+                    ProductMultiple product = multipleProductRepository.findById(s.getProductMultiple().getId()).orElseThrow();
+                    totalPrice+= s.getAmountOfProduct()* product.getPrice();
+                }
+
+
+
+            }
+            newOrder.setTotalPrice(totalPrice);
 
 
         }
@@ -503,9 +516,7 @@ public class OrderAcceptingModels {
             OrderProducts orderProducts = new OrderProducts();
             orderProducts.setProduct(product);
             orderProducts.setProductMultiple(productMultiple);
-            if(test){
-                orderProducts.setProductMultiple(null);
-            }
+
             orderProducts.setOrder(newOrder);
             if(s.getProduct() != null) {
                 orderProducts.setCost(materialCost(s.getProduct().getId(), s.getAmountOfProduct(),false));
@@ -628,6 +639,7 @@ public class OrderAcceptingModels {
         }
 
         return price * amountTaken;
+
 
     }
 

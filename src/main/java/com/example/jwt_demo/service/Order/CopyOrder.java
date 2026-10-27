@@ -7,6 +7,7 @@ import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Entity.Product;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
+import com.example.jwt_demo.Entity.ProductMultiple;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,9 +30,6 @@ public class CopyOrder {
         copy.setPayStatus(original.getPayStatus());
 
 
-
-
-
         // Copy products
         List<OrderProducts> copiedProducts = original.getProductsData()
                 .stream()
@@ -44,56 +42,125 @@ public class CopyOrder {
                     newProduct.setCost(oldProduct.getCost());
 
 
+                    // Copy normal product, if present
+                    if (oldProduct.getProduct() != null) {
 
-                    Product productCopy = new Product();
-                    productCopy.setStockCalculatedManually(oldProduct.getProduct().isStockCalculatedManually());
-                    productCopy.setId(oldProduct.getProduct().getId());
-                    productCopy.setProductName(oldProduct.getProduct().getProductName());
+                        Product productCopy = new Product();
 
-                    List<ProductMaterials> copiedMaterials =
-                            oldProduct.getProduct().getMaterials()
-                                    .stream()
-                                    .map(oldMaterial -> {
+                        productCopy.setStockCalculatedManually(
+                                oldProduct.getProduct().isStockCalculatedManually()
+                        );
 
-                                        ProductMaterials newMaterial = new ProductMaterials();
-                                        newMaterial.setAmountUsed(oldMaterial.getAmountUsed());
+                        productCopy.setId(oldProduct.getProduct().getId());
+
+                        productCopy.setProductName(
+                                oldProduct.getProduct().getProductName()
+                        );
+
+                        List<ProductMaterials> copiedMaterials =
+                                oldProduct.getProduct().getMaterials()
+                                        .stream()
+                                        .map(oldMaterial -> {
+
+                                            ProductMaterials newMaterial =
+                                                    new ProductMaterials();
+
+                                            newMaterial.setAmountUsed(
+                                                    oldMaterial.getAmountUsed()
+                                            );
+
+                                            newMaterial.setId(oldMaterial.getId());
+
+                                            Materials materialCopy = new Materials();
+
+                                            materialCopy.setId(
+                                                    oldMaterial.getMaterials().getId()
+                                            );
+
+                                            materialCopy.setMaterialName(
+                                                    oldMaterial.getMaterials()
+                                                            .getMaterialName()
+                                            );
+
+                                            materialCopy.setInStock(
+                                                    oldMaterial.getMaterials()
+                                                            .getInStock()
+                                            );
+
+                                            newMaterial.setMaterials(materialCopy);
+
+                                            return newMaterial;
+
+                                        })
+                                        .toList();
+
+                        productCopy.setMaterials(copiedMaterials);
+
+                        newProduct.setProduct(productCopy);
+                    }
 
 
+                    // Copy multi-variant product, if present
+                    if (oldProduct.getProductMultiple() != null) {
 
-                                        newMaterial.setId(oldMaterial.getId());
+                        ProductMultiple oldMultiple =
+                                oldProduct.getProductMultiple();
 
+                        ProductMultiple multipleCopy = new ProductMultiple();
 
-                                        Materials materialCopy = new Materials();
+                        multipleCopy.setId(oldMultiple.getId());
 
-                                        materialCopy.setId(
-                                                oldMaterial.getMaterials().getId()
-                                        );
+                        multipleCopy.setStockCalculatedManually(
+                                oldMultiple.isStockCalculatedManually()
+                        );
 
-                                        materialCopy.setMaterialName(
-                                                oldMaterial.getMaterials().getMaterialName()
-                                        );
+                        multipleCopy.setProductName(
+                                oldMultiple.getProductName()
+                        );
 
-                                        materialCopy.setInStock(
-                                                oldMaterial.getMaterials().getInStock()
-                                        );
+                        // Copy multi-variant materials
+                        List<ProductMaterials> copiedMultipleMaterials =
+                                oldMultiple.getMaterials()
+                                        .stream()
+                                        .map(oldMaterial -> {
 
+                                            ProductMaterials newMaterial =
+                                                    new ProductMaterials();
 
+                                            newMaterial.setAmountUsed(
+                                                    oldMaterial.getAmountUsed()
+                                            );
 
+                                            newMaterial.setId(oldMaterial.getId());
 
+                                            Materials materialCopy = new Materials();
 
+                                            materialCopy.setId(
+                                                    oldMaterial.getMaterials().getId()
+                                            );
 
+                                            materialCopy.setMaterialName(
+                                                    oldMaterial.getMaterials()
+                                                            .getMaterialName()
+                                            );
 
-                                        newMaterial.setMaterials(materialCopy);
+                                            materialCopy.setInStock(
+                                                    oldMaterial.getMaterials()
+                                                            .getInStock()
+                                            );
 
-                                        return newMaterial;
+                                            newMaterial.setMaterials(materialCopy);
 
-                                    })
-                                    .toList();
+                                            return newMaterial;
 
+                                        })
+                                        .toList();
 
-                    productCopy.setMaterials(copiedMaterials);
+                        multipleCopy.setMaterials(copiedMultipleMaterials);
 
-                    newProduct.setProduct(productCopy);
+                        newProduct.setProductMultiple(multipleCopy);
+                    }
+
 
                     return newProduct;
 
@@ -122,7 +189,6 @@ public class CopyOrder {
 
 
         copy.setEmployees(copiedEmployees);
-
 
         return copy;
     }

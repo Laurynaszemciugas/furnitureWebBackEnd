@@ -399,35 +399,63 @@ public class DatabaseChecks {
 
         for (var prods : order.getProductsData()) {
 
+
+            if(prods.getProductMultiple() != null){
+
+
+                if (prods.getProductMultiple().isStockCalculatedManually()) {
+                    continue;
+                }
+
+
+                Long amountOfProductTaken = prods.getAmountOfProduct();
+                Long remainingProduct = prods.getProductMultiple().getStockQuantity();
+
+                for (var mats : prods.getProductMultiple().getMaterials()) {
+
+
+                    Materials mat = materialRepository.findById(mats.getMaterials().getId()).orElseThrow();
+
+                    Long materialUsed = mats.getAmountUsed();
+
+                    Long getStock = mat.getInStock();
+
+
+                    Long newStock = getStock - (materialUsed * amountOfProductTaken);
+
+                    if (newStock < 0) {
+                        newStock = 0L;
+                    }
+
+                    //mat.setInStock(newStock);
+
+                    Long lowThreshold = mat.getMinThresHold();
+
+                    if (getStock > lowThreshold) {
+                        mat.setStock(Stock.In_Stock);
+                    }
+                    if (getStock <= lowThreshold) {
+                        mat.setStock(Stock.Low_Stock);
+                    }
+                    if (getStock == 0) {
+                        mat.setStock(Stock.No_Stock);
+                    }
+
+                    materialRepository.save(mat);
+
+
+                }
+            }
+
+            else{
+
             if (prods.getProduct().isStockCalculatedManually()) {
                 continue;
             }
 
-//            OrderProducts productOld = oldOrder.getProductsData()
-//                    .stream()
-//                    .filter(p -> p.getProduct().getId().equals(prods.getProduct().getId()))
-//                    .findFirst()
-//                    .orElse(null);
-
-//            if(prods.getAmountOfProduct().equals(productOld.getAmountOfProduct())){
-//                continue;
-//            }
 
             Long amountOfProductTaken = prods.getAmountOfProduct();
             Long remainingProduct = prods.getProduct().getStockQuantity();
-//
-//// seems useless i have product update btw
-//            Product userDrivenProduct = prods.getProduct();
-//
-//            userDrivenProduct.setStockQuantity(
-//                    Math.abs(amountOfProductTaken - remainingProduct)
-//            );
-//
-//            productRepository.save(userDrivenProduct);
-
-
-
-
 
             for (var mats : prods.getProduct().getMaterials()) {
 
@@ -466,6 +494,7 @@ public class DatabaseChecks {
 
 
         }
+        }
 
 
     }
@@ -477,64 +506,135 @@ public class DatabaseChecks {
 
         for (var prods : order.getProductsData()) {
 
-            OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
+            if(prods.getProductMultiple() != null){
 
-            if (prods.getProduct().isStockCalculatedManually()) {
+                OrderProducts old = oldOrder.getProductsData().stream().filter(p->  p.getProductMultiple() != null && p.getProductMultiple().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
 
-                Long amountWasUsed;
+                if (prods.getProductMultiple().isStockCalculatedManually()) {
+
+                    Long amountWasUsed;
+                    if(old != null) {
+                        amountWasUsed = old.getAmountOfProduct();
+                    }
+                    else{
+                        amountWasUsed = 0L;
+                    }
+
+
+
+                    Long amountUsedUpdated = prods.getAmountOfProduct();
+                    Long productStock = prods.getProductMultiple().getStockQuantity();
+
+                    Long taken = amountUsedUpdated - amountWasUsed;
+
+
+                    System.out.println("===========================================================");
+
+                    System.out.println("Amount was used so old order - " + amountWasUsed);
+                    System.out.println("Amount new used - " + amountUsedUpdated);
+                    System.out.println("Amount taken - " + taken);
+
+                    System.out.println("===========================================================");
+
+                    System.out.println("product stock - " + productStock);
+
+
+                    if(taken > productStock){
+
+                        String productName = prods.getProductMultiple().getProductName();
+
+
+                        throw new ValidationException("Order cannot be filled due to product stock (Manually set) [" + productName +"]", Warnings.ERROR);
+                    }
+
+
+                    continue;
+                }
+
+                Long amountOfProductTaken = prods.getAmountOfProduct();
+                Long remainingProduct = prods.getProductMultiple().getStockQuantity();
+
+
+
                 if(old != null) {
-                    amountWasUsed = old.getAmountOfProduct();
-                }
-                else{
-                    amountWasUsed = 0L;
+
+                    amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
                 }
 
+                if (amountOfProductTaken > remainingProduct) {
+                    String productName = prods.getProductMultiple().getProductName();
+
+                    throw new ValidationException("Order cannot be filled due to product stock [" + productName +"]", Warnings.ERROR);
+                }
 
 
-                Long amountUsedUpdated = prods.getAmountOfProduct();
-                Long productStock = prods.getProduct().getStockQuantity();
-
-                Long taken = amountUsedUpdated - amountWasUsed;
-
-
-                System.out.println("===========================================================");
-
-                System.out.println("Amount was used so old order - " + amountWasUsed);
-                System.out.println("Amount new used - " + amountUsedUpdated);
-                System.out.println("Amount taken - " + taken);
-
-                System.out.println("===========================================================");
-
-                System.out.println("product stock - " + productStock);
-
-
-               if(taken > productStock){
-
-                   String productName = prods.getProduct().getProductName();
-
-
-                   throw new ValidationException("Order cannot be filled due to product stock (Manually set) [" + productName +"]", Warnings.ERROR);
-               }
-
-
-                continue;
             }
 
-            Long amountOfProductTaken = prods.getAmountOfProduct();
-            Long remainingProduct = prods.getProduct().getStockQuantity();
+
+            else{
+
+                OrderProducts old = oldOrder.getProductsData().stream().filter(p->p.getProduct().getId().equals(prods.getProduct().getId())).findFirst().orElse(null);
+
+                if (prods.getProduct().isStockCalculatedManually()) {
+
+                    Long amountWasUsed;
+                    if(old != null) {
+                        amountWasUsed = old.getAmountOfProduct();
+                    }
+                    else{
+                        amountWasUsed = 0L;
+                    }
 
 
 
-            if(old != null) {
+                    Long amountUsedUpdated = prods.getAmountOfProduct();
+                    Long productStock = prods.getProduct().getStockQuantity();
 
-                amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
+                    Long taken = amountUsedUpdated - amountWasUsed;
+
+
+                    System.out.println("===========================================================");
+
+                    System.out.println("Amount was used so old order - " + amountWasUsed);
+                    System.out.println("Amount new used - " + amountUsedUpdated);
+                    System.out.println("Amount taken - " + taken);
+
+                    System.out.println("===========================================================");
+
+                    System.out.println("product stock - " + productStock);
+
+
+                    if(taken > productStock){
+
+                        String productName = prods.getProduct().getProductName();
+
+
+                        throw new ValidationException("Order cannot be filled due to product stock (Manually set) [" + productName +"]", Warnings.ERROR);
+                    }
+
+
+                    continue;
+                }
+
+                Long amountOfProductTaken = prods.getAmountOfProduct();
+                Long remainingProduct = prods.getProduct().getStockQuantity();
+
+
+
+                if(old != null) {
+
+                    amountOfProductTaken = amountOfProductTaken - old.getAmountOfProduct();
+                }
+
+                if (amountOfProductTaken > remainingProduct) {
+                    String productName = prods.getProduct().getProductName();
+
+                    throw new ValidationException("Order cannot be filled due to product stock [" + productName +"]", Warnings.ERROR);
+                }
+
             }
 
-            if (amountOfProductTaken > remainingProduct) {
-                String productName = prods.getProduct().getProductName();
 
-                throw new ValidationException("Order cannot be filled due to product stock [" + productName +"]", Warnings.ERROR);
-            }
         }
     }
 
@@ -544,49 +644,91 @@ public class DatabaseChecks {
 
         Orders newOrder = orderRepository.findById(orderId).orElseThrow();
 
+
+
         for(var productNew : newOrder.getProductsData()) {
 
+            if(productNew.getProductMultiple() != null){
 
-            if(productNew.getProduct().isStockCalculatedManually()){
-                continue;
-            }
-
-            OrderProducts productOld = oldOrder.getProductsData()
-                    .stream()
-                    .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
-                    .findFirst()
-                    .orElse(null);
-
-            for (var material : productNew.getProduct().getMaterials()) {
-
-                Long newOrderMaterialCount = 0L;
-                Long oldOrderMaterialCount = 0L;
-                Long totalMaterialStock = 0L;
-
-                if(productOld != null){
-                    oldOrderMaterialCount = productOld.getAmountOfProduct() * material.getAmountUsed();
-                }
-
-                newOrderMaterialCount = productNew.getAmountOfProduct() * material.getAmountUsed();
-                totalMaterialStock = material.getMaterials().getInStock();
-
-                if(newOrderMaterialCount == oldOrderMaterialCount){
+                if (productNew.getProductMultiple().isStockCalculatedManually()) {
                     continue;
                 }
 
-                Long taken = newOrderMaterialCount - oldOrderMaterialCount;
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProductMultiple() != null && p.getProductMultiple().getId().equals(productNew.getProduct().getId()))
+                        .findFirst()
+                        .orElse(null);
 
-                if(taken > totalMaterialStock){
-                    throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+                for (var material : productNew.getProductMultiple().getMaterials()) {
+
+                    Long newOrderMaterialCount = 0L;
+                    Long oldOrderMaterialCount = 0L;
+                    Long totalMaterialStock = 0L;
+
+                    if (productOld != null) {
+                        oldOrderMaterialCount = productOld.getAmountOfProduct() * material.getAmountUsed();
+                    }
+
+                    newOrderMaterialCount = productNew.getAmountOfProduct() * material.getAmountUsed();
+                    totalMaterialStock = material.getMaterials().getInStock();
+
+                    if (newOrderMaterialCount == oldOrderMaterialCount) {
+                        continue;
+                    }
+
+                    Long taken = newOrderMaterialCount - oldOrderMaterialCount;
+
+                    if (taken > totalMaterialStock) {
+                        throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+                    }
+
+
                 }
-
 
             }
 
 
+            else {
+
+                if (productNew.getProduct().isStockCalculatedManually()) {
+                    continue;
+                }
+
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
+                        .findFirst()
+                        .orElse(null);
+
+                for (var material : productNew.getProduct().getMaterials()) {
+
+                    Long newOrderMaterialCount = 0L;
+                    Long oldOrderMaterialCount = 0L;
+                    Long totalMaterialStock = 0L;
+
+                    if (productOld != null) {
+                        oldOrderMaterialCount = productOld.getAmountOfProduct() * material.getAmountUsed();
+                    }
+
+                    newOrderMaterialCount = productNew.getAmountOfProduct() * material.getAmountUsed();
+                    totalMaterialStock = material.getMaterials().getInStock();
+
+                    if (newOrderMaterialCount == oldOrderMaterialCount) {
+                        continue;
+                    }
+
+                    Long taken = newOrderMaterialCount - oldOrderMaterialCount;
+
+                    if (taken > totalMaterialStock) {
+                        throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+                    }
 
 
+                }
 
+
+            }
         }
     }
 
@@ -691,53 +833,114 @@ public class DatabaseChecks {
 
         for(var prod : newOrder.getProductsData()){
 
-            OrderProducts productOld = oldOrder.getProductsData()
-                    .stream()
-                    .filter(p -> p.getProduct().getId().equals(prod.getProduct().getId()))
-                    .findFirst()
-                    .orElse(null);
 
-            if (productOld == null) {
+            if(prod.getProductMultiple() != null){
 
-                System.out.println("found added product");
+                System.out.println(prod.getProductMultiple().getId());
 
-                // find product and its stepp and copy them
-                List<OrderStepsToComplete> steps = new ArrayList<>();
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProduct().getId().equals(prod.getProduct().getId()))
+                        .findFirst()
+                        .orElse(null);
 
-                for(var step : prod.getProduct().getSteps()){
+                if (productOld == null) {
 
-                    OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+                    System.out.println("found added product");
 
-                    orderStepsToComplete.setStepId(step.getStepId());
-                    orderStepsToComplete.setStepName(step.getStepName());
-                    orderStepsToComplete.setStepDescription(step.getStepDescription());
-                    orderStepsToComplete.setEmployee(null);
-                    orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
-                    orderStepsToComplete.setOrderProducts(prod);
+                    // find product and its stepp and copy them
+                    List<OrderStepsToComplete> steps = new ArrayList<>();
 
-                    orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
-                    orderStepsToComplete.setStepsCompleted(0L);
+                    for(var step : prod.getProduct().getSteps()){
+
+                        OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+
+                        orderStepsToComplete.setStepId(step.getStepId());
+                        orderStepsToComplete.setStepName(step.getStepName());
+                        orderStepsToComplete.setStepDescription(step.getStepDescription());
+                        orderStepsToComplete.setEmployee(null);
+                        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
+                        orderStepsToComplete.setOrderProducts(prod);
+
+                        orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
+                        orderStepsToComplete.setStepsCompleted(0L);
 
 
 
-                    steps.add(orderStepsToComplete);
+                        steps.add(orderStepsToComplete);
+
+                    }
+
+
+                    if(prod.getOrderSteps() == null){
+                        prod.setOrderSteps(steps);
+                    }
+                    else {
+                        prod.getOrderSteps().addAll(steps);
+                    }
+
+                    orderRepository.save(newOrder);
+
+
+
 
                 }
-
-
-                if(prod.getOrderSteps() == null){
-                   prod.setOrderSteps(steps);
-                }
-                else {
-                    prod.getOrderSteps().addAll(steps);
-                }
-
-                orderRepository.save(newOrder);
-
-
-
 
             }
+
+            else{
+
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProduct().getId().equals(prod.getProduct().getId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (productOld == null) {
+
+                    System.out.println("found added product");
+
+                    // find product and its stepp and copy them
+                    List<OrderStepsToComplete> steps = new ArrayList<>();
+
+                    for(var step : prod.getProduct().getSteps()){
+
+                        OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+
+                        orderStepsToComplete.setStepId(step.getStepId());
+                        orderStepsToComplete.setStepName(step.getStepName());
+                        orderStepsToComplete.setStepDescription(step.getStepDescription());
+                        orderStepsToComplete.setEmployee(null);
+                        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
+                        orderStepsToComplete.setOrderProducts(prod);
+
+                        orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
+                        orderStepsToComplete.setStepsCompleted(0L);
+
+
+
+                        steps.add(orderStepsToComplete);
+
+                    }
+
+
+                    if(prod.getOrderSteps() == null){
+                        prod.setOrderSteps(steps);
+                    }
+                    else {
+                        prod.getOrderSteps().addAll(steps);
+                    }
+
+                    orderRepository.save(newOrder);
+
+
+
+
+                }
+
+            }
+
+
 
 
 
@@ -767,53 +970,71 @@ public class DatabaseChecks {
         checkIfOrderDoesntTakeTooMuchSupply(orderId,oldOrder);
         checkIfOrderPossible(orderId,oldOrder);
 
+        System.out.println("baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
 
         Orders newOrder = orderRepository.findById(orderId).orElseThrow();
 
         // check if order has new items
         for(var productNew : newOrder.getProductsData()) {
 
-            OrderProducts productOld = oldOrder.getProductsData()
-                    .stream()
-                    .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
-                    .findFirst()
-                    .orElse(null);
 
-            if (productOld == null) {
-                System.out.println("found added product");
+            if(productNew.getProductMultiple() != null){
 
-                if (productNew.getProduct().isStockCalculatedManually()) {
 
-                    Product manuallySetProduct = productRepository.findById(productNew.getProduct().getId()).orElseThrow();
 
-                    Long productStock = manuallySetProduct.getStockQuantity();
-                    Long takenProductCount = productNew.getAmountOfProduct();
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProductMultiple() != null && p.getProductMultiple().getId().equals(productNew.getProductMultiple().getId()))
+                        .findFirst()
+                        .orElse(null);
 
-                    Long stock = productStock - takenProductCount;
+                System.out.println("================");
+                for(var s : newOrder.getProductsData()){
 
-                    manuallySetProduct.setStockQuantity(stock);
-
-                    productRepository.save(manuallySetProduct);
-
-                    continue;
+                    if(s.getProductMultiple() != null) {
+                        System.out.println(s.getProductMultiple().getId());
+                    }
                 }
 
-
-                for (var material : productNew.getProduct().getMaterials()) {
-
+                System.out.println("====================");
 
 
+                if (productOld == null) {
+                    System.out.println("found added product multi");
 
-                    Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
-                    Long materialStock = newlyAddedProductsMaterial.getInStock();
-                    Long takenProductCount = productNew.getAmountOfProduct();
-                    Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+                    if (productNew.getProductMultiple().isStockCalculatedManually()) {
 
-                    Long stock = materialStock - (takenProductCount * amountMaterialNeededForOneProduct);
+                        Product manuallySetProduct = productRepository.findById(productNew.getProductMultiple().getId()).orElseThrow();
 
-                    // add material reserve increase it
+                        Long productStock = manuallySetProduct.getStockQuantity();
+                        Long takenProductCount = productNew.getAmountOfProduct();
 
-                    Long reserved = newlyAddedProductsMaterial.getReserved();
+                        Long stock = productStock - takenProductCount;
+
+                        manuallySetProduct.setStockQuantity(stock);
+
+                        productRepository.save(manuallySetProduct);
+
+                        continue;
+                    }
+
+
+                    for (var material : productNew.getProductMultiple().getMaterials()) {
+
+
+
+
+                        Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
+                        Long materialStock = newlyAddedProductsMaterial.getInStock();
+                        Long takenProductCount = productNew.getAmountOfProduct();
+                        Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+
+                        Long stock = materialStock - (takenProductCount * amountMaterialNeededForOneProduct);
+
+                        // add material reserve increase it
+
+                        Long reserved = newlyAddedProductsMaterial.getReserved();
 
 //                    System.out.println("Reserved " +  reserved);
 //
@@ -824,72 +1045,8 @@ public class DatabaseChecks {
 //                    System.out.println("Diff " + (materialStock - stock));
 //
 //
-//                    System.out.println("New reserve " + reserved + (materialStock - stock));
+//                    System.out.println("New reserve " + (reserved + (materialStock - stock)));
 
-
-                    newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
-
-
-                    newlyAddedProductsMaterial.setInStock(stock);
-
-                    materialRepository.save(newlyAddedProductsMaterial);
-
-
-                    // check if order is getting new value
-                    logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
-
-
-
-                }
-
-
-            }
-        }
-
-            // check if material was removed
-            for(var productOld : oldOrder.getProductsData()) {
-
-                OrderProducts productNew = newOrder.getProductsData()
-                        .stream()
-                        .filter(p -> p.getProduct().getId().equals(productOld.getProduct().getId()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (productNew == null) {
-
-                    System.out.println("found removed material");
-
-                    if (productOld.getProduct().isStockCalculatedManually()) {
-
-                        Product manuallySetProduct = productRepository.findById(productOld.getProduct().getId()).orElseThrow();
-
-                        Long productStock = manuallySetProduct.getStockQuantity();
-                        Long takenProductCount = productOld.getAmountOfProduct();
-
-                        Long stock = productStock + takenProductCount;
-
-                        manuallySetProduct.setStockQuantity(stock);
-
-                        productRepository.save(manuallySetProduct);
-
-                        continue;
-                    }
-
-
-                    for (var material : productOld.getProduct().getMaterials()) {
-
-
-                        Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
-                        Long materialStock = newlyAddedProductsMaterial.getInStock();
-                        Long takenProductCount = productOld.getAmountOfProduct();
-                        Long amountMaterialNeededForOneProduct = material.getAmountUsed();
-
-                        Long stock = materialStock + (takenProductCount * amountMaterialNeededForOneProduct);
-
-
-                        // remove material reserve decrease it
-
-                        Long reserved = newlyAddedProductsMaterial.getReserved();
 
                         newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
 
@@ -897,85 +1054,80 @@ public class DatabaseChecks {
                         newlyAddedProductsMaterial.setInStock(stock);
 
                         materialRepository.save(newlyAddedProductsMaterial);
+
 
                         // check if order is getting new value
                         logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
 
 
+
                     }
 
 
                 }
 
+
             }
 
-            // check if order was modified like value was set from 5 to 10
-                for(var productNew : newOrder.getProductsData()) {
+            else{
 
 
-
-                    OrderProducts productOld = oldOrder.getProductsData()
-                            .stream()
-                            .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
-                            .findFirst()
-                            .orElse(null);
-
-
-                    Long oldAmountTaken = 0L;
-
-                    if(productOld == null){
-                        System.out.println("Product is new but it was fixed my other method skipped");
-                        continue;
-                    }
-
-                    oldAmountTaken = productOld.getAmountOfProduct();
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
+                        .findFirst()
+                        .orElse(null);
 
 
-                    if(productNew.getAmountOfProduct().equals(oldAmountTaken)){
-                        System.out.println("found product which was not modified skiped");
-                        continue;
-                    }
+                if (productOld == null) {
 
 
-                    if(productNew.getProduct().isStockCalculatedManually()){
+                    System.out.println("found added product");
 
-                        Long newAmountTaken = productNew.getAmountOfProduct();
+                    if (productNew.getProduct().isStockCalculatedManually()) {
 
+                        Product manuallySetProduct = productRepository.findById(productNew.getProduct().getId()).orElseThrow();
 
-                        Product manuallySetProduct = productRepository.findById(productOld.getProduct().getId()).orElseThrow();
                         Long productStock = manuallySetProduct.getStockQuantity();
+                        Long takenProductCount = productNew.getAmountOfProduct();
 
-
-                        Long stock = productStock + (oldAmountTaken - newAmountTaken);
-
-
+                        Long stock = productStock - takenProductCount;
 
                         manuallySetProduct.setStockQuantity(stock);
 
                         productRepository.save(manuallySetProduct);
 
-
                         continue;
                     }
 
 
+                    for (var material : productNew.getProduct().getMaterials()) {
 
-                    for(var material : productNew.getProduct().getMaterials()) {
 
-                        Long newAmountTaken = productNew.getAmountOfProduct();
 
 
                         Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
                         Long materialStock = newlyAddedProductsMaterial.getInStock();
+                        Long takenProductCount = productNew.getAmountOfProduct();
                         Long amountMaterialNeededForOneProduct = material.getAmountUsed();
 
-                        Long amountTakenDifference = oldAmountTaken - newAmountTaken;
+                        Long stock = materialStock - (takenProductCount * amountMaterialNeededForOneProduct);
 
-                        Long stock = materialStock + (amountTakenDifference * amountMaterialNeededForOneProduct);
-
-                        // remove or add  material reserve
+                        // add material reserve increase it
 
                         Long reserved = newlyAddedProductsMaterial.getReserved();
+//
+//                        System.out.println("Reserved " +  reserved);
+//
+//                        System.out.println("material stock was " + materialStock);
+//                        System.out.println("material stock new " + stock);
+//
+//
+//                        System.out.println("Diff " + (materialStock - stock));
+//
+//
+//                        System.out.println("New reserve " + (reserved + (materialStock - stock)));
+
 
                         newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
 
@@ -984,9 +1136,379 @@ public class DatabaseChecks {
 
                         materialRepository.save(newlyAddedProductsMaterial);
 
+
+                        // check if order is getting new value
                         logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
 
+
+
                     }
+
+
+                }
+
+
+            }
+
+
+
+        }
+
+
+
+
+
+
+
+
+            // check if material was removed
+            for(var productOld : oldOrder.getProductsData()) {
+
+                if(productOld.getProductMultiple() != null){
+
+
+                    OrderProducts productNew = newOrder.getProductsData()
+                            .stream()
+                            .filter(p -> p.getProductMultiple() != null && p.getProductMultiple().getId().equals(productOld.getProductMultiple().getId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (productNew == null) {
+
+                        System.out.println("found removed material");
+
+                        if (productOld.getProductMultiple().isStockCalculatedManually()) {
+
+                            Product manuallySetProduct = productRepository.findById(productOld.getProductMultiple().getId()).orElseThrow();
+
+                            Long productStock = manuallySetProduct.getStockQuantity();
+                            Long takenProductCount = productOld.getAmountOfProduct();
+
+                            Long stock = productStock + takenProductCount;
+
+                            manuallySetProduct.setStockQuantity(stock);
+
+                            productRepository.save(manuallySetProduct);
+
+                            continue;
+                        }
+
+
+                        for (var material : productOld.getProductMultiple().getMaterials()) {
+
+
+                            Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
+                            Long materialStock = newlyAddedProductsMaterial.getInStock();
+                            Long takenProductCount = productOld.getAmountOfProduct();
+                            Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+
+                            Long stock = materialStock + (takenProductCount * amountMaterialNeededForOneProduct);
+
+
+                            // remove material reserve decrease it
+
+                            Long reserved = newlyAddedProductsMaterial.getReserved();
+
+                            newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
+
+                            newlyAddedProductsMaterial.setInStock(stock);
+
+                            materialRepository.save(newlyAddedProductsMaterial);
+
+                            // check if order is getting new value
+                            logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
+
+
+                        }
+
+
+                    }
+
+
+                }
+
+                else{
+
+
+                    OrderProducts productNew = newOrder.getProductsData()
+                            .stream()
+                            .filter(p -> p.getProduct().getId().equals(productOld.getProduct().getId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (productNew == null) {
+
+                        System.out.println("found removed material");
+
+                        if (productOld.getProduct().isStockCalculatedManually()) {
+
+                            Product manuallySetProduct = productRepository.findById(productOld.getProduct().getId()).orElseThrow();
+
+                            Long productStock = manuallySetProduct.getStockQuantity();
+                            Long takenProductCount = productOld.getAmountOfProduct();
+
+                            Long stock = productStock + takenProductCount;
+
+                            manuallySetProduct.setStockQuantity(stock);
+
+                            productRepository.save(manuallySetProduct);
+
+                            continue;
+                        }
+
+
+                        for (var material : productOld.getProduct().getMaterials()) {
+
+
+                            Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
+                            Long materialStock = newlyAddedProductsMaterial.getInStock();
+                            Long takenProductCount = productOld.getAmountOfProduct();
+                            Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+
+                            Long stock = materialStock + (takenProductCount * amountMaterialNeededForOneProduct);
+
+
+                            // remove material reserve decrease it
+
+                            Long reserved = newlyAddedProductsMaterial.getReserved();
+
+                            newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
+
+                            newlyAddedProductsMaterial.setInStock(stock);
+
+                            materialRepository.save(newlyAddedProductsMaterial);
+
+                            // check if order is getting new value
+                            logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
+
+
+                        }
+
+
+                    }
+
+
+                }
+
+
+
+
+            }
+
+
+
+
+
+
+
+            // check if order was modified like value was set from 5 to 10
+                for(var productNew : newOrder.getProductsData()) {
+
+                    System.out.println("value was modifeid gigggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+
+
+                    if(productNew.getProductMultiple() != null){
+
+
+                        OrderProducts productOld = oldOrder.getProductsData()
+                                .stream()
+                                .filter(p -> p.getProductMultiple() != null && p.getProductMultiple().getId().equals(productNew.getProductMultiple().getId()))
+                                .findFirst()
+                                .orElse(null);
+
+
+                        Long oldAmountTaken = 0L;
+
+                        if(productOld == null){
+                            System.out.println("Product is new but it was fixed my other method skipped");
+                            continue;
+                        }
+
+                        oldAmountTaken = productOld.getAmountOfProduct();
+
+
+                        if(productNew.getAmountOfProduct().equals(oldAmountTaken)){
+                            System.out.println("found product which was not modified skiped");
+                            continue;
+                        }
+
+
+                        if(productNew.getProductMultiple().isStockCalculatedManually()){
+
+                            Long newAmountTaken = productNew.getAmountOfProduct();
+
+
+                            Product manuallySetProduct = productRepository.findById(productOld.getProductMultiple().getId()).orElseThrow();
+                            Long productStock = manuallySetProduct.getStockQuantity();
+
+
+                            Long stock = productStock + (oldAmountTaken - newAmountTaken);
+
+
+
+                            manuallySetProduct.setStockQuantity(stock);
+
+                            productRepository.save(manuallySetProduct);
+
+
+                            continue;
+                        }
+
+
+
+                        for(var material : productNew.getProductMultiple().getMaterials()) {
+
+                            Long newAmountTaken = productNew.getAmountOfProduct();
+
+
+                            Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
+                            Long materialStock = newlyAddedProductsMaterial.getInStock();
+                            Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+
+                            Long amountTakenDifference = oldAmountTaken - newAmountTaken;
+
+
+
+                            System.out.println("old amount taken " + oldAmountTaken);
+                            System.out.println("New amount taken " + newAmountTaken);
+
+                            Long stock = materialStock + (amountTakenDifference * amountMaterialNeededForOneProduct);
+
+                            // remove or add  material reserve
+
+                            Long reserved = newlyAddedProductsMaterial.getReserved();
+
+                            newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
+
+                            System.out.println("Reserved " +  reserved);
+
+                            System.out.println("material stock was " + materialStock);
+                            System.out.println("material stock new " + stock);
+
+
+                            System.out.println("Diff " + (materialStock - stock));
+
+
+                            System.out.println("New reserve " + (reserved + (materialStock - stock)));
+
+
+
+
+
+
+
+
+
+                            newlyAddedProductsMaterial.setInStock(stock);
+
+                            materialRepository.save(newlyAddedProductsMaterial);
+
+                            logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
+
+                        }
+
+
+
+
+                    }
+
+                    else{
+                        OrderProducts productOld = oldOrder.getProductsData()
+                                .stream()
+                                .filter(p -> p.getProduct().getId().equals(productNew.getProduct().getId()))
+                                .findFirst()
+                                .orElse(null);
+
+
+                        Long oldAmountTaken = 0L;
+
+                        if(productOld == null){
+                            System.out.println("Product is new but it was fixed my other method skipped");
+                            continue;
+                        }
+
+                        oldAmountTaken = productOld.getAmountOfProduct();
+
+
+                        if(productNew.getAmountOfProduct().equals(oldAmountTaken)){
+                            System.out.println("found product which was not modified skiped");
+                            continue;
+                        }
+
+
+                        if(productNew.getProduct().isStockCalculatedManually()){
+
+                            Long newAmountTaken = productNew.getAmountOfProduct();
+
+
+                            Product manuallySetProduct = productRepository.findById(productOld.getProduct().getId()).orElseThrow();
+                            Long productStock = manuallySetProduct.getStockQuantity();
+
+
+                            Long stock = productStock + (oldAmountTaken - newAmountTaken);
+
+
+
+                            manuallySetProduct.setStockQuantity(stock);
+
+                            productRepository.save(manuallySetProduct);
+
+
+                            continue;
+                        }
+
+
+
+                        for(var material : productNew.getProduct().getMaterials()) {
+
+                            Long newAmountTaken = productNew.getAmountOfProduct();
+
+
+                            Materials newlyAddedProductsMaterial = materialRepository.findById(material.getMaterials().getId()).orElseThrow();
+                            Long materialStock = newlyAddedProductsMaterial.getInStock();
+                            Long amountMaterialNeededForOneProduct = material.getAmountUsed();
+
+                            Long amountTakenDifference = oldAmountTaken - newAmountTaken;
+
+                            Long stock = materialStock + (amountTakenDifference * amountMaterialNeededForOneProduct);
+
+                            // remove or add  material reserve
+
+                            Long reserved = newlyAddedProductsMaterial.getReserved();
+
+                            newlyAddedProductsMaterial.setReserved(reserved + (materialStock - stock));
+
+
+
+
+                            System.out.println("Reserved " +  reserved);
+
+                            System.out.println("material stock was " + materialStock);
+                            System.out.println("material stock new " + stock);
+
+
+                            System.out.println("Diff " + (materialStock - stock));
+
+
+                            System.out.println("New reserve " + (reserved + (materialStock - stock)));
+
+
+
+                            newlyAddedProductsMaterial.setInStock(stock);
+
+                            materialRepository.save(newlyAddedProductsMaterial);
+
+                            logic.materialMovementTracker(newOrder.getUser().getId(),newOrder.getId(), material.getMaterials().getId(), materialStock, stock);
+
+                        }
+
+
+
+                    }
+
 
 
 

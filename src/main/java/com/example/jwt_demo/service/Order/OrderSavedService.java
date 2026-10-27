@@ -4,18 +4,12 @@ import com.example.jwt_demo.Common.ActionMaker;
 import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Common.OrderAcceptance.OrderAcceptingModels;
-import com.example.jwt_demo.Entity.Employee;
+import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
-import com.example.jwt_demo.Entity.Orders;
-import com.example.jwt_demo.Entity.Product;
-import com.example.jwt_demo.Entity.User;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
-import com.example.jwt_demo.repository.EmployeeRepository;
-import com.example.jwt_demo.repository.OrderRepository;
-import com.example.jwt_demo.repository.ProductRepository;
-import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.repository.*;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +45,9 @@ public class OrderSavedService {
 
     @Autowired
     CopyOrder copyOrder;
+
+    @Autowired
+    MultipleProductRepository multipleProductRepository;
 
 
 
@@ -568,30 +565,53 @@ public class OrderSavedService {
         }
 
         sameExistingOrder.setBillingAddress(order.getBillingAddress());
-
-
-
         double totalPrice = 0.0;
-
 
 //        if(order.getProductsData().isEmpty() || order.getProductsData() == null){
 //            throw  new ValidationException("Existing order cannot be without products ", Warnings.ERROR);
 //        }
 
 
+
         for (var existingProduct : new ArrayList<>(sameExistingOrder.getProductsData())) {
 
-            Long existingProductId = existingProduct.getProduct().getId();
+            if(existingProduct.getProductMultiple() != null){
 
-            boolean stillExists = order.getProductsData().stream()
-                    .anyMatch(newProduct ->
-                            newProduct.getProduct().getId().equals(existingProductId)
-                    );
 
-            if (!stillExists) {
-                existingProduct.setOrder(null);
-                sameExistingOrder.getProductsData().remove(existingProduct);
+                System.out.println("idsssssss");
+                System.out.println(existingProduct.getProductMultiple().getId());
+
+                Long existingProductId = existingProduct.getProductMultiple().getId();
+
+                boolean stillExists = order.getProductsData().stream()
+                        .anyMatch(newProduct ->
+                                newProduct.getProductMultiple() != null && newProduct.getProductMultiple().getId().equals(existingProductId)
+                        );
+
+                if (!stillExists) {
+                    existingProduct.setOrder(null);
+                    sameExistingOrder.getProductsData().remove(existingProduct);
+                }
+
             }
+            else{
+
+                Long existingProductId = existingProduct.getProduct().getId();
+
+                boolean stillExists = order.getProductsData().stream()
+                        .anyMatch(newProduct ->
+                                newProduct.getProduct().getId().equals(existingProductId)
+                        );
+
+                if (!stillExists) {
+                    existingProduct.setOrder(null);
+                    sameExistingOrder.getProductsData().remove(existingProduct);
+                }
+
+
+            }
+
+
         }
 
 
@@ -600,49 +620,116 @@ public class OrderSavedService {
         for(var s : order.getProductsData()) {
 
 
-            if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
-                throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
+            Product product = null;
+
+            if(s.getProduct() != null) {
+                System.out.println("Product id");
+                System.out.println(s.getProduct().getId());
             }
 
-            Long productId = s.getProduct().getId();
-            Product existingProduct = productRepository.findById(productId).orElseThrow();
+            if(s.getProductMultiple() != null) {
+                System.out.println("Multi product id");
+                System.out.println(s.getProductMultiple().getId());
 
-            totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
+                ProductMultiple productMultiple = multipleProductRepository.findById(s.getProductMultiple().getId()).orElseThrow();
+
+                 product = productRepository.findById(productMultiple.getProduct().getId()).orElseThrow(()-> new ValidationException("Product not found", Warnings.ERROR));
+            }
+
+            if(s.getProductMultiple() != null){
+
+                if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
+                    throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
+                }
+
+                Long productId = s.getProductMultiple().getId();
+                ProductMultiple existingProduct = multipleProductRepository.findById(productId).orElseThrow();
+
+                totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
 
 
-            OrderProducts orderProducts = products.stream()
-                    .filter(p -> p.getProduct().getId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
+                OrderProducts orderProducts = products.stream()
+                        .filter(p -> p.getProductMultiple() != null
+                                && p.getProductMultiple().getId().equals(productId))
+                        .findFirst()
+                        .orElse(null);
 
 
-            if(orderProducts != null){
-                orderProducts.setAmountOfProduct(s.getAmountOfProduct());
-                orderProducts.setCost(
-                        orderAcceptingModels.materialCost(
-                                productId,
-                                s.getAmountOfProduct(),
-                                false
-                        )
-                );
+
+                if(orderProducts != null){
+
+                    orderProducts.setAmountOfProduct(s.getAmountOfProduct());
+                    orderProducts.setProduct(product);
+                    orderProducts.setCost(
+                            orderAcceptingModels.materialCost(
+                                    productId,
+                                    s.getAmountOfProduct(),
+                                    true
+                            )
+                    );
+                }
+
+                else{
+                    orderProducts = new OrderProducts();
+                    orderProducts.setProductMultiple(existingProduct);
+                    orderProducts.setProduct(product);
+                    orderProducts.setOrder(sameExistingOrder);
+                    orderProducts.setCost(orderAcceptingModels.materialCost(s.getProductMultiple().getId(), s.getAmountOfProduct(),true));
+                    orderProducts.setAmountOfProduct(s.getAmountOfProduct());
+                    products.add(orderProducts);
+
+
+                }
+
             }
 
             else{
-                orderProducts = new OrderProducts();
-                orderProducts.setProduct(existingProduct);
-                orderProducts.setOrder(sameExistingOrder);
-                orderProducts.setCost(orderAcceptingModels.materialCost(s.getProduct().getId(), s.getAmountOfProduct(),true));
-                orderProducts.setAmountOfProduct(s.getAmountOfProduct());
-                products.add(orderProducts);
 
+                if (s.getAmountOfProduct() <= 0 || s.getAmountOfProduct() >= 100) {
+                    throw  new ValidationException("Product quantity can only be from 1 to 99", Warnings.ERROR);
+                }
+
+                Long productId = s.getProduct().getId();
+                Product existingProduct = productRepository.findById(productId).orElseThrow();
+
+                totalPrice += existingProduct.getPrice() * s.getAmountOfProduct();
+
+
+                OrderProducts orderProducts = products.stream()
+                        .filter(p -> p.getProduct().getId().equals(productId))
+                        .findFirst()
+                        .orElse(null);
+
+
+                if(orderProducts != null){
+                    orderProducts.setAmountOfProduct(s.getAmountOfProduct());
+                    orderProducts.setCost(
+                            orderAcceptingModels.materialCost(
+                                    productId,
+                                    s.getAmountOfProduct(),
+                                    false
+                            )
+                    );
+                }
+
+                else{
+                    orderProducts = new OrderProducts();
+                    orderProducts.setProduct(existingProduct);
+                    orderProducts.setOrder(sameExistingOrder);
+                    orderProducts.setCost(orderAcceptingModels.materialCost(s.getProduct().getId(), s.getAmountOfProduct(),false));
+                    orderProducts.setAmountOfProduct(s.getAmountOfProduct());
+                    products.add(orderProducts);
+
+
+                }
 
             }
 
-
-
-
-
         }
+
+
+
+
 
 
         if(order.getEmployees().isEmpty() || order.getEmployees() == null){
