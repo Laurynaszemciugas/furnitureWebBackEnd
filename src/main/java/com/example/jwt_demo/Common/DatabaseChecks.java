@@ -315,68 +315,81 @@ public class DatabaseChecks {
                     }
                 }
 
-
-                String limitingMaterial = null;
-                Long lowestAmountToMake = 0L;
-
-                if (prods.isStockCalculatedManually()) {
-                    continue;
-                }
+                else{
 
 
-                for (var matStats : prods.getMaterials()) {
+                    String limitingMaterial = null;
+                    Long lowestAmountToMake = 0L;
 
-                    if (prods.getMaterials().isEmpty()) {
+                    if (prods.isStockCalculatedManually()) {
                         continue;
                     }
 
 
-                    Long amountUsed = matStats.getAmountUsed();
-                    Long materialStock = matStats.getMaterials().getInStock();
-                    String materialName = matStats.getMaterials().getMaterialName();
+                    for (var matStats : prods.getMaterials()) {
 
-                    Long canProduce = materialStock / amountUsed;
-
-                    stockWas = matStats.getMaterials().getInStock();
-                    stockNew = Math.abs(stockWas - amountUsed);
+                        if (prods.getMaterials().isEmpty()) {
+                            continue;
+                        }
 
 
+                        Long amountUsed = matStats.getAmountUsed();
+                        Long materialStock = matStats.getMaterials().getInStock();
+                        String materialName = matStats.getMaterials().getMaterialName();
+
+                        System.out.println("Material stock " + materialStock);
+
+                        System.out.println("amount used " + amountUsed);
+
+                        Long canProduce = materialStock / amountUsed;
+
+                        stockWas = matStats.getMaterials().getInStock();
+                        stockNew = Math.abs(stockWas - amountUsed);
 
 
 
-                    if (limitingMaterial == null && lowestAmountToMake == 0) {
-                        lowestAmountToMake = canProduce;
-                        limitingMaterial = materialName;
+
+
+                        if (limitingMaterial == null && lowestAmountToMake == 0) {
+                            lowestAmountToMake = canProduce;
+                            limitingMaterial = materialName;
+                        }
+
+                        if (canProduce <= lowestAmountToMake) {
+                            lowestAmountToMake = canProduce;
+                            limitingMaterial = materialName;
+                        }
+
                     }
 
-                    if (canProduce <= lowestAmountToMake) {
-                        lowestAmountToMake = canProduce;
-                        limitingMaterial = materialName;
+
+                    Long lowThreshold = prods.getLowStockThreshold();
+
+                    if (lowestAmountToMake > lowThreshold) {
+                        prods.setStock(Stock.In_Stock);
+                    }
+                    if (lowestAmountToMake <= lowThreshold) {
+                        prods.setStock(Stock.Low_Stock);
+                    }
+                    if (lowestAmountToMake == 0) {
+                        prods.setStock(Stock.No_Stock);
                     }
 
+                    prods.setStockQuantity(lowestAmountToMake);
+
+
+
+                    productRepository.save(prods);
+
+
+                    actionMaker.makeAction(String.format("Stock of %s was was changed",prods.getProductName()),s.getId(),null, ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.System_Check);
+
                 }
 
 
-                Long lowThreshold = prods.getLowStockThreshold();
-
-                if (lowestAmountToMake > lowThreshold) {
-                    prods.setStock(Stock.In_Stock);
-                }
-                if (lowestAmountToMake <= lowThreshold) {
-                    prods.setStock(Stock.Low_Stock);
-                }
-                if (lowestAmountToMake == 0) {
-                    prods.setStock(Stock.No_Stock);
-                }
-
-                prods.setStockQuantity(lowestAmountToMake);
 
 
 
-                productRepository.save(prods);
-
-
-                actionMaker.makeAction(String.format("Stock of %s was was changed",prods.getProductName()),s.getId(),null, ActionTrackerEnum.SYSTEM, ActionDesciptionEnum.System_Check);
 
             }
 

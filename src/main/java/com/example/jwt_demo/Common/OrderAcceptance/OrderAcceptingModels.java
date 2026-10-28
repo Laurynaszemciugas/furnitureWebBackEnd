@@ -8,6 +8,7 @@ import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
+import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.*;
@@ -49,6 +50,9 @@ public class OrderAcceptingModels {
 
     @Autowired
     ProvidedDataChecker providedDataChecker;
+
+    @Autowired
+    OrderProductsRepository orderProductsRepository;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
@@ -146,7 +150,7 @@ public class OrderAcceptingModels {
     // ===============================================================
     // Timed recheck if possible to make orders that were marked as lack of supply
     // ===============================================================
-    @Scheduled(cron = "0 */30 * * * MON-FRI")
+    @Scheduled(cron = "0 */1 * * * MON-FRI")
     @Transactional
     public void startLackOfSupply(){
 
@@ -212,46 +216,99 @@ public class OrderAcceptingModels {
 
                 for (var productData : orders.getProductsData()) {
 
-                    Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
 
-                    Long productAmountNeeded = productData.getAmountOfProduct();
+                    if(productData.getProductMultiple()!=null){
 
-                    for (var materials : product.getMaterials()) {
 
-                        Long materialId = materials.getMaterials().getId();
+                        ProductMultiple product = multipleProductRepository.findById(productData.getProductMultiple().getId()).orElseThrow();
 
-                        Long materialNeeded = materials.getAmountUsed();
+                        Long productAmountNeeded = productData.getAmountOfProduct();
 
-                        Long totalMaterialNeeded = productAmountNeeded * materialNeeded;
+                        for (var materials : product.getMaterials()) {
 
-                        for (var s : allMaterials) {
-                            if (s.getId().equals(materialId)) {
+                            Long materialId = materials.getMaterials().getId();
 
-                                Long availableMaterial = s.getInStock();
+                            Long materialNeeded = materials.getAmountUsed();
 
-                                // remove the order if its taking more or equal items
-                                if (totalMaterialNeeded >= availableMaterial) {
-                                    bannedOrders.add(orderId);
-                                    break;
-                                } else {
+                            Long totalMaterialNeeded = productAmountNeeded * materialNeeded;
 
-                                    System.out.println(orderId);
-                                    System.out.println("Material " + materials.getMaterials().getMaterialName());
-                                    System.out.println("Total material neeeded " + totalMaterialNeeded);
-                                    System.out.println("Total material exists " + availableMaterial);
-                                    System.out.println("Percentage taken " + ((double) totalMaterialNeeded / (double) availableMaterial) * 100);
-                                    System.out.println("---------------------------------------------");
+                            for (var s : allMaterials) {
+                                if (s.getId().equals(materialId)) {
 
-                                    percentageNeeded += ((double) totalMaterialNeeded / (double) availableMaterial) * 100;
+                                    Long availableMaterial = s.getInStock();
+
+                                    // remove the order if its taking more or equal items
+                                    if (totalMaterialNeeded >= availableMaterial) {
+                                        bannedOrders.add(orderId);
+                                        break;
+                                    } else {
+
+                                        System.out.println(orderId);
+                                        System.out.println("Material " + materials.getMaterials().getMaterialName());
+                                        System.out.println("Total material neeeded " + totalMaterialNeeded);
+                                        System.out.println("Total material exists " + availableMaterial);
+                                        System.out.println("Percentage taken " + ((double) totalMaterialNeeded / (double) availableMaterial) * 100);
+                                        System.out.println("---------------------------------------------");
+
+                                        percentageNeeded += ((double) totalMaterialNeeded / (double) availableMaterial) * 100;
+                                    }
+
                                 }
-
                             }
+
+
                         }
+
+                        orderCalculation.add(new MostOrders(orders, percentageNeeded));
 
 
                     }
+                    else{
 
-                    orderCalculation.add(new MostOrders(orders, percentageNeeded));
+
+                        Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow();
+
+                        Long productAmountNeeded = productData.getAmountOfProduct();
+
+                        for (var materials : product.getMaterials()) {
+
+                            Long materialId = materials.getMaterials().getId();
+
+                            Long materialNeeded = materials.getAmountUsed();
+
+                            Long totalMaterialNeeded = productAmountNeeded * materialNeeded;
+
+                            for (var s : allMaterials) {
+                                if (s.getId().equals(materialId)) {
+
+                                    Long availableMaterial = s.getInStock();
+
+                                    // remove the order if its taking more or equal items
+                                    if (totalMaterialNeeded >= availableMaterial) {
+                                        bannedOrders.add(orderId);
+                                        break;
+                                    } else {
+
+                                        System.out.println(orderId);
+                                        System.out.println("Material " + materials.getMaterials().getMaterialName());
+                                        System.out.println("Total material neeeded " + totalMaterialNeeded);
+                                        System.out.println("Total material exists " + availableMaterial);
+                                        System.out.println("Percentage taken " + ((double) totalMaterialNeeded / (double) availableMaterial) * 100);
+                                        System.out.println("---------------------------------------------");
+
+                                        percentageNeeded += ((double) totalMaterialNeeded / (double) availableMaterial) * 100;
+                                    }
+
+                                }
+                            }
+
+
+                        }
+
+                        orderCalculation.add(new MostOrders(orders, percentageNeeded));
+
+                    }
+
                 }
 
             }
@@ -349,7 +406,10 @@ public class OrderAcceptingModels {
                 if (orderProduct.getOrderSteps() == null ||
                         orderProduct.getOrderSteps().isEmpty()) {
 
-                         order.setProductsData(stepCreator(order, order));
+
+                    System.out.println("NOT STEPS ARE AVAILABLE FOR THIS");
+
+                         addStepsToOrder(order);
 
                 }
             }
@@ -365,6 +425,7 @@ public class OrderAcceptingModels {
 
 
         }
+
 
     }
 
@@ -456,7 +517,7 @@ public class OrderAcceptingModels {
 
 
 
-        newOrder.setProductsData(stepCreator(order,newOrder));
+        newOrder.setProductsData(stepCreator(order,newOrder,true));
 
 
         return newOrder;
@@ -468,17 +529,124 @@ public class OrderAcceptingModels {
     // Create steps always add package at the end
     // ===============================================================
 
-    public List<OrderProducts> stepCreator(Orders order, Orders newOrder){
+    @Transactional
+    public void addStepsToOrder(Orders order) {
 
+        for (OrderProducts orderProduct : order.getProductsData()) {
 
+            if (orderProduct.getOrderSteps() != null
+                    && !orderProduct.getOrderSteps().isEmpty()) {
+                continue;
+            }
 
+            Product product;
+            ProductMultiple productMultiple = orderProduct.getProductMultiple();
 
-        for(var s : order.getProductsData()){
+            if (productMultiple != null) {
 
-            System.out.println(s);
+                product = productMultiple.getProduct();
 
+            } else {
 
+                product = orderProduct.getProduct();
+            }
+
+            if (product == null) {
+                throw new ValidationException(
+                        "Product not found for order product",
+                        Warnings.ERROR
+                );
+            }
+
+            if (orderProduct.getOrderSteps() == null) {
+                orderProduct.setOrderSteps(new ArrayList<>());
+            }
+
+            List<OrderStepsToComplete> orderSteps =
+                    orderProduct.getOrderSteps();
+
+            if (product.isStockCalculatedManually()) {
+                addPackageStep(orderProduct, orderSteps);
+                continue;
+            }
+
+            List<ProductFinishSteps> productSteps = product.getSteps();
+
+            if (productSteps == null || productSteps.isEmpty()) {
+                addPackageStep(orderProduct, orderSteps);
+                continue;
+            }
+
+            for (ProductFinishSteps step : productSteps) {
+
+                OrderStepsToComplete orderStep = new OrderStepsToComplete();
+
+                orderStep.setProductFinishStepStatus(
+                        ProductFinishStepStatus.NOT_STARTED
+                );
+
+                orderStep.setStepsNeeded(
+                        orderProduct.getAmountOfProduct()
+                );
+
+                orderStep.setStepsCompleted(0L);
+
+                orderStep.setStepRealId(step.getId());
+                orderStep.setStepId(step.getStepId());
+                orderStep.setStepName(step.getStepName());
+                orderStep.setStepDescription(step.getStepDescription());
+
+                orderStep.setOrderProducts(orderProduct);
+
+                orderSteps.add(orderStep);
+            }
+
+            addPackageStep(orderProduct, orderSteps);
         }
+    }
+
+
+    private void addPackageStep(
+            OrderProducts orderProduct,
+            List<OrderStepsToComplete> orderSteps) {
+
+        OrderStepsToComplete packageStep = new OrderStepsToComplete();
+
+        packageStep.setProductFinishStepStatus(
+                ProductFinishStepStatus.NOT_STARTED
+        );
+
+        packageStep.setStepsNeeded(
+                orderProduct.getAmountOfProduct()
+        );
+
+        packageStep.setStepsCompleted(0L);
+
+        long nextStepId = orderSteps.stream()
+                .map(OrderStepsToComplete::getStepId)
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0L) + 1L;
+
+        packageStep.setStepId(nextStepId);
+        packageStep.setStepName("Package the product");
+        packageStep.setStepDescription(
+                "Package the product using the styrofoam bubble wrap"
+        );
+
+        packageStep.setOrderProducts(orderProduct);
+
+        orderSteps.add(packageStep);
+    }
+
+
+
+    public List<OrderProducts> stepCreator(Orders order, Orders newOrder, boolean newCreating){
+
+
+
+
 
 
         List<OrderProducts> products = new ArrayList<>();
@@ -512,8 +680,19 @@ public class OrderAcceptingModels {
 //                    throw new ValidationException(String.format("Order is not possible due to [%s] having less stock that is needed to fill the order | AVAILABLE STOCK %d | NEEDED STOCK %d",product.getProductName(),product.getStockQuantity(),s.getAmountOfProduct()), Warnings.ERROR);
 //                }
 
+            OrderProducts orderProducts = null;
+            if(newCreating){
+                 orderProducts = new OrderProducts();
 
-            OrderProducts orderProducts = new OrderProducts();
+            }
+            else{
+                orderProducts =  orderProductsRepository.findById(s.getId()).orElseThrow();
+            }
+
+
+            System.out.println("GERE");
+
+
             orderProducts.setProduct(product);
             orderProducts.setProductMultiple(productMultiple);
 

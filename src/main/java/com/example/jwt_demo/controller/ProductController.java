@@ -16,6 +16,7 @@ import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
 import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
+import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.*;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +74,7 @@ public class ProductController {
     @Autowired
     MultipleProductRepository multipleProductRepository;
 
+    @Transactional
     @PostMapping("/saveProduct")
     public ResponseEntity<ErrorResponse> saveProduct(@RequestBody Product product){
 
@@ -133,6 +135,11 @@ public class ProductController {
         if (product.getMaterials() != null) {
             cleanProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
+
+
+                if(mat.getAmountUsed() <= 0){
+                    throw new ValidationException("Taken material amount cannot be 0 " , Warnings.ERROR );
+                }
 
                 ProductMaterials newMat = new ProductMaterials();
 
@@ -747,6 +754,9 @@ public class ProductController {
             existingProduct.getMaterials().clear();
             for (var mat : product.getMaterials()) {
 
+                if(mat.getAmountUsed() <= 0){
+                    throw new ValidationException("Taken material amount cannot be 0 " , Warnings.ERROR );
+                }
 
                 Materials usedMaterial = materialRepository.findByMaterialName(mat.getId(), user.getId());
 
