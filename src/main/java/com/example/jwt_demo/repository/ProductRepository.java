@@ -1,5 +1,6 @@
 package com.example.jwt_demo.repository;
 
+import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -13,6 +14,7 @@ import com.example.jwt_demo.Enums.Category;
 import com.example.jwt_demo.Enums.Stock;
 import com.example.jwt_demo.Enums.Visibility;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -392,6 +394,85 @@ GROUP BY
 
 
 
+    // ====================================================================
+    // Client side category
+    // ====================================================================
+
+    @Query(value = """
+    SELECT p.category, MIN(pid.image_url)
+    FROM bpfurniture.products p
+    LEFT JOIN bpfurniture.product_image_data pid
+        ON pid.product_id = p.id
+        AND pid.image_logic = 'Main'
+    GROUP BY p.category
+    """, nativeQuery = true)
+    List<Object[]> getCategoryList(Pageable pageable);
+
+
+
+    @Query(value = """
+        SELECT
+            p.id AS id,
+            p.product_name AS productName,
+            p.category AS category,
+            p.multiple_items AS multiVariants,
+
+            CASE
+                WHEN p.multiple_items = FALSE THEN (
+                    SELECT pid2.image_url
+                    FROM bpfurniture.product_image_data pid2
+                    WHERE pid2.product_id = p.id
+                      AND pid2.image_logic = 'Main'
+                    LIMIT 1
+                )
+                ELSE NULL
+            END AS nonMultiVariantImage,
+
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pid.image_url SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantImages,
+
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pm.price SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantPrices,
+
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantDiscounts,
+
+            CASE
+                WHEN p.multiple_items = FALSE THEN p.price
+                ELSE NULL
+            END AS normalProductPrice,
+
+            CASE
+                WHEN p.multiple_items = FALSE THEN p.discount
+                ELSE NULL
+            END AS normalProductDiscount
+
+        FROM bpfurniture.products p
+
+        LEFT JOIN bpfurniture.product_multiple pm
+            ON pm.product_id = p.id
+
+        LEFT JOIN bpfurniture.product_image_data pid
+            ON pid.product_id = p.id
+
+        GROUP BY
+            p.id,
+            p.product_name,
+            p.category,
+            p.multiple_items,
+            p.price,
+            p.discount
+        """, nativeQuery = true)
+    List<Object[]> findProductsClients();
 
 
 }

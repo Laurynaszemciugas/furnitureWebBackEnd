@@ -562,8 +562,7 @@ public class OrderAcceptingModels {
                 orderProduct.setOrderSteps(new ArrayList<>());
             }
 
-            List<OrderStepsToComplete> orderSteps =
-                    orderProduct.getOrderSteps();
+            List<OrderStepsToComplete> orderSteps = orderProduct.getOrderSteps();
 
             if (product.isStockCalculatedManually()) {
                 addPackageStep(orderProduct, orderSteps);

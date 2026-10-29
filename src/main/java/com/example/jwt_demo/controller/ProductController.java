@@ -2,6 +2,8 @@ package com.example.jwt_demo.controller;
 
 
 import com.example.jwt_demo.Common.*;
+import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
+import com.example.jwt_demo.DTOS.Client.ProductsClients;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -22,6 +24,7 @@ import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -233,6 +236,48 @@ public class ProductController {
 
         cleanProduct.setMultipleItems(true);
 
+
+        cleanProduct.getImages().clear();
+        boolean mainFound = false;
+        for(var s : product.getProductMultiples()){
+
+
+
+            if (s.getImages() != null) {
+                for (var img : s.getImages()) {
+
+
+                    if(img.getImageLogic().equals(ImageLogic.Main)) {
+
+                        ProductImageData image = new ProductImageData();
+                        image.setProduct(cleanProduct);
+
+                        if(mainFound) {
+                            image.setImageLogic(ImageLogic.NonMain);
+                        }
+
+                        else{
+                            image.setImageLogic(ImageLogic.Main);
+                            mainFound = true;
+                        }
+                        img.setProduct(cleanProduct);
+                        try {
+                            image.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
+                            image.setImageData(null);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        cleanProduct.getImages().add(image);
+                    }
+                }
+            }
+
+        }
+
+
+
+
+
         // Tags belong to the main product
         if (product.getTags() != null) {
             for (var tag : product.getTags()) {
@@ -389,6 +434,47 @@ public class ProductController {
         cleanProduct.setMultipleItems(true);
 
 
+        cleanProduct.getImages().clear();
+
+
+        boolean mainFound = false;
+        for(var s : product.getProductMultiples()){
+
+
+
+            if (s.getImages() != null) {
+                for (var img : s.getImages()) {
+
+
+                    if(img.getImageLogic().equals(ImageLogic.Main)) {
+
+                        ProductImageData image = new ProductImageData();
+                        image.setProduct(cleanProduct);
+
+                        if(mainFound) {
+                            image.setImageLogic(ImageLogic.NonMain);
+                        }
+
+                        else{
+                            image.setImageLogic(ImageLogic.Main);
+                            mainFound = true;
+                        }
+                        img.setProduct(cleanProduct);
+                        try {
+                            image.setImageUrl(convertImages.saveImage(img.getImageData(), img.getImageUrl()));
+                            image.setImageData(null);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        cleanProduct.getImages().add(image);
+                    }
+                }
+            }
+
+        }
+
+
+
 
         // Replace main-product tags, without replacing the collection itself.
         if (product.getTags() != null) {
@@ -430,21 +516,7 @@ public class ProductController {
         }
 
 
-// Always replace main-product images
-        cleanProduct.getImages().clear();
 
-        if (product.getImages() != null) {
-            for (var incomingImage : product.getImages()) {
-
-                ProductImageData image =
-                        copyImageForSave(incomingImage, currentUser);
-
-                image.setProduct(cleanProduct);
-                image.setProductMultiple(null);
-
-                cleanProduct.getImages().add(image);
-            }
-        }
 
         // Rebuild variants using the existing managed collection.
         if (product.getProductMultiples() != null) {
@@ -952,9 +1024,53 @@ public class ProductController {
         return ResponseEntity.ok(productRepository.getProductPerformance(logic.dateConverter(from),logic.dateConverter(to), user.getId()));
     }
 
+    // ====================================================================
+    // Client side category
+    // ====================================================================
+
+    @GetMapping("/getClientProductCategorys/{amount}")
+    public ResponseEntity<List<CategoryDisplay>> getProductPerformanceReport(
+            @PathVariable int amount) {
+
+        List<CategoryDisplay> categories = productRepository
+                .getCategoryList(PageRequest.of(0, amount))
+                .stream()
+                .map(row -> new CategoryDisplay(
+                        Category.valueOf((String) row[0]),
+                        (String) row[1]
+                ))
+                .toList();
+
+        return ResponseEntity.ok(categories);
+    }
 
 
+    @GetMapping("/getProductsClients/{amount}")
+    public List<ProductsClients> getProductsClients(@PathVariable int amount) {
 
+        List<Object[]> results = productRepository.findProductsClients();
+
+        return results.stream()
+                .map(row -> new ProductsClients(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        row[2] != null
+                                ? Category.valueOf(row[2].toString())
+                                : null,
+                        Boolean.TRUE.equals(row[3]),
+                        (String) row[4],
+                        row[5],
+                        row[6],
+                        row[7],
+                        row[8] != null
+                                ? ((Number) row[8]).doubleValue()
+                                : null,
+                        row[9] != null
+                                ? ((Number) row[9]).longValue()
+                                : null
+                ))
+                .toList();
+    }
 
 
 }
