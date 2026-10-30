@@ -21,7 +21,9 @@ public class ProductsClients {
     private Object multiVariantImages;
     private Object multiVariantPrices;
     private Object multiVariantDiscounts;
+    private Object multiVariantColors;
     private Double normalProductPrice;
     private Long normalProductDiscount;
+    private String productColor;
 
 }

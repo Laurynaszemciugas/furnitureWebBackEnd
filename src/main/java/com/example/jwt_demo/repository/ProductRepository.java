@@ -445,6 +445,12 @@ GROUP BY
                 THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ', ')
                 ELSE NULL
             END AS multiVariantDiscounts,
+                        
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pm.color SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantDiscounts,            
 
             CASE
                 WHEN p.multiple_items = FALSE THEN p.price
@@ -453,6 +459,11 @@ GROUP BY
 
             CASE
                 WHEN p.multiple_items = FALSE THEN p.discount
+                ELSE NULL
+            END AS normalProductDiscount,
+            
+            CASE
+                WHEN p.multiple_items = FALSE THEN p.color
                 ELSE NULL
             END AS normalProductDiscount
 

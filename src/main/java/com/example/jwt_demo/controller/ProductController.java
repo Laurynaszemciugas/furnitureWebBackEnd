@@ -1062,12 +1062,14 @@ public class ProductController {
                         row[5],
                         row[6],
                         row[7],
-                        row[8] != null
-                                ? ((Number) row[8]).doubleValue()
-                                : null,
+                        row[8],
                         row[9] != null
-                                ? ((Number) row[9]).longValue()
-                                : null
+                                ? ((Number) row[9]).doubleValue()
+                                : null,
+                        row[10] != null
+                                ? ((Number) row[10]).longValue()
+                                : null,
+                        (String) row[11]
                 ))
                 .toList();
     }
