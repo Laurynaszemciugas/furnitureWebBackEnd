@@ -77,6 +77,24 @@ public class ProductController {
     @Autowired
     MultipleProductRepository multipleProductRepository;
 
+
+
+
+
+    @GetMapping("/getProduct/{id}")
+    public ResponseEntity<Product> getProduct(@PathVariable Long id) {
+
+
+        return ResponseEntity.ok(productRepository.findById(id).orElseThrow());
+
+
+
+    }
+
+
+
+
+
     @Transactional
     @PostMapping("/saveProduct")
     public ResponseEntity<ErrorResponse> saveProduct(@RequestBody Product product){
