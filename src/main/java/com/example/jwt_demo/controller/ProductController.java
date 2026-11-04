@@ -308,6 +308,8 @@ public class ProductController {
         // Specifications belong to the main product
         if (product.getExtraDetails() != null) {
             for (var detail : product.getExtraDetails()) {
+                System.out.println("multi");
+                System.out.println(detail.getSpecTypes());
                 detail.setProduct(cleanProduct);
                 detail.setUser(currentUser);
                 cleanProduct.getExtraDetails().add(detail);

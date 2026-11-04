@@ -1,5 +1,6 @@
 package com.example.jwt_demo.Entity;
 
+import com.example.jwt_demo.Enums.SpecTypes;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,6 +26,9 @@ public class ExtraDetails {
     private Long id;
     private String specName;
     private String specDescription;
+
+    @Enumerated(EnumType.STRING)
+    private SpecTypes specTypes;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
