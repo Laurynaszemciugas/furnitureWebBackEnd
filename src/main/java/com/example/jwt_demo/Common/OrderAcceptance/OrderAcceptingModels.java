@@ -150,7 +150,7 @@ public class OrderAcceptingModels {
     // ===============================================================
     // Timed recheck if possible to make orders that were marked as lack of supply
     // ===============================================================
-    @Scheduled(cron = "0 */1 * * * MON-FRI")
+    @Scheduled(cron = "0 */30 * * * MON-FRI")
     @Transactional
     public void startLackOfSupply(){
 

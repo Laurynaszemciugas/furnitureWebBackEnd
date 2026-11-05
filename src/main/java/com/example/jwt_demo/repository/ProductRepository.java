@@ -486,6 +486,91 @@ GROUP BY
     List<Object[]> findProductsClients();
 
 
+    @Query(value = """
+        SELECT
+            p.id AS id,
+            p.product_name AS productName,
+            p.category AS category,
+            p.multiple_items AS multiVariants,
+
+            CASE
+                WHEN p.multiple_items = FALSE THEN (
+                    SELECT pid2.image_url
+                    FROM bpfurniture.product_image_data pid2
+                    WHERE pid2.product_id = p.id
+                      AND pid2.image_logic = 'Main'
+                    LIMIT 1
+                )
+                ELSE NULL
+            END AS nonMultiVariantImage,
+
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pid.image_url SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantImages,
+
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pm.price SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantPrices,
+
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantDiscounts,
+                        
+            CASE
+                WHEN p.multiple_items = TRUE
+                THEN GROUP_CONCAT(DISTINCT pm.color SEPARATOR ', ')
+                ELSE NULL
+            END AS multiVariantDiscounts,            
+
+            CASE
+                WHEN p.multiple_items = FALSE THEN p.price
+                ELSE NULL
+            END AS normalProductPrice,
+
+            CASE
+                WHEN p.multiple_items = FALSE THEN p.discount
+                ELSE NULL
+            END AS normalProductDiscount,
+            
+            CASE
+                WHEN p.multiple_items = FALSE THEN p.color
+                ELSE NULL
+            END AS normalProductDiscount
+
+        FROM bpfurniture.products p
+
+        LEFT JOIN bpfurniture.product_multiple pm
+            ON pm.product_id = p.id
+
+        LEFT JOIN bpfurniture.product_image_data pid
+            ON pid.product_id = p.id
+                        
+        WHERE p.category = :category
+
+        GROUP BY
+            p.id,
+            p.product_name,
+            p.category,
+            p.multiple_items,
+            p.price,
+            p.discount
+        """, nativeQuery = true)
+    List<Object[]> findProductsClientsWithCategory(String category, Pageable pageable);
+
+    @Query("""
+       
+      SELECT p FROM Product p
+         WHERE p.category = :category
+
+
+""")
+    List<Product> findSimilarItems(String category, Pageable pageable);
 
 
 

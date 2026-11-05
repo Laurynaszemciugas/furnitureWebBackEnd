@@ -1094,5 +1094,39 @@ public class ProductController {
                 .toList();
     }
 
+    @GetMapping("/getSimilarItems/{category}")
+    public List<ProductsClients> getSimilarItems(@PathVariable Category category) {
+
+
+        List<Object[]> results = productRepository.findProductsClientsWithCategory(category.toString(), PageRequest.of(0,10));
+
+        System.out.println(results.size());
+
+        return results.stream()
+                .map(row -> new ProductsClients(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        row[2] != null
+                                ? Category.valueOf(row[2].toString())
+                                : null,
+                        Boolean.TRUE.equals(row[3]),
+                        (String) row[4],
+                        row[5],
+                        row[6],
+                        row[7],
+                        row[8],
+                        row[9] != null
+                                ? ((Number) row[9]).doubleValue()
+                                : null,
+                        row[10] != null
+                                ? ((Number) row[10]).longValue()
+                                : null,
+                        (String) row[11]
+                ))
+                .toList();
+    }
+
+
+
 
 }
