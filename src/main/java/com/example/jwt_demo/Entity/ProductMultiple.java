@@ -29,6 +29,8 @@ public class ProductMultiple {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String uuid;
+
     private String color;
 
     private boolean stockCalculatedManually;

@@ -575,11 +575,17 @@ public class OrderSavedService {
 
         for (var existingProduct : new ArrayList<>(sameExistingOrder.getProductsData())) {
 
+            System.out.println("===============================================");
+
+            System.out.println(existingProduct);
+            System.out.println("===============================================");
+
+
+
             if(existingProduct.getProductMultiple() != null){
 
 
-                System.out.println("idsssssss");
-                System.out.println(existingProduct.getProductMultiple().getId());
+                System.out.println("MULTIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII");
 
                 Long existingProductId = existingProduct.getProductMultiple().getId();
 
@@ -596,10 +602,13 @@ public class OrderSavedService {
             }
             else{
 
+
+
                 Long existingProductId = existingProduct.getProduct().getId();
 
                 boolean stillExists = order.getProductsData().stream()
                         .anyMatch(newProduct ->
+                                newProduct.getProduct() != null &&
                                 newProduct.getProduct().getId().equals(existingProductId)
                         );
 

@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/product")
@@ -110,6 +111,8 @@ public class ProductController {
         System.out.println("Processing incoming product save request...");
 
         Product cleanProduct = new Product();
+
+        cleanProduct.setUuid(UUID.randomUUID().toString());
 
         cleanProduct.setId(product.getId());
         cleanProduct.setProductName(product.getProductName());
@@ -234,6 +237,7 @@ public class ProductController {
 
 
         // Main product fields
+        cleanProduct.setUuid(UUID.randomUUID().toString());
         cleanProduct.setId(null);
         cleanProduct.setProductName(product.getProductName());
         cleanProduct.setSku(product.getSku());
@@ -332,6 +336,7 @@ public class ProductController {
             prod.setUser(currentUser);
 
             // Main product fields
+            prod.setUuid(UUID.randomUUID().toString());
             prod.setId(null);
             prod.setProductName(s.getProductName());
             prod.setSku(s.getSku());
@@ -410,6 +415,8 @@ public class ProductController {
 
 
         productRepository.save(cleanProduct);
+
+        databaseChecks.calculateProductsStock(user.getId(),false);
 
 
         return ResponseEntity.ok(
