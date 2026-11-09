@@ -1,5 +1,6 @@
 package com.example.jwt_demo.Common;
 
+import com.example.jwt_demo.DTOS.MaterialTakenCount;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
@@ -53,6 +54,7 @@ public class DatabaseChecks {
 
     @Autowired
     MultipleProductRepository multipleProductRepository;
+
 
 
     @Autowired
@@ -162,19 +164,41 @@ public class DatabaseChecks {
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
         for (var orderProducts : order.getProductsData()) {
-            Product product = productRepository.findById(orderProducts.getProduct().getId()).orElseThrow();
-            for (var mats : product.getMaterials()) {
 
-                Materials material = mats.getMaterials();
 
-                Long reserved = material.getReserved();
+            if(orderProducts.getProductMultiple() != null){
+                ProductMultiple product = multipleProductRepository.findById(orderProducts.getProduct().getId()).orElseThrow();
+                for (var mats : product.getMaterials()) {
 
-                Long totalAmountOfMaterials = orderProducts.getAmountOfProduct() * mats.getAmountUsed();
+                    Materials material = mats.getMaterials();
 
-                material.setReserved(reserved - totalAmountOfMaterials);
+                    Long reserved = material.getReserved();
 
-                materialRepository.save(material);
+                    Long totalAmountOfMaterials = orderProducts.getAmountOfProduct() * mats.getAmountUsed();
 
+                    material.setReserved(reserved - totalAmountOfMaterials);
+
+                    materialRepository.save(material);
+
+                }
+
+            }
+            else {
+
+                Product product = productRepository.findById(orderProducts.getProduct().getId()).orElseThrow();
+                for (var mats : product.getMaterials()) {
+
+                    Materials material = mats.getMaterials();
+
+                    Long reserved = material.getReserved();
+
+                    Long totalAmountOfMaterials = orderProducts.getAmountOfProduct() * mats.getAmountUsed();
+
+                    material.setReserved(reserved - totalAmountOfMaterials);
+
+                    materialRepository.save(material);
+
+                }
             }
         }
 
@@ -654,6 +678,8 @@ public class DatabaseChecks {
     public void checkIfOrderDoesntTakeTooMuchSupply(Long orderId, Orders oldOrder){
 
 
+        List<MaterialTakenCount> materialTakenCounts = new ArrayList<>();
+
 
         Orders newOrder = orderRepository.findById(orderId).orElseThrow();
 
@@ -669,9 +695,12 @@ public class DatabaseChecks {
 
                 OrderProducts productOld = oldOrder.getProductsData()
                         .stream()
-                        .filter(p -> p.getProductMultiple() != null && p.getProductMultiple().getId().equals(productNew.getProduct().getId()))
+                        .filter(p -> p.getProductMultiple() != null && p.getProductMultiple().getId().equals(productNew.getProductMultiple().getId()))
                         .findFirst()
                         .orElse(null);
+
+
+                //productNew.getProduct().getId()
 
                 for (var material : productNew.getProductMultiple().getMaterials()) {
 
@@ -692,9 +721,25 @@ public class DatabaseChecks {
 
                     Long taken = newOrderMaterialCount - oldOrderMaterialCount;
 
-                    if (taken > totalMaterialStock) {
-                        throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+
+                    if(materialTakenCounts.isEmpty()){
+                        materialTakenCounts.add(new MaterialTakenCount(material.getMaterials().getId(),taken));
                     }
+                    else {
+                        for (var s : materialTakenCounts) {
+
+                            if (s.getId().equals(material.getMaterials().getId())) {
+                                s.setAmountTaken((s.getAmountTaken() + taken));
+                            } else {
+                                s.setId(material.getMaterials().getId());
+                                s.setAmountTaken(taken);
+                            }
+                        }
+                    }
+
+
+
+
 
 
                 }
@@ -733,8 +778,19 @@ public class DatabaseChecks {
 
                     Long taken = newOrderMaterialCount - oldOrderMaterialCount;
 
-                    if (taken > totalMaterialStock) {
-                        throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+                    if(materialTakenCounts.isEmpty()){
+                        materialTakenCounts.add(new MaterialTakenCount(material.getMaterials().getId(),taken));
+                    }
+                    else {
+                        for (var s : materialTakenCounts) {
+
+                            if (s.getId().equals(material.getMaterials().getId())) {
+                                s.setAmountTaken((s.getAmountTaken() + taken));
+                            } else {
+                                s.setId(material.getMaterials().getId());
+                                s.setAmountTaken(taken);
+                            }
+                        }
                     }
 
 
@@ -742,6 +798,24 @@ public class DatabaseChecks {
 
 
             }
+
+
+            for(var s : materialTakenCounts){
+
+
+                    Materials mat = materialRepository.findById(s.getId()).orElseThrow();
+
+
+                    if(s.getAmountTaken() > mat.getInStock()){
+                        throw new ValidationException("Order cannot be filled due chosen products combined materials are exeeding the storage amount", Warnings.ERROR);
+                    }
+
+
+                }
+
+
+
+
         }
     }
 
