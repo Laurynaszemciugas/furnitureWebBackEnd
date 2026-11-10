@@ -27,7 +27,7 @@ public class ConvertImages {
             Path file = folder.resolve(fileName);
 
             Files.write(file, imageData);
-            return "/uploads/materials/" + fileName;
+            return "http://localhost:8080/uploads/materials/" + fileName;
         }
 
         else{
