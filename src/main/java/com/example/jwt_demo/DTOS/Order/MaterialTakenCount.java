@@ -1,4 +1,4 @@
-package com.example.jwt_demo.DTOS;
+package com.example.jwt_demo.DTOS.Order;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

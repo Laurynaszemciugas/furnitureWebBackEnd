@@ -1,27 +1,19 @@
 package com.example.jwt_demo.Common;
 
-import com.example.jwt_demo.DTOS.MaterialTakenCount;
+import com.example.jwt_demo.DTOS.Order.MaterialTakenCount;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
-import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
-import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
-import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.controller.EmailSenderContoller;
-import com.example.jwt_demo.controller.OrderController;
 import com.example.jwt_demo.repository.*;
 import com.example.jwt_demo.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-import static com.fasterxml.jackson.databind.type.LogicalType.Map;
 
 @Service
 public class DatabaseChecks {

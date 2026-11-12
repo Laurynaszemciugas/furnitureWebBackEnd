@@ -3,6 +3,7 @@ package com.example.jwt_demo.controller;
 
 import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
+import com.example.jwt_demo.DTOS.Client.ClientCategorys;
 import com.example.jwt_demo.DTOS.Client.ProductsClients;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
@@ -1131,6 +1132,11 @@ public class ProductController {
                         (String) row[11]
                 ))
                 .toList();
+    }
+
+    @GetMapping("/getClientCategorysWithCount")
+    public List<ClientCategorys> getClientCategorysWithCount() {
+        return productRepository.findClientCategorysAndTheirCount();
     }
 
 

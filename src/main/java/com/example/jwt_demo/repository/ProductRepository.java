@@ -1,6 +1,7 @@
 package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
+import com.example.jwt_demo.DTOS.Client.ClientCategorys;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -571,6 +572,19 @@ GROUP BY
 
 """)
     List<Product> findSimilarItems(String category, Pageable pageable);
+
+
+
+    @Query("""
+
+        SELECT new com.example.jwt_demo.DTOS.Client.ClientCategorys(p.category, count(p.category))
+         FROM Product p
+         group by p.category
+
+
+""")
+    List<ClientCategorys> findClientCategorysAndTheirCount();
+
 
 
 
