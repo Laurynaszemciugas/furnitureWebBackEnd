@@ -2,6 +2,7 @@ package com.example.jwt_demo.repository;
 
 import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
 import com.example.jwt_demo.DTOS.Client.ClientCategorys;
+import com.example.jwt_demo.DTOS.Client.ClientProductsFilter;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -584,6 +585,219 @@ GROUP BY
 
 """)
     List<ClientCategorys> findClientCategorysAndTheirCount();
+
+
+    @Query("""
+
+        SELECT distinct(m.materialName)
+         FROM Materials m
+        
+
+
+""")
+    List<String> findAllAvailableMaterialNames();
+
+
+
+    @Query("""
+
+      SELECT p.color FROM Product p
+      where p.color is not Null
+        
+
+
+""")
+    List<String> findColorNormalProducts();
+
+    @Query("""
+
+      SELECT p.color FROM ProductMultiple p
+      where p.color is not Null
+        
+
+
+""")
+    List<String> findColorMultiProducts();
+
+
+
+
+
+
+
+    @Query(value = """
+    SELECT
+        p.id,
+        p.product_name,
+        p.category,
+        p.multiple_items,
+
+        (
+            SELECT pid.image_url
+            FROM product_image_data pid
+            WHERE pid.product_id = p.id
+              AND pid.image_logic = 'Main'
+            LIMIT 1
+        ) AS nonMultiVariantImage,
+
+        (
+            SELECT GROUP_CONCAT(pid.image_url ORDER BY pm.id)
+            FROM product_multiple pm
+            JOIN product_image_data pid
+                ON pid.product_multiple_id = pm.id
+               AND pid.image_logic = 'Main'
+            WHERE pm.product_id = p.id
+        ) AS multiVariantImages,
+
+        (
+            SELECT GROUP_CONCAT(pm.price ORDER BY pm.id)
+            FROM product_multiple pm
+            WHERE pm.product_id = p.id
+        ) AS multiVariantPrices,
+
+        (
+            SELECT GROUP_CONCAT(pm.discount ORDER BY pm.id)
+            FROM product_multiple pm
+            WHERE pm.product_id = p.id
+        ) AS multiVariantDiscounts,
+
+        (
+            SELECT GROUP_CONCAT(pm.color ORDER BY pm.id)
+            FROM product_multiple pm
+            WHERE pm.product_id = p.id
+        ) AS multiVariantColors,
+
+        p.price,
+        p.discount,
+        p.color
+
+    FROM products p
+
+    WHERE
+
+        /* PROMPT */
+        (
+            :prompt IS NULL
+            OR :prompt = ''
+            OR LOWER(p.product_name) LIKE LOWER(CONCAT('%', :prompt, '%'))
+            OR LOWER(p.description) LIKE LOWER(CONCAT('%', :prompt, '%'))
+
+            OR EXISTS (
+                SELECT 1
+                FROM product_materials pmat
+                JOIN materials m ON m.id = pmat.material_id
+                WHERE pmat.product_id = p.id
+                  AND pmat.product_multiple_id IS NULL
+                  AND (
+                      LOWER(m.material_name) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                      OR LOWER(m.description) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                  )
+            )
+
+            OR EXISTS (
+                SELECT 1
+                FROM extra_details ed
+                WHERE ed.product_id = p.id
+                  AND (
+                      LOWER(ed.spec_name) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                      OR LOWER(ed.spec_description) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                  )
+            )
+
+            OR EXISTS (
+                SELECT 1
+                FROM product_multiple pm
+                WHERE pm.product_id = p.id
+                  AND (
+                      LOWER(pm.product_name) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                      OR LOWER(pm.description) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                  )
+            )
+        )
+
+        /* CATEGORY - always parent product category */
+        AND (
+            :categories IS NULL
+            OR p.category IN (:categories)
+        )
+
+        /* NORMAL PRODUCT FILTERS */
+        AND (
+            p.multiple_items = 1
+            OR (
+                (:priceFrom IS NULL OR p.price >= :priceFrom)
+                AND (:priceTo IS NULL OR p.price <= :priceTo)
+                AND (
+                    :color IS NULL
+                    OR LOWER(p.color) LIKE LOWER(CONCAT('%', :color, '%'))
+                )
+                AND (
+                    :stock IS NULL
+                    OR p.stock = :stock
+                )
+                AND (
+                    :materials IS NULL
+                    OR EXISTS (
+                        SELECT 1
+                        FROM product_materials pmat
+                        JOIN materials m ON m.id = pmat.material_id
+                        WHERE pmat.product_id = p.id
+                          AND pmat.product_multiple_id IS NULL
+                          AND m.material_name IN (:materials)
+                    )
+                )
+            )
+        )
+
+        /* VARIANT PRODUCT FILTERS - all conditions must match
+           the same variant */
+        AND (
+            p.multiple_items = 0
+            OR EXISTS (
+                SELECT 1
+                FROM product_multiple pm
+                WHERE pm.product_id = p.id
+
+                  AND (:priceFrom IS NULL OR pm.price >= :priceFrom)
+                  AND (:priceTo IS NULL OR pm.price <= :priceTo)
+
+                  AND (
+                      :color IS NULL
+                      OR LOWER(pm.color) LIKE LOWER(CONCAT('%', :color, '%'))
+                  )
+
+                  AND (
+                      :stock IS NULL
+                      OR pm.stock = :stock
+                  )
+
+                  AND (
+                      :materials IS NULL
+                      OR EXISTS (
+                          SELECT 1
+                          FROM product_materials pmat
+                          JOIN materials m ON m.id = pmat.material_id
+                          WHERE pmat.product_multiple_id = pm.id
+                            AND m.material_name IN (:materials)
+                      )
+                  )
+            )
+        )
+
+    """, nativeQuery = true)
+    List<Object[]> queryProductsClientsWithFilters(
+            @Param("prompt") String prompt,
+            @Param("categories") List<String> categories,
+            @Param("priceFrom") Double priceFrom,
+            @Param("priceTo") Double priceTo,
+            @Param("materials") List<String> materials,
+            @Param("color") String color,
+            @Param("stock") String stock
+    );
+
+
+
+
 
 
 

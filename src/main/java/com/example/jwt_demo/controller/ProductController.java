@@ -4,6 +4,7 @@ package com.example.jwt_demo.controller;
 import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
 import com.example.jwt_demo.DTOS.Client.ClientCategorys;
+import com.example.jwt_demo.DTOS.Client.ClientProductsFilter;
 import com.example.jwt_demo.DTOS.Client.ProductsClients;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
@@ -18,6 +19,7 @@ import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
 import com.example.jwt_demo.FilterDTO.Material.MaterialFilterHolder;
+import com.example.jwt_demo.FilterDTO.Order.OrderFilterHolder;
 import com.example.jwt_demo.FilterDTO.Prodcut.ProductFilterHolder;
 import com.example.jwt_demo.GlobalExseptions.Exseptions.ValidationException;
 import com.example.jwt_demo.repository.*;
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -1136,9 +1139,94 @@ public class ProductController {
 
     @GetMapping("/getClientCategorysWithCount")
     public List<ClientCategorys> getClientCategorysWithCount() {
-        return productRepository.findClientCategorysAndTheirCount();
+
+        // all items categorys an their count
+        List<ClientCategorys> clientCategorys = productRepository.findClientCategorysAndTheirCount();
+
+
+        // add a last object called All
+        Long total = clientCategorys.stream().mapToLong(e-> e.getCount()).sum();
+
+        clientCategorys.add(new ClientCategorys(Category.ALL, total));
+
+        return clientCategorys;
     }
 
+    @GetMapping("/findAllAvailableMaterialNames")
+    public List<String> findAllAvailableMaterialNames() {
+
+        // get all distinct names of the materials
+        List<String> materials = productRepository.findAllAvailableMaterialNames();
+
+
+        return materials;
+    }
+
+
+    @GetMapping("/findAllAvailableColors")
+    public List<String> findAllAvailableColors() {
+
+        // get all distinct names of the materials
+        List<String> colorsNormal = new ArrayList<>();
+        colorsNormal.addAll(productRepository.findColorNormalProducts());
+        colorsNormal.addAll(productRepository.findColorMultiProducts());
+
+
+
+        return colorsNormal;
+    }
+
+
+
+
+    @PostMapping("/getProductsAccordingToFilter")
+    public List<ProductsClients> getProductsAccordingToFilter(@RequestBody ClientProductsFilter filter) {
+
+
+
+        filter = providedDataChecker.defaultValueChecker(filter, ClientProductsFilter.class);
+
+
+
+
+
+
+
+
+
+        List<Object[]> results = productRepository.queryProductsClientsWithFilters(
+                filter.getPrompt(),
+                filter.getCategories(),
+                filter.getPriceFrom(),
+                filter.getPriceTo(),
+                filter.getMaterials(),
+                filter.getColor(),
+                filter.getStocks()
+        );
+
+        return results.stream()
+                .map(row -> new ProductsClients(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        row[2] != null
+                                ? Category.valueOf(row[2].toString())
+                                : null,
+                        Boolean.TRUE.equals(row[3]),
+                        (String) row[4],
+                        row[5],
+                        row[6],
+                        row[7],
+                        row[8],
+                        row[9] != null
+                                ? ((Number) row[9]).doubleValue()
+                                : null,
+                        row[10] != null
+                                ? ((Number) row[10]).longValue()
+                                : null,
+                        (String) row[11]
+                ))
+                .toList();
+    }
 
 
 
