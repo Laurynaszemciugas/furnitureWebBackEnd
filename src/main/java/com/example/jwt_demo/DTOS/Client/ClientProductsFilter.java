@@ -21,5 +21,6 @@ public class ClientProductsFilter {
     private List<String> materials = Collections.singletonList("All");
     private String color = "All"; // searches according to color in the product
     private String stocks = Stock.ALL.toString();
+    private Boolean discount = null;
 
 }

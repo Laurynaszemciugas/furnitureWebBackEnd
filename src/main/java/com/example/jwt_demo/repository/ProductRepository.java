@@ -432,25 +432,25 @@ GROUP BY
 
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pid.image_url SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pid.image_url SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantImages,
 
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pm.price SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pm.price SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantPrices,
 
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantDiscounts,
                         
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pm.color SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pm.color SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantDiscounts,            
 
@@ -508,25 +508,25 @@ GROUP BY
 
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pid.image_url SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pid.image_url SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantImages,
 
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pm.price SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pm.price SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantPrices,
 
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pm.discount SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantDiscounts,
                         
             CASE
                 WHEN p.multiple_items = TRUE
-                THEN GROUP_CONCAT(DISTINCT pm.color SEPARATOR ', ')
+                THEN GROUP_CONCAT(DISTINCT pm.color SEPARATOR ',')
                 ELSE NULL
             END AS multiVariantDiscounts,            
 
@@ -577,12 +577,10 @@ GROUP BY
 
 
     @Query("""
-
-        SELECT new com.example.jwt_demo.DTOS.Client.ClientCategorys(p.category, count(p.category))
-         FROM Product p
-         group by p.category
-
-
+    SELECT new com.example.jwt_demo.DTOS.Client.ClientCategorys(p.category, count(p.category))
+    FROM Product p
+    WHERE p.visibility = 'Visible'
+    GROUP BY p.category
 """)
     List<ClientCategorys> findClientCategorysAndTheirCount();
 
@@ -602,7 +600,7 @@ GROUP BY
     @Query("""
 
       SELECT p.color FROM Product p
-      where p.color is not Null
+      where p.color is not Null and p.status = 'Enabled'
         
 
 
@@ -612,7 +610,7 @@ GROUP BY
     @Query("""
 
       SELECT p.color FROM ProductMultiple p
-      where p.color is not Null
+      where p.color is not Null and p.status = 'Enabled'
         
 
 
@@ -647,24 +645,28 @@ SELECT
             ON pid.product_multiple_id = pm.id
            AND pid.image_logic = 'Main'
         WHERE pm.product_id = p.id
+          AND pm.status = 'Enabled'
     ) AS multiVariantImages,
 
     (
         SELECT GROUP_CONCAT(pm.price ORDER BY pm.id)
         FROM product_multiple pm
         WHERE pm.product_id = p.id
+          AND pm.status = 'Enabled'
     ) AS multiVariantPrices,
 
     (
         SELECT GROUP_CONCAT(pm.discount ORDER BY pm.id)
         FROM product_multiple pm
         WHERE pm.product_id = p.id
+          AND pm.status = 'Enabled'
     ) AS multiVariantDiscounts,
 
     (
         SELECT GROUP_CONCAT(pm.color ORDER BY pm.id)
         FROM product_multiple pm
         WHERE pm.product_id = p.id
+          AND pm.status = 'Enabled'
     ) AS multiVariantColors,
 
     p.price,
@@ -675,12 +677,17 @@ FROM products p
 
 WHERE
 
-    /* PROMPT */
-    (
+    /* STATUS FILTER - Ensure parent product is Enabled */
+    p.status = 'Enabled'
+
+    /* PROMPT (Includes Name, Description, SKU, Category, Materials, Extra Details, and Enabled Variant SKUs/Names) */
+    AND (
         :prompt IS NULL
         OR :prompt = ''
         OR LOWER(p.product_name) LIKE LOWER(CONCAT('%', :prompt, '%'))
         OR LOWER(p.description) LIKE LOWER(CONCAT('%', :prompt, '%'))
+        OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :prompt, '%'))
+        OR LOWER(p.category) LIKE LOWER(CONCAT('%', :prompt, '%'))
 
         OR EXISTS (
             SELECT 1
@@ -708,14 +715,16 @@ WHERE
             SELECT 1
             FROM product_multiple pm
             WHERE pm.product_id = p.id
+              AND pm.status = 'Enabled'
               AND (
                   LOWER(pm.product_name) LIKE LOWER(CONCAT('%', :prompt, '%'))
                   OR LOWER(pm.description) LIKE LOWER(CONCAT('%', :prompt, '%'))
+                  OR LOWER(pm.sku) LIKE LOWER(CONCAT('%', :prompt, '%'))
               )
         )
     )
 
-    /* CATEGORY - handles null/empty lists correctly */
+    /* CATEGORY */
     AND (
         :#{#categories == null || #categories.isEmpty()} = true
         OR p.category IN (:categories)
@@ -734,6 +743,11 @@ WHERE
             AND (
                 :stock IS NULL
                 OR p.stock = :stock
+            )
+            AND (
+                :hasDiscount IS NULL
+                OR (:hasDiscount = true AND p.discount > 0)
+                OR (:hasDiscount = false AND (p.discount IS NULL OR p.discount = 0))
             )
             AND (
                 :#{#materials == null || #materials.isEmpty()} = true
@@ -756,6 +770,7 @@ WHERE
             SELECT 1
             FROM product_multiple pm
             WHERE pm.product_id = p.id
+              AND pm.status = 'Enabled'
 
               AND (:priceFrom IS NULL OR pm.price >= :priceFrom)
               AND (:priceTo IS NULL OR pm.price <= :priceTo)
@@ -768,6 +783,12 @@ WHERE
               AND (
                   :stock IS NULL
                   OR pm.stock = :stock
+              )
+
+              AND (
+                  :hasDiscount IS NULL
+                  OR (:hasDiscount = true AND pm.discount > 0)
+                  OR (:hasDiscount = false AND (pm.discount IS NULL OR pm.discount = 0))
               )
 
               AND (
@@ -791,12 +812,9 @@ WHERE
             @Param("priceTo") Double priceTo,
             @Param("materials") List<String> materials,
             @Param("color") String color,
-            @Param("stock") String stock
+            @Param("stock") String stock,
+            @Param("hasDiscount") Boolean hasDiscount
     );
-
-
-
-
 
 
 

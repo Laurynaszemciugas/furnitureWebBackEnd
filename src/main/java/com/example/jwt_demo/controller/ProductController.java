@@ -252,7 +252,7 @@ public class ProductController {
         cleanProduct.setStockQuantity(0L);
         cleanProduct.setLowStockThreshold(0L);
         cleanProduct.setCategory(product.getCategory());
-        cleanProduct.setStatus(product.getStatus());
+        cleanProduct.setStatus(Status.Enabled);
         cleanProduct.setVisibility(Visibility.Visible);
         cleanProduct.setCreated(product.getCreated());
         cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
@@ -456,7 +456,7 @@ public class ProductController {
         cleanProduct.setStockQuantity(0L);
         cleanProduct.setLowStockThreshold(0L);
         cleanProduct.setCategory(product.getCategory());
-        cleanProduct.setStatus(product.getStatus());
+        cleanProduct.setStatus(Status.Enabled);
         cleanProduct.setVisibility(Visibility.Visible);
         cleanProduct.setStockCalculatedManually(false);
         cleanProduct.setUser(currentUser);
@@ -1201,7 +1201,8 @@ public class ProductController {
                 filter.getPriceTo(),
                 filter.getMaterials(),
                 filter.getColor(),
-                filter.getStocks()
+                filter.getStocks(),
+                filter.getDiscount()
         );
 
         return results.stream()
