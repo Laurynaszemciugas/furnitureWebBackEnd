@@ -2,10 +2,7 @@ package com.example.jwt_demo.controller;
 
 
 import com.example.jwt_demo.Common.*;
-import com.example.jwt_demo.DTOS.Client.CategoryDisplay;
-import com.example.jwt_demo.DTOS.Client.ClientCategorys;
-import com.example.jwt_demo.DTOS.Client.ClientProductsFilter;
-import com.example.jwt_demo.DTOS.Client.ProductsClients;
+import com.example.jwt_demo.DTOS.Client.*;
 import com.example.jwt_demo.DTOS.Common.GraphDataLongValue;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.Common.ReportMiniStatHolder;
@@ -90,7 +87,18 @@ public class ProductController {
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
 
 
-        return ResponseEntity.ok(productRepository.findById(id).orElseThrow());
+        Product product = productRepository.findById(id).orElseThrow();
+
+        if(product.getMultipleItems()){
+        for(var s : new ArrayList<>(product.getProductMultiples())){
+            if(s.getStatus().equals(Status.Disabled)){
+                product.getProductMultiples().remove(s);
+            }
+        }
+        }
+
+
+        return ResponseEntity.ok(product);
 
 
 
@@ -1228,6 +1236,47 @@ public class ProductController {
                 ))
                 .toList();
     }
+
+
+    @PostMapping("/addNewReview")
+    public ResponseEntity<ErrorResponse> addNewReview(@RequestBody AddNewReviewProduct comment) {
+
+        CustomUserDetails user = common.getUserData();
+
+        ProductComments comments = new ProductComments();
+
+
+
+
+        Product product = productRepository.findById(comment.getProductId()).orElseThrow();
+        User actualUser = userRepository.findById(product.getUser().getId()).orElseThrow();
+
+        if(user == null){
+            comments.setCommenter("Unknown user is not sign in");
+        }
+        else{
+            comments.setCommenter(user.getUsername());
+        }
+
+        comments.setProduct(product);
+        comments.setUser(actualUser);
+
+        if(comment.getReview() > 5){
+            throw new ValidationException("Something went wrong",Warnings.ERROR);
+        }
+
+        comments.setReview(comment.getReview());
+        comments.setComment(comment.getComment());
+
+        product.getComments().add(comments);
+
+        productRepository.save(product);
+
+
+        return ResponseEntity.ok(new ErrorResponse("Saved new review thanks for contributing", Warnings.OK));
+
+    }
+
 
 
 
