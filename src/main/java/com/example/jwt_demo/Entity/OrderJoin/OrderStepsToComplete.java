@@ -37,6 +37,8 @@ public class OrderStepsToComplete {
     private String stepName = null;
     private String stepDescription = null;
 
+    private String uuId;
+
     private Long stepsNeeded;
 
     private Long stepsCompleted;

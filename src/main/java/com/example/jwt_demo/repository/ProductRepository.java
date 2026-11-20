@@ -629,6 +629,14 @@ SELECT
     p.product_name,
     p.category,
     p.multiple_items,
+    
+    
+        (
+        SELECT GROUP_CONCAT(pm.id ORDER BY pm.id)
+        FROM product_multiple pm
+        WHERE pm.status = 'Enabled'
+    ) AS multiVariantIds,
+    
 
     (
         SELECT pid.image_url

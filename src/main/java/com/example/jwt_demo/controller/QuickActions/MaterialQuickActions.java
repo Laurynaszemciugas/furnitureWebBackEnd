@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller.QuickActions;
 
+import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Entity.Materials;
 import com.example.jwt_demo.Enums.Warnings;
@@ -21,6 +22,9 @@ public class MaterialQuickActions {
 
     @Autowired
     MaterialRepository materialRepository;
+
+    @Autowired
+    DatabaseChecks databaseChecks;
 
     @Autowired
     Common common;
@@ -48,7 +52,7 @@ public class MaterialQuickActions {
         materials.setInStock(updatedStock);
 
         materialRepository.save(materials);
-
+        databaseChecks.calculateProductsStock(null,false);
 
         materialRepository.recalculteStockJustAccordingToLowThreAndStock(user.getId());
 

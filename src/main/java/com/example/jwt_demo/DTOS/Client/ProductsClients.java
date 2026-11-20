@@ -17,6 +17,7 @@ public class ProductsClients {
     private String productName;
     private Category category;
     private boolean multiVariants;
+    private Object multiVariantIds;
     private String nonMultiVariantImage;
     private Object multiVariantImages;
     private Object multiVariantPrices;

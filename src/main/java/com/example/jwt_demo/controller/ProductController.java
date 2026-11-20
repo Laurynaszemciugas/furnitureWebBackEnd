@@ -12,6 +12,8 @@ import com.example.jwt_demo.DTOS.Product.ProductLowStockList;
 import com.example.jwt_demo.DTOS.Product.ProductPerformanceReport;
 import com.example.jwt_demo.DTOS.Product.ProductReportPieChart;
 import com.example.jwt_demo.Entity.*;
+import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
+import com.example.jwt_demo.Entity.ProductJoin.ProductFinishSteps;
 import com.example.jwt_demo.Entity.ProductJoin.ProductMaterials;
 import com.example.jwt_demo.Enums.*;
 import com.example.jwt_demo.DTOS.Product.ProductFeedModel;
@@ -79,7 +81,11 @@ public class ProductController {
     @Autowired
     MultipleProductRepository multipleProductRepository;
 
+    @Autowired
+    OrderStepsToCompleteRepository orderStepsToCompleteRepository;
 
+    @Autowired
+    ProductFinishStepsRepository productFinishStepsRepository;
 
 
 
@@ -143,6 +149,13 @@ public class ProductController {
         cleanProduct.setUser(currentUser);
         cleanProduct.setStockCalculatedManually(product.isStockCalculatedManually());
         cleanProduct.setMultipleItems(product.getMultipleItems());
+
+        if(product.getColor() == null){
+            cleanProduct.setColor("white");
+        }
+        else{
+            cleanProduct.setColor(product.getColor());
+        }
 
         if (product.getTags() != null) {
             cleanProduct.getTags().clear();
@@ -209,11 +222,39 @@ public class ProductController {
             }
         }
 
+        // Replace main-product finishing steps.
         if (product.getSteps() != null) {
             cleanProduct.getSteps().clear();
-            for (var steps : product.getSteps()) {
-                steps.setProduct(cleanProduct);
-                cleanProduct.getSteps().add(steps);
+
+            for (var incomingStep : product.getSteps()) {
+
+
+                System.out.println("ba");
+                System.out.println(incomingStep.getId());
+
+                if(incomingStep.getId() != null){
+
+                    ProductFinishSteps productFinishSteps = productFinishStepsRepository.findById(incomingStep.getId()).orElseThrow();
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    cleanProduct.getSteps().add(productFinishSteps);
+
+
+                }
+                else{
+
+                    ProductFinishSteps productFinishSteps = new ProductFinishSteps();
+                    productFinishSteps.setProduct(cleanProduct);
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setUuId(UUID.randomUUID().toString());
+                    cleanProduct.getSteps().add(productFinishSteps);
+
+                }
+
+
+
+
             }
         }
 
@@ -332,13 +373,41 @@ public class ProductController {
             }
         }
 
-        // Steps to finish belong to the main product
         if (product.getSteps() != null) {
-            for (var step : product.getSteps()) {
-                step.setProduct(cleanProduct);
-                cleanProduct.getSteps().add(step);
+            cleanProduct.getSteps().clear();
+
+            for (var incomingStep : product.getSteps()) {
+
+                if(incomingStep.getId() != null){
+
+                    ProductFinishSteps productFinishSteps = productFinishStepsRepository.findById(incomingStep.getId()).orElseThrow();
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    cleanProduct.getSteps().add(productFinishSteps);
+
+                }
+                else{
+
+                    ProductFinishSteps productFinishSteps = new ProductFinishSteps();
+                    productFinishSteps.setProduct(cleanProduct);
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setUuId(UUID.randomUUID().toString());
+                    cleanProduct.getSteps().add(productFinishSteps);
+
+
+                }
+
+
+
+
             }
         }
+
+
+
+
+
 
         List<ProductMultiple> multiples = new ArrayList<>();
         for(var s : product.getProductMultiples()){
@@ -364,7 +433,13 @@ public class ProductController {
             prod.setCreated(s.getCreated());
             prod.setStockCalculatedManually(s.isStockCalculatedManually());
             prod.setUser(currentUser);
-            prod.setColor(s.getColor());
+
+            if(product.getColor() == null){
+                prod.setColor("white");
+            }
+            else{
+                prod.setColor(product.getColor());
+            }
 
 
 
@@ -443,8 +518,7 @@ public class ProductController {
 
     @PostMapping("/saveEditedMultipleProduct")
     @Transactional
-    public ResponseEntity<ErrorResponse> saveEdited(
-            @RequestBody Product product) {
+    public ResponseEntity<ErrorResponse> saveEdited(@RequestBody Product product) {
 
         CustomUserDetails user = common.getUserData();
         User currentUser = userRepository.findById(user.getId())
@@ -547,10 +621,32 @@ public class ProductController {
             cleanProduct.getSteps().clear();
 
             for (var incomingStep : product.getSteps()) {
-                incomingStep.setId(null);
-                incomingStep.setProduct(cleanProduct);
 
-                cleanProduct.getSteps().add(incomingStep);
+
+
+                if(incomingStep.getId() != null){
+
+                    ProductFinishSteps productFinishSteps = productFinishStepsRepository.findById(incomingStep.getId()).orElseThrow();
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    cleanProduct.getSteps().add(productFinishSteps);
+
+
+                }
+                else{
+
+                    ProductFinishSteps productFinishSteps = new ProductFinishSteps();
+                    productFinishSteps.setProduct(cleanProduct);
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setUuId(UUID.randomUUID().toString());
+                    cleanProduct.getSteps().add(productFinishSteps);
+
+                }
+
+
+
+
             }
         }
 
@@ -576,7 +672,6 @@ public class ProductController {
                 variant.setProduct(cleanProduct);
                 variant.setUser(currentUser);
 
-                variant.setColor(incomingVariant.getColor());
                 variant.setProductName(incomingVariant.getProductName());
                 variant.setSku(incomingVariant.getSku());
                 variant.setDescription(incomingVariant.getDescription());
@@ -590,9 +685,14 @@ public class ProductController {
                 variant.setStatus(incomingVariant.getStatus());
                 variant.setVisibility(incomingVariant.getVisibility());
                 variant.setStock(incomingVariant.getStock());
-                variant.setStockCalculatedManually(
-                        incomingVariant.isStockCalculatedManually());
-                variant.setColor(incomingVariant.getColor());
+                variant.setStockCalculatedManually(incomingVariant.isStockCalculatedManually());
+
+                if(incomingVariant.getColor() == null){
+                    variant.setColor("white");
+                }
+                else{
+                    variant.setColor(incomingVariant.getColor());
+                }
 
                 // Always replace variant images
                 variant.getImages().clear();
@@ -676,6 +776,7 @@ public class ProductController {
         }
 
         productRepository.save(cleanProduct);
+        databaseChecks.calculateProductsStock(user.getId(),false);
 
         return ResponseEntity.ok(
                 new ErrorResponse(
@@ -817,6 +918,13 @@ public class ProductController {
         existingProduct.setUser(currentUser);
         existingProduct.setStockCalculatedManually(product.isStockCalculatedManually());
 
+        if(product.getColor() == null){
+            existingProduct.setColor("white");
+        }
+        else{
+            existingProduct.setColor(product.getColor());
+        }
+
 
         // stock check later
         existingProduct.setStock(Stock.No_Stock);
@@ -904,11 +1012,39 @@ public class ProductController {
 
         if (product.getSteps() != null) {
             existingProduct.getSteps().clear();
-            for (var steps : product.getSteps()) {
-                steps.setProduct(existingProduct);
-                existingProduct.getSteps().add(steps);
+
+            for (var incomingStep : product.getSteps()) {
+
+
+                System.out.println("ba");
+                System.out.println(incomingStep.getId());
+
+                if(incomingStep.getId() != null){
+
+                    ProductFinishSteps productFinishSteps = productFinishStepsRepository.findById(incomingStep.getId()).orElseThrow();
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    existingProduct.getSteps().add(productFinishSteps);
+
+
+                }
+                else{
+
+                    ProductFinishSteps productFinishSteps = new ProductFinishSteps();
+                    productFinishSteps.setProduct(existingProduct);
+                    productFinishSteps.setStepDescription(incomingStep.getStepDescription());
+                    productFinishSteps.setStepName(incomingStep.getStepName());
+                    productFinishSteps.setUuId(UUID.randomUUID().toString());
+                    existingProduct.getSteps().add(productFinishSteps);
+
+                }
+
+
+
+
             }
         }
+
 
 
 
@@ -1097,6 +1233,7 @@ public class ProductController {
                                 ? Category.valueOf(row[2].toString())
                                 : null,
                         Boolean.TRUE.equals(row[3]),
+                        null,
                         (String) row[4],
                         row[5],
                         row[6],
@@ -1129,6 +1266,7 @@ public class ProductController {
                                 ? Category.valueOf(row[2].toString())
                                 : null,
                         Boolean.TRUE.equals(row[3]),
+                        null,
                         (String) row[4],
                         row[5],
                         row[6],
@@ -1143,6 +1281,7 @@ public class ProductController {
                         (String) row[11]
                 ))
                 .toList();
+
     }
 
     @GetMapping("/getClientCategorysWithCount")
@@ -1221,18 +1360,19 @@ public class ProductController {
                                 ? Category.valueOf(row[2].toString())
                                 : null,
                         Boolean.TRUE.equals(row[3]),
-                        (String) row[4],
-                        row[5],
+                        row[4],
+                        (String) row[5],
                         row[6],
                         row[7],
                         row[8],
-                        row[9] != null
-                                ? ((Number) row[9]).doubleValue()
-                                : null,
+                        row[9],
                         row[10] != null
-                                ? ((Number) row[10]).longValue()
+                                ? ((Number) row[10]).doubleValue()
                                 : null,
-                        (String) row[11]
+                        row[11] != null
+                                ? ((Number) row[11]).longValue()
+                                : null,
+                        (String) row[12]
                 ))
                 .toList();
     }

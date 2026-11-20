@@ -26,6 +26,8 @@ public class ProductFinishSteps {
     private String stepName = null;
     private String stepDescription = null;
 
+    private String uuId;
+
     @ManyToOne
     @JoinColumn(name = "product_id")
     @JsonIgnore

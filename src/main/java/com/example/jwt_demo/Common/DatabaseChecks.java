@@ -47,6 +47,8 @@ public class DatabaseChecks {
     @Autowired
     MultipleProductRepository multipleProductRepository;
 
+    @Autowired
+    OrderStepsToCompleteRepository orderStepsToCompleteRepository;
 
 
     @Autowired
@@ -910,7 +912,7 @@ public class DatabaseChecks {
         Orders newOrder = orderRepository.findById(orderId).orElseThrow();
 
 
-        for(var prod : newOrder.getProductsData()){
+        for(var prod : new ArrayList<>(newOrder.getProductsData())){
 
 
             if(prod.getProductMultiple() != null){
@@ -934,12 +936,92 @@ public class DatabaseChecks {
 
                         OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
 
-                        orderStepsToComplete.setStepId(step.getStepId());
+                        orderStepsToComplete.setStepId(step.getId());
+                        orderStepsToComplete.setStepRealId(step.getId());
                         orderStepsToComplete.setStepName(step.getStepName());
                         orderStepsToComplete.setStepDescription(step.getStepDescription());
                         orderStepsToComplete.setEmployee(null);
                         orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
                         orderStepsToComplete.setOrderProducts(prod);
+                        orderStepsToComplete.setUuId(step.getUuId());
+
+                        orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
+                        orderStepsToComplete.setStepsCompleted(0L);
+
+
+
+                        steps.add(orderStepsToComplete);
+
+                    }
+
+
+                    if(prod.getOrderSteps() == null){
+                        prod.setOrderSteps(steps);
+                    }
+                    else {
+                        prod.getOrderSteps().addAll(steps);
+                    }
+
+                    orderRepository.save(newOrder);
+
+
+
+
+                }
+                else{
+                    List<OrderStepsToComplete> steps = new ArrayList<>();
+                    for(var step : prod.getProduct().getSteps()){
+
+                        OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(orderStepsToCompleteRepository.getOrderStepsToComplete(prod.getId(),step.getUuId())).orElseThrow();
+
+
+                        orderStepsToComplete.setStepName(step.getStepName());
+                        orderStepsToComplete.setStepDescription(step.getStepDescription());
+                        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.IN_PROGRESS);
+                        orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
+                        orderStepsToComplete.setStepsCompleted(orderStepsToComplete.getStepsCompleted() < prod.getAmountOfProduct() ?  orderStepsToComplete.getStepsCompleted() :  prod.getAmountOfProduct());
+
+
+
+                        steps.add(orderStepsToComplete);
+
+
+                    }
+
+
+                    prod.getOrderSteps().addAll(steps);
+                    orderRepository.save(newOrder);
+                }
+
+            }
+
+            else{
+
+                OrderProducts productOld = oldOrder.getProductsData()
+                        .stream()
+                        .filter(p -> p.getProduct().getId().equals(prod.getProduct().getId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (productOld == null) {
+
+                    System.out.println("found added product");
+
+                    // find product and its stepp and copy them
+                    List<OrderStepsToComplete> steps = new ArrayList<>();
+
+                    for(var step : prod.getProduct().getSteps()){
+
+                        OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+
+                        orderStepsToComplete.setStepId(step.getId());
+                        orderStepsToComplete.setStepRealId(step.getId());
+                        orderStepsToComplete.setStepName(step.getStepName());
+                        orderStepsToComplete.setStepDescription(step.getStepDescription());
+                        orderStepsToComplete.setEmployee(null);
+                        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
+                        orderStepsToComplete.setOrderProducts(prod);
+                        orderStepsToComplete.setUuId(step.getUuId());
 
                         orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
                         orderStepsToComplete.setStepsCompleted(0L);
@@ -965,56 +1047,28 @@ public class DatabaseChecks {
 
                 }
 
-            }
-
-            else{
-
-                OrderProducts productOld = oldOrder.getProductsData()
-                        .stream()
-                        .filter(p -> p.getProduct().getId().equals(prod.getProduct().getId()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (productOld == null) {
-
-                    System.out.println("found added product");
-
-                    // find product and its stepp and copy them
+                else{
                     List<OrderStepsToComplete> steps = new ArrayList<>();
-
                     for(var step : prod.getProduct().getSteps()){
 
-                        OrderStepsToComplete orderStepsToComplete = new OrderStepsToComplete();
+                        OrderStepsToComplete orderStepsToComplete = orderStepsToCompleteRepository.findById(orderStepsToCompleteRepository.getOrderStepsToComplete(prod.getId(),step.getUuId())).orElseThrow();
 
-                        orderStepsToComplete.setStepId(step.getStepId());
                         orderStepsToComplete.setStepName(step.getStepName());
                         orderStepsToComplete.setStepDescription(step.getStepDescription());
-                        orderStepsToComplete.setEmployee(null);
-                        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.NOT_STARTED);
-                        orderStepsToComplete.setOrderProducts(prod);
-
+                        orderStepsToComplete.setProductFinishStepStatus(ProductFinishStepStatus.IN_PROGRESS);
                         orderStepsToComplete.setStepsNeeded(prod.getAmountOfProduct());
-                        orderStepsToComplete.setStepsCompleted(0L);
+                        orderStepsToComplete.setStepsCompleted(orderStepsToComplete.getStepsCompleted() < prod.getAmountOfProduct() ?  orderStepsToComplete.getStepsCompleted() :  prod.getAmountOfProduct());
 
 
 
                         steps.add(orderStepsToComplete);
 
+
                     }
 
 
-                    if(prod.getOrderSteps() == null){
-                        prod.setOrderSteps(steps);
-                    }
-                    else {
-                        prod.getOrderSteps().addAll(steps);
-                    }
-
+                    prod.getOrderSteps().addAll(steps);
                     orderRepository.save(newOrder);
-
-
-
-
                 }
 
             }
