@@ -1385,19 +1385,26 @@ public class ProductController {
 
         ProductComments comments = new ProductComments();
 
+        if(user == null){
+            throw new ValidationException("You need to be logged in to be able to review product",Warnings.ERROR);
+        }
 
+        if(comment.getReview() == 0 || comment.getReview() > 5 ){
+            throw new ValidationException("Review can only be from 1-5 stars",Warnings.ERROR);
+        }
+
+        if(comment.getComment().isBlank()){
+            throw new ValidationException("Please leave a comment to continue",Warnings.ERROR);
+        }
+
+        System.out.println(comment.getReview());
 
 
         Product product = productRepository.findById(comment.getProductId()).orElseThrow();
         User actualUser = userRepository.findById(product.getUser().getId()).orElseThrow();
 
-        if(user == null){
-            comments.setCommenter("Unknown user is not sign in");
-        }
-        else{
-            comments.setCommenter(user.getUsername());
-        }
 
+        comments.setCommenter(user.getUsername());
         comments.setProduct(product);
         comments.setUser(actualUser);
 
