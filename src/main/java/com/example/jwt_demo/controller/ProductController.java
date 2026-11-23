@@ -831,6 +831,7 @@ public class ProductController {
 
 
 
+
         return productRepository.getAllProducts(
                 productFilterHolder.getCategory(),
                 productFilterHolder.getStockChoice(),

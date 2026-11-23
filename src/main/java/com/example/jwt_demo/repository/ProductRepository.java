@@ -37,30 +37,94 @@ SELECT new com.example.jwt_demo.DTOS.Product.ProductFeedModel(
     p.productName,
     p.category,
     p.price,
-    p.stockQuantity,
+    CASE
+        WHEN p.multipleItems = true THEN
+            COALESCE(
+                (
+                    SELECT SUM(pm.stockQuantity)
+                    FROM ProductMultiple pm
+                    WHERE pm.product.id = p.id
+                ),
+                0
+            )
+        ELSE p.stockQuantity
+    END,
     p.lowStockThreshold,
     p.multipleItems,
     p.discount,
     p.price - (p.price * p.discount / 100.0),
-    p.visibility
+    p.visibility,
+
+    (
+        SELECT FUNCTION('GROUP_CONCAT', pm.price)
+        FROM ProductMultiple pm
+        WHERE pm.product.id = p.id
+    ),
+
+    (
+        SELECT FUNCTION('GROUP_CONCAT', pm.discount)
+        FROM ProductMultiple pm
+        WHERE pm.product.id = p.id
+    ),
+
+    (
+        SELECT FUNCTION('GROUP_CONCAT', pm.stock)
+        FROM ProductMultiple pm
+        WHERE pm.product.id = p.id
+    )
 )
 FROM Product p
-LEFT JOIN ProductImageData i 
-    ON i.product.id = p.id 
+
+LEFT JOIN ProductImageData i
+    ON i.product.id = p.id
     AND i.imageLogic = 'Main'
+
 WHERE p.user.id = :userId
 
 AND (:category IS NULL OR p.category = :category)
-AND (:stock IS NULL OR p.stock = :stock)
+
+AND (
+    :stock IS NULL
+    OR p.stock = :stock
+    OR EXISTS (
+        SELECT 1
+        FROM ProductMultiple pm
+        WHERE pm.product.id = p.id
+        AND pm.stock = :stock
+    )
+)
+
 AND (:visibility IS NULL OR p.visibility = :visibility)
 
-AND (:prompt IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%')))
+AND (
+    :prompt IS NULL
+    OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :prompt, '%'))
+)
 
 AND (:createdFrom IS NULL OR p.created >= :createdFrom)
 AND (:createdTo IS NULL OR p.created <= :createdTo)
 
-AND (:price IS NULL OR p.price <= :price)
-AND (:discount IS NULL OR p.discount >= :discount)
+AND (
+    :price IS NULL
+    OR p.price <= :price
+    OR EXISTS (
+        SELECT 1
+        FROM ProductMultiple pm
+        WHERE pm.product.id = p.id
+        AND pm.price <= :price
+    )
+)
+
+AND (
+    :discount IS NULL
+    OR p.discount >= :discount
+    OR EXISTS (
+        SELECT 1
+        FROM ProductMultiple pm
+        WHERE pm.product.id = p.id
+        AND pm.discount >= :discount
+    )
+)
 
 AND (
     :materialId IS NULL
@@ -85,7 +149,6 @@ AND (
             @Param("userId") Long userId,
             Pageable pageable
     );
-
 
     @Query("""
 

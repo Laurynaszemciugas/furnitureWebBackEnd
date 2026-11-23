@@ -31,16 +31,16 @@ public interface WorkDoneRepository extends JpaRepository<WorkDone,Long> {
     @Query("""
         SELECT new com.example.jwt_demo.DTOS.WorkDay.WorkDayMiniStats(
             (SELECT COALESCE(SUM(workedForMinutes), 0)
-             FROM WorkDay),
+             FROM WorkDay where employee.id = :employeeId),
         
             (SELECT COALESCE(COUNT(*),0)
-             FROM WorkDay),
+             FROM WorkDay where employee.id = :employeeId),
         
             (SELECT COALESCE(COUNT(*), 0)
-             FROM WorkDone),
+             FROM WorkDone where employee.id = :employeeId),
         
-             (SELECT COALESCE(avg(wd.workedForMinutes),0)
-             FROM WorkDay wd))
+             (SELECT COALESCE(avg(workedForMinutes),0)
+             FROM WorkDay where employee.id = :employeeId))
         
              
 """)
