@@ -732,6 +732,8 @@ public class OrderAcceptingModels {
                     orderStep.setStepsCompleted(0L);
 
                     orderStep.setStepId(1L);
+                    orderStep.setUuId("PACK");
+                    orderStep.setStepRealId(step.getId());
                     orderStep.setStepName("Package the product");
                     orderStep.setStepDescription("Package the product using the styro foam bubble rap");
 
@@ -749,7 +751,7 @@ public class OrderAcceptingModels {
 
                     orderStep.setStepsNeeded(orderProducts.getAmountOfProduct());
                     orderStep.setStepsCompleted(0L);
-
+                    orderStep.setUuId(step.getUuId());
                     orderStep.setStepRealId(step.getId());
                     orderStep.setStepId(step.getStepId());
                     orderStep.setStepName(step.getStepName());
@@ -773,7 +775,9 @@ public class OrderAcceptingModels {
                     packageStep.setStepsNeeded(orderProducts.getAmountOfProduct());
                     packageStep.setStepsCompleted(0L);
 
-                    packageStep.setStepId(step.getStepId()+1);
+                    packageStep.setStepId(i);
+                    packageStep.setUuId("PACK");
+                    packageStep.setStepRealId(step.getId());
                     packageStep.setStepName("Package the product");
                     packageStep.setStepDescription("Package the product using the styro foam bubble rap");
 

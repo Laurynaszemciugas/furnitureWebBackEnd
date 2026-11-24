@@ -68,7 +68,7 @@ SELECT new com.example.jwt_demo.DTOS.Product.ProductFeedModel(
     ),
 
     (
-        SELECT FUNCTION('GROUP_CONCAT', pm.stock)
+        SELECT distinct FUNCTION('GROUP_CONCAT', pm.stock)
         FROM ProductMultiple pm
         WHERE pm.product.id = p.id
     )

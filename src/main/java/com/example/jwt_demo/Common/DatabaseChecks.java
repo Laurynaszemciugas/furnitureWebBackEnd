@@ -76,10 +76,29 @@ public class DatabaseChecks {
 
             if(productData.getProduct().getMultipleItems()) {
 
-                System.out.println("detected multi");
-
 
                 ProductMultiple product = multipleProductRepository.findById(productData.getProductMultiple().getId()).orElseThrow(() -> new ValidationException("No product found ", Warnings.ERROR));
+
+                if(product.isStockCalculatedManually()){
+
+                    Long needed = productData.getAmountOfProduct();
+                    Long inStock = product.getStockQuantity();
+
+                    if(needed > inStock){
+                        order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                        orderRepository.save(order);
+                    }
+                    else{
+                        order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+                        orderRepository.save(order);
+
+                        product.setStockQuantity(inStock-needed);
+                        multipleProductRepository.save(product);
+
+                    }
+
+                    continue;
+                }
 
                 Long amountOfProductTaken = productData.getAmountOfProduct();
 
@@ -89,6 +108,8 @@ public class DatabaseChecks {
                     Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
                     Long materialStock = material.getInStock();
 
+
+                    System.out.println("baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
                     System.out.println(materialStock - (materialNeededForOne * amountOfProductTaken) < 0);
 
                     if (materialStock - (materialNeededForOne * amountOfProductTaken) < 0) {
@@ -115,6 +136,27 @@ public class DatabaseChecks {
 
 
                 Product product = productRepository.findById(productData.getProduct().getId()).orElseThrow(() -> new ValidationException("No product found ", Warnings.ERROR));
+
+                if(product.isStockCalculatedManually()){
+
+                    Long needed = productData.getAmountOfProduct();
+                    Long inStock = product.getStockQuantity();
+
+
+                    if(needed > inStock){
+                        order.setOrderStatus(OrderStatus.LACK_OF_SUPPLY);
+                        orderRepository.save(order);
+                    }
+                    else{
+                        order.setOrderStatus(OrderStatus.AWAITING_CONFIRMATION);
+                        orderRepository.save(order);
+
+                        product.setStockQuantity(inStock-needed);
+                        productRepository.save(product);
+                    }
+
+                    continue;
+                }
 
                 Long amountOfProductTaken = productData.getAmountOfProduct();
 
@@ -255,7 +297,6 @@ public class DatabaseChecks {
 
                 if(prods.getMultipleItems() == true) {
 
-                    System.out.println("FOUND MULTIIIIIIIIIIIIIIIIII");
 
                     String limitingMaterial = null;
                     Long lowestAmountToMake = 0L;
@@ -420,7 +461,6 @@ public class DatabaseChecks {
 
     public void calculateMaterialsStock(Long orderId) {
 
-        System.out.println("cheking db stuff");
 
         Orders order = orderRepository.findById(orderId).orElseThrow();
 
@@ -435,6 +475,9 @@ public class DatabaseChecks {
 
 
                 if (prods.getProductMultiple().isStockCalculatedManually()) {
+
+
+
                     continue;
                 }
 
@@ -481,6 +524,7 @@ public class DatabaseChecks {
             else{
 
             if (prods.getProduct().isStockCalculatedManually()) {
+
                 continue;
             }
 
@@ -1473,7 +1517,7 @@ public class DatabaseChecks {
                             Long newAmountTaken = productNew.getAmountOfProduct();
 
 
-                            Product manuallySetProduct = productRepository.findById(productOld.getProductMultiple().getId()).orElseThrow();
+                            ProductMultiple manuallySetProduct = multipleProductRepository.findById(productOld.getProductMultiple().getId()).orElseThrow();
                             Long productStock = manuallySetProduct.getStockQuantity();
 
 
@@ -1483,7 +1527,7 @@ public class DatabaseChecks {
 
                             manuallySetProduct.setStockQuantity(stock);
 
-                            productRepository.save(manuallySetProduct);
+                            multipleProductRepository.save(manuallySetProduct);
 
 
                             continue;
@@ -1748,6 +1792,113 @@ public class DatabaseChecks {
                     )
             );
         }
+    }
+
+
+
+
+    public void addRemoveChangeReserveStock(Long orderId, boolean modifyStock, boolean reAddStock){
+
+        // addreserveback is return stock to material
+        // readdstock means take order spin thru its material and just take the stock out and return to the reserve just reverse
+
+
+        // if modifyStock is false means i dont want the reserved amount to be returned to storage just remove the reserve
+        // if modifyStock is true means i want reserve to be reverted and the reverted stock to be back inside the storage
+        // if reAddStock is false just do all normale if its true means reverse all actions means remove stock and re-add the reserve
+
+        int operator = 1;
+
+        if(reAddStock){
+            operator = -1;
+        }
+
+        Orders order = orderRepository.findById(orderId).orElseThrow();
+
+        for(var products : order.getProductsData()){
+
+            if(products.getProductMultiple() != null){
+
+                ProductMultiple productMultiple = multipleProductRepository.findById(products.getProductMultiple().getId()).orElseThrow();
+
+
+                // return stock to the manually managed ones
+                if(productMultiple.isStockCalculatedManually()){
+
+                    if(modifyStock) {
+                        Long takenStock = products.getAmountOfProduct();
+                        Long remainingStock = productMultiple.getStockQuantity();
+
+                        productMultiple.setStockQuantity(remainingStock + takenStock * operator);
+                        multipleProductRepository.save(productMultiple);
+                    }
+                    continue;
+                }
+
+                // return material stock and remove the reserve
+                for(var materials : productMultiple.getMaterials()){
+
+                    Long amountOfProduct = products.getAmountOfProduct();
+                    Long amountOfMaterialNeeded = materials.getAmountUsed();
+
+                    Long howMuchProductToReturn = amountOfProduct * amountOfMaterialNeeded;
+
+                    Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
+
+                    material.setReserved(material.getReserved() - howMuchProductToReturn * operator);
+
+                    if(modifyStock) {
+                        material.setInStock(material.getInStock() + howMuchProductToReturn * operator);
+                    }
+                    materialRepository.save(material);
+                }
+
+            }
+
+
+            else{
+
+                Product product = productRepository.findById(products.getProduct().getId()).orElseThrow();
+
+
+                // return stock to the manually managed ones
+                if(product.isStockCalculatedManually()){
+
+                    if(modifyStock) {
+                        Long takenStock = products.getAmountOfProduct();
+                        Long remainingStock = product.getStockQuantity();
+
+                        product.setStockQuantity(remainingStock + takenStock * operator);
+                        productRepository.save(product);
+                    }
+                    continue;
+                }
+
+                // return material stock and remove the reserve
+                for(var materials : product.getMaterials()){
+
+                    Long amountOfProduct = products.getAmountOfProduct();
+                    Long amountOfMaterialNeeded = materials.getAmountUsed();
+
+                    Long howMuchProductToReturn = amountOfProduct * amountOfMaterialNeeded;
+
+                    Materials material = materialRepository.findById(materials.getMaterials().getId()).orElseThrow();
+
+                    material.setReserved(material.getReserved() - howMuchProductToReturn * operator);
+
+                    if(modifyStock) {
+                        material.setInStock(material.getInStock() + howMuchProductToReturn * operator);
+                    }
+                    materialRepository.save(material);
+                }
+
+            }
+
+
+
+        }
+
+
     }
 
 

@@ -1,6 +1,7 @@
 package com.example.jwt_demo.service.Order;
 
 import com.example.jwt_demo.Common.ActionMaker;
+import com.example.jwt_demo.Common.DatabaseChecks;
 import com.example.jwt_demo.Common.ErrorResponse;
 import com.example.jwt_demo.Entity.Orders;
 import com.example.jwt_demo.Enums.ActionDesciptionEnum;
@@ -27,6 +28,9 @@ public class ModifyDataOrdersService {
     @Autowired
     ActionMaker actionMaker;
 
+    @Autowired
+    DatabaseChecks databaseChecks;
+
     public ResponseEntity<ErrorResponse> rejectNewOrder(Long id, CustomUserDetails user){
 
 
@@ -37,9 +41,10 @@ public class ModifyDataOrdersService {
 
         actionMaker.makeAction(String.format("Order [ORD-%d] was rejected successfully",newOrder.getId()),user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Status_Change);
 
+        databaseChecks.addRemoveChangeReserveStock(id,true,false);
 
 
-        return ResponseEntity.ok(new ErrorResponse("Changed successfully to cancelled", Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse("Changed successfully to cancelled and stock was returned to storage counter", Warnings.OK));
 
     }
 

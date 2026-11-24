@@ -4,7 +4,6 @@ import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.DTOS.Common.MiniStatHolder;
 import com.example.jwt_demo.DTOS.EmployeePage.EmployeeOrderProjection;
 import com.example.jwt_demo.DTOS.Order.NewOrderFeedData;
-import com.example.jwt_demo.DTOS.Order.OrderReportPieChart;
 import com.example.jwt_demo.DTOS.Order.OrdersFeedData;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.OrderJoin.OrderStepsToComplete;
@@ -19,10 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -344,7 +339,7 @@ public class GetItemsOfOrdersService {
 
         if(canBeSetAsFinished){
             order.setOrderStatus(OrderStatus.Finished);
-            databaseChecks.orderFinishedDeductReserve(order.getId());
+            databaseChecks.addRemoveChangeReserveStock(order.getId(), false,false);
         }
         else {
             order.setOrderStatus(OrderStatus.Pending);
@@ -436,7 +431,7 @@ public class GetItemsOfOrdersService {
 
         if(canBeSetAsFinished){
             order.setOrderStatus(OrderStatus.Finished);
-            databaseChecks.orderFinishedDeductReserve(order.getId());
+            databaseChecks.addRemoveChangeReserveStock(order.getId(),false,false);
         }
         else {
             order.setOrderStatus(OrderStatus.Pending);

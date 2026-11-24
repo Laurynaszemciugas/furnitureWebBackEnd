@@ -560,6 +560,34 @@ public class OrderSavedService {
         Orders nonModified = copyOrder.copyOrder(sameExistingOrder);
 
 
+        OrderStatus newStatus = order.getOrderStatus();
+
+        OrderStatus oldStatus = sameExistingOrder.getOrderStatus();
+
+        String message = "";
+
+        if(newStatus != oldStatus) {
+            // retake the reserve and stock
+            if (newStatus.equals(OrderStatus.Pending) || newStatus.equals(OrderStatus.In_Progress) && oldStatus.equals(OrderStatus.CANCELLED)) {
+                databaseChecks.addRemoveChangeReserveStock(order.getId(),true,true);
+                message = "Stock was deducted from materials and reserve added";
+            }
+            // remove the reserve
+            if (oldStatus.equals(OrderStatus.Pending) || oldStatus.equals(OrderStatus.In_Progress) && newStatus.equals(OrderStatus.Finished)) {
+
+                databaseChecks.addRemoveChangeReserveStock(order.getId(),false,false);
+                message = "Reserve for [" + order.getId() + "] was removed";
+            }
+            // remove the reserve and return the material stock back
+            if (oldStatus.equals(OrderStatus.Pending) || oldStatus.equals(OrderStatus.In_Progress) && newStatus.equals(OrderStatus.CANCELLED)) {
+                databaseChecks.addRemoveChangeReserveStock(order.getId(),true,false);
+                message = "Stock was returned and the reserve was removed";
+            }
+        }
+
+
+
+
         if(order.getBillingAddress().isEmpty() || order.getBillingAddress() == null){
             throw  new ValidationException("Address is required", Warnings.ERROR);
         }
@@ -686,8 +714,6 @@ public class OrderSavedService {
                     orderProducts.setCost(orderAcceptingModels.materialCost(s.getProductMultiple().getId(), s.getAmountOfProduct(),true));
                     orderProducts.setAmountOfProduct(s.getAmountOfProduct());
                     products.add(orderProducts);
-
-
                 }
 
             }
@@ -779,12 +805,12 @@ public class OrderSavedService {
         orderRepository.saveAndFlush(sameExistingOrder);
 
 
-        actionMaker.makeAction(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Updated);
+        actionMaker.makeAction(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully ") + message,user.getId(),null, ActionTrackerEnum.USER, ActionDesciptionEnum.Order_Updated);
 
 
         orderRepository.incrementProductsFinished(order.getId());
 
-        return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully"),Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse(String.format("ORD-%d %s",order.getId(), "was modified and saved successfully " +  message),Warnings.OK));
     }
 
 
