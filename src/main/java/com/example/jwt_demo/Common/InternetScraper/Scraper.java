@@ -19,15 +19,67 @@ public class Scraper {
 
     HttpClient client = HttpClient.newHttpClient();
 
+
+
+//    String fullRequest = "";
+//
+//        if(fullUrl){
+//        fullRequest = text;
+//    }
+//        else {
+//        text = text.replace(" ", "+");
+//        fullRequest = String.format("https://www.kaina24.lt/s/%s/",text);
+//    }
+//
+//    HttpRequest request = HttpRequest.newBuilder()
+//            .uri(URI.create(fullRequest))
+//            .GET()
+//            .build();
+
     public List<PriceResult> scraper(String text) throws IOException, InterruptedException {
 
 
-        text = text.replace(" ", "+");
+
+        text = text.replace(" ", "-");
+//
+//        HttpRequest request = HttpRequest.newBuilder()
+//                .uri(URI.create("https://www.kaina24.lt/p/logitech-g-pro-x-superlight-2"))
+//                .GET()
+//                .build();
+//
+//        HttpResponse<String> response =
+//                client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//
+//
+//
+//
+//
+//        Document document = Jsoup.parse(response.body());
+//
+//
+//
+//        Elements element = document.select(".product-item-h");
+
+
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(String.format("https://www.kaina24.lt/s/%s/",text)))
+                .uri(URI.create(
+                        "https://www.kaina24.lt/p/" + text
+                ))
+                .header("User-Agent",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36")
+                .header("Accept",
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "lt-LT,lt;q=0.9,en-US;q=0.8")
+                .header("Accept-Encoding", "identity")
                 .GET()
                 .build();
+
+
 
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -36,13 +88,43 @@ public class Scraper {
 
 
 
-        //System.out.println(html);
-
         Document document = Jsoup.parse(response.body());
 
 
-
         Elements element = document.select(".product-item-h");
+
+        System.out.println(element);
+
+        if (document.text().contains("Deja toks puslapis nerastas :/")) {
+
+            System.out.println("Product page not found!");
+
+
+
+
+            HttpRequest request2 = HttpRequest.newBuilder()
+                    .uri(URI.create(
+                            "https://www.kaina24.lt/s/" + text
+                    ))
+                    .header("User-Agent",
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36")
+                    .header("Accept",
+                            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "lt-LT,lt;q=0.9,en-US;q=0.8")
+                    .header("Accept-Encoding", "identity")
+                    .GET()
+                    .build();
+
+
+
+            HttpResponse<String> response2 =
+                    client.send(request2, HttpResponse.BodyHandlers.ofString());
+
+             html = response2.body();
+
+        }
+
+        //System.out.println(element);
 
         if (element.isEmpty()) {
 
@@ -58,6 +140,7 @@ public class Scraper {
         List<PriceResult> priceResultList = new ArrayList<>();
 
         for(Element product : element){
+
 
 
             String vendorName = product.select(".shop a").attr("title");
@@ -105,7 +188,6 @@ public class Scraper {
 
 
 
-
             List<MultipleVendors> multipleVendors = null;
             if (!"1".equals(sellerCount)) {
 
@@ -147,15 +229,35 @@ return  priceResultList;
         multipleVendors = new ArrayList<>();
 
 
-        HttpRequest request2 = HttpRequest.newBuilder()
-                .uri(URI.create(vendorUrl))
+
+
+
+
+
+
+
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        vendorUrl
+                ))
+                .header("User-Agent",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36")
+                .header("Accept",
+                        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                .header("Accept-Language", "lt-LT,lt;q=0.9,en-US;q=0.8")
+                .header("Accept-Encoding", "identity")
                 .GET()
                 .build();
 
-        HttpResponse<String> response2 =
-                client.send(request2, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        Document document2 = Jsoup.parse(response2.body());
+
+        Document document2 = Jsoup.parse(response.body());
 
         Elements element2 = document2.select(".item-table-wrap[itemprop=offers] .seller-item-table");
 
@@ -207,6 +309,7 @@ return  priceResultList;
 
 
     public List<PriceResult> differentLayout(String html) throws IOException, InterruptedException {
+
 
         List<PriceResult> priceResultList = new ArrayList<>();
 

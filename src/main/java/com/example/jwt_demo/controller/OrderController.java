@@ -433,11 +433,21 @@ public class OrderController {
 
             orders.setOrderStatus(OrderStatus.In_Progress);
 
+
+            logic.addNewNotification("No_picture.png",
+                    String.format("Order [%d]",orderId),
+                    "Order was started to be worked on","In progress",
+                    NotificationTypes.ORDER,
+                    orderId,
+                    null,
+                    orders.getUser().getId());
+
+
             orderRepository.save(orders);
         }
 
 
-        return ResponseEntity.ok(new ErrorResponse(String.format(" order - #%d %s",orderId,"was accepted"), Warnings.OK));
+        return ResponseEntity.ok(new ErrorResponse(String.format(" Order - #%d %s",orderId,"was accepted"), Warnings.OK));
 
     }
 

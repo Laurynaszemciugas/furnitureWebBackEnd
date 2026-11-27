@@ -667,6 +667,7 @@ public class ProductController {
                 }
                 else{
                     variant = new ProductMultiple();
+                    variant.setUuid(UUID.randomUUID().toString());
                 }
 
                 variant.setProduct(cleanProduct);

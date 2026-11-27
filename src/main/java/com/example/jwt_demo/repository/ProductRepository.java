@@ -888,6 +888,30 @@ WHERE
     );
 
 
+    // get all products that contain specific material
+
+    @Query("""
+    SELECT DISTINCT p.id
+    FROM Product p
+    JOIN p.materials pm
+    WHERE pm.materials.id = :materialId
+""")
+    List<Long> idsOfNormalProductComparedToMaterial(
+            @Param("materialId") Long materialId
+    );
+
+
+    @Query("""
+    SELECT DISTINCT p.id
+    FROM ProductMultiple p
+    JOIN p.materials pm
+    WHERE pm.materials.id = :materialId
+""")
+    List<Long> idsOfMultiProductComparedToMaterial(
+            @Param("materialId") Long materialId
+    );
+
+
 
 
 }

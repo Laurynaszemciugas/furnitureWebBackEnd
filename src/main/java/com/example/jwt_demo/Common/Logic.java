@@ -1,13 +1,10 @@
 package com.example.jwt_demo.Common;
 
-import com.example.jwt_demo.Entity.Materials;
-import com.example.jwt_demo.Entity.Orders;
-import com.example.jwt_demo.Entity.StockMovement;
-import com.example.jwt_demo.Entity.User;
+import com.example.jwt_demo.Entity.*;
+import com.example.jwt_demo.Enums.ImageLogic;
+import com.example.jwt_demo.Enums.NotificationTypes;
 import com.example.jwt_demo.Enums.Type;
-import com.example.jwt_demo.repository.MaterialRepository;
-import com.example.jwt_demo.repository.OrderRepository;
-import com.example.jwt_demo.repository.StockMovementRepository;
+import com.example.jwt_demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class Logic {
@@ -28,6 +25,12 @@ public class Logic {
 
     @Autowired
     MaterialRepository materialRepository;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    NotificationRepository notificationRepository;
 
     public LocalDateTime dateConverter(LocalDate givenDate) {
 
@@ -76,6 +79,64 @@ public class Logic {
 
         stockMovementRepository.save(stockMovement);
 
+
+    }
+
+    public void addNewNotification(String image, String notificationName, String message, String highlightedText, NotificationTypes type, Long itemId, Long sender, Long receiver){
+
+
+        User senderUser = null;
+
+        if(sender != null) {
+            senderUser = userRepository.findById(sender).orElseThrow();
+        }
+
+        User receiverUser = null;
+
+        if(receiver != null) {
+            receiverUser = userRepository.findById(receiver).orElseThrow();
+        }
+
+        Notifications notification = new Notifications();
+        notification.setNotificationImage(image);
+        notification.setNotificationName(notificationName);
+        notification.setMessage(message);
+        notification.setMessageHighLightedText(highlightedText);
+        notification.setNotificationType(type);
+        notification.setItemId(itemId);
+        notification.setSender(senderUser);
+        notification.setReceiver(receiverUser);
+
+        notification.setReadedNotification(false);
+
+        notificationRepository.save(notification);
+
+    }
+
+
+
+    public String extractMainImage(List<ProductImageData> productImage, List<MaterialImageData> materialImage){
+
+        String mainImage = "No_picture.png";
+
+        if(productImage == null){
+            for(var s : materialImage){
+                if(s.getImageLogic().equals(ImageLogic.Main)){
+                    mainImage = s.getImageUrl();
+                }
+            }
+        }
+        else{
+
+            for(var s : productImage){
+                if(s.getImageLogic().equals(ImageLogic.Main)){
+                    mainImage = s.getImageUrl();
+                }
+            }
+
+        }
+
+        return mainImage;
 
     }
 

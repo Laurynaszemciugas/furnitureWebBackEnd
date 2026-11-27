@@ -1,9 +1,6 @@
 package com.example.jwt_demo.Common.OrderAcceptance;
 
-import com.example.jwt_demo.Common.ActionMaker;
-import com.example.jwt_demo.Common.DatabaseChecks;
-import com.example.jwt_demo.Common.ErrorResponse;
-import com.example.jwt_demo.Common.ProvidedDataChecker;
+import com.example.jwt_demo.Common.*;
 import com.example.jwt_demo.Entity.*;
 import com.example.jwt_demo.Entity.EmployeeJoin.OrderEmployees;
 import com.example.jwt_demo.Entity.OrderJoin.OrderProducts;
@@ -53,6 +50,9 @@ public class OrderAcceptingModels {
 
     @Autowired
     OrderProductsRepository orderProductsRepository;
+
+    @Autowired
+    Logic logic;
 
     Map<Long,Integer> countTheTimesAccordingToUser = new HashMap<>();
 
@@ -118,60 +118,11 @@ public class OrderAcceptingModels {
     }
 
 
-    // ===============================================================
-    // Timed maximize order thingy
-    // ===============================================================
-
-    @Scheduled(cron = "0 */60 * * * MON-FRI")
-    @Transactional
-    public void startTheMaximeOrder(){
-
-        List<Long> users = userRepository.getIdsOfTheOrderProcessing(OrderProcessing.MAXIMIZE_ORDER.toString());
 
 
 
-        if(users.isEmpty()){
-            return;
-        }
-
-        for(var us : users){
-
-            List<Orders> newOrders = orderRepository.getAllNewOrder(us);
-
-            List<Materials> allMaterials = materialRepository.getAllMaterials(us);
-
-            acceptOrdersAsManyAsPossible(newOrders,allMaterials);
-
-        }
-    }
 
 
-
-    // ===============================================================
-    // Timed recheck if possible to make orders that were marked as lack of supply
-    // ===============================================================
-    @Scheduled(cron = "0 */30 * * * MON-FRI")
-    @Transactional
-    public void startLackOfSupply(){
-
-        List<Long> users = userRepository.getIdsOfAdmins();
-
-
-
-        if(users.isEmpty()){
-            return;
-        }
-
-        for(var us : users){
-
-            List<Orders> newOrders = orderRepository.getAllLackOfSupplyOrders(us);
-
-            List<Materials> allMaterials = materialRepository.getAllMaterials(us);
-
-            acceptOrdersAsManyAsPossible(newOrders,allMaterials);
-
-        }
-    }
 
 
 
@@ -422,7 +373,13 @@ public class OrderAcceptingModels {
             databaseChecks.addReserveFromCreatedOrder(order.getId());
             databaseChecks.calculateProductsStock(null, false);
 
-
+            logic.addNewNotification("No_picture.png",
+                    String.format("Order [%d]",order.getId()),
+                    "Order was accepted and order status was change to","Awaiting order",
+                    NotificationTypes.ORDER,
+                    order.getId(),
+                    null,
+                    order.getUser().getId());
 
         }
 
